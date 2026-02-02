@@ -212,31 +212,10 @@ const MasterDetailTable = forwardRef<
           table: !isSysColumn(column.columnName),
           search: column.columnName === value,
           add: !isSysColumn(column.columnName),
-          add_disabled: false,
+          add_disabled: column.columnName === value,
           edit: !isSysColumn(column.columnName),
-          edit_disabled: false,
+          edit_disabled: column.columnName === value,
           join: undefined
-
-          // columnType: 'origin',
-          // primary: isPrimaryKey,
-          // table: !isSysColumn(column.columnName),
-          // table_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
-          // search: column.columnName === value,
-          // check:
-          //   !isSysColumn(column.columnName) &&
-          //   uniqueIndex === column.columnName,
-          // add:
-          //   !isSysColumn(column.columnName) &&
-          //   !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)),
-          // add_hidden:
-          //   !isSysColumn(column.columnName) &&
-          //   !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)) &&
-          //   isPrimaryKey,
-          // add_disabled: column.columnName === value,
-          // edit: !isSysColumn(column.columnName),
-          // edit_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
-          // edit_disabled: column.columnName === value,
-          // join: undefined
         };
       });
       setDetailData(data);
