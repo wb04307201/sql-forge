@@ -77,6 +77,7 @@ const SingleTable = forwardRef<AmisTemplateCrudMethods, AmisTemplateCrudProps>(
 
         const data: DataType[] = columns.map(column => {
           const isPrimaryKey = primaryKey === column.columnName;
+          const isUniqueIndex = uniqueIndex === column.columnName;
           return {
             columnName: column.columnName,
             dataType: column.dataType,
@@ -89,25 +90,15 @@ const SingleTable = forwardRef<AmisTemplateCrudMethods, AmisTemplateCrudProps>(
             tableName: value,
             columnType: 'origin',
             primary: isPrimaryKey,
+            uniqueIndex: isUniqueIndex,
             table: !isSysColumn(column.columnName),
-            table_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
             search:
               !isSysColumn(column.columnName) &&
               !isPrimaryKey &&
               !isNumberJavaSqlType(column.javaSqlType),
-            check:
-              !isSysColumn(column.columnName) &&
-              uniqueIndex === column.columnName,
-            add:
-              !isSysColumn(column.columnName) &&
-              !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)),
-            add_hidden:
-              !isSysColumn(column.columnName) &&
-              !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)) &&
-              isPrimaryKey,
+            add: !isSysColumn(column.columnName),
             add_disabled: false,
             edit: !isSysColumn(column.columnName),
-            edit_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
             edit_disabled: false,
             join: undefined
           };

@@ -259,13 +259,17 @@ export const buildSingleTable = (
     body: tableData
       .filter(item => item.add)
       .map(item => {
-        if (isNumberJavaSqlType(item.javaSqlType)) {
+        if (item.primary){
+          return {
+            type: 'uuid',
+            id: `insert-${item.columnName}`
+          };
+        }else if (isNumberJavaSqlType(item.javaSqlType)) {
           return {
             type: 'input-number',
             name: `${item.columnName}`,
             label: `${item.remarks ? item.remarks : item.columnName}`,
             precision: item.decimalDigits,
-            hidden: item.add_hidden,
             disabled: item.add_disabled,
             id: `insert-${item.columnName}`
           };
@@ -275,7 +279,6 @@ export const buildSingleTable = (
             name: `${item.columnName}`,
             label: `${item.remarks ? item.remarks : item.columnName}`,
             valueFormat: 'YYYY-MM-DD',
-            hidden: item.add_hidden,
             disabled: item.add_disabled,
             id: `insert-${item.columnName}`
           };
@@ -290,7 +293,6 @@ export const buildSingleTable = (
             name: `${item.columnName}`,
             label: `${item.remarks ? item.remarks : item.columnName}`,
             valueFormat: 'YYYY-MM-DDTHH\\:mm\\:ss',
-            hidden: item.add_hidden,
             disabled: item.add_disabled,
             id: `insert-${item.columnName}`
           };
@@ -306,7 +308,6 @@ export const buildSingleTable = (
             maxLength: item.columnSize,
             source: sourceDict[item.join.dict],
             clearable: true,
-            hidden: item.add_hidden,
             disabled: item.add_disabled,
             id: `insert-${item.columnName}`
           };
@@ -324,7 +325,6 @@ export const buildSingleTable = (
             maxLength: item.columnSize,
             source: sourceDict[item.join.table],
             clearable: true,
-            hidden: item.add_hidden,
             disabled: item.add_disabled,
             id: `insert-${item.columnName}`,
             onEvent: {
@@ -361,11 +361,10 @@ export const buildSingleTable = (
           };
         } else {
           return {
-            type: item.primary ? 'uuid' : 'input-text',
+            type: 'input-text',
             name: `${item.columnName}`,
             label: `${item.remarks ? item.remarks : item.columnName}`,
             maxLength: item.columnSize,
-            hidden: item.add_hidden,
             disabled: item.add_disabled,
             id: `insert-${item.columnName}`
           };
@@ -443,13 +442,19 @@ export const buildSingleTable = (
     body: tableData
       .filter(item => item.edit)
       .map(item => {
-        if (isNumberJavaSqlType(item.javaSqlType)) {
+        if (item.primary) {
+          return {
+            type: 'input-text',
+            name: `${item.columnName}`,
+            hidden: true,
+            id: `update-${item.columnName}`
+          };
+        } else if (isNumberJavaSqlType(item.javaSqlType)) {
           return {
             type: 'input-number',
             name: `${item.columnName}`,
             label: `${item.remarks ? item.remarks : item.columnName}`,
             precision: item.decimalDigits,
-            hidden: item.edit_hidden,
             disabled: item.edit_disabled,
             id: `update-${item.columnName}`
           };
@@ -459,7 +464,6 @@ export const buildSingleTable = (
             name: `${item.columnName}`,
             label: `${item.remarks ? item.remarks : item.columnName}`,
             valueFormat: 'YYYY-MM-DD',
-            hidden: item.edit_hidden,
             disabled: item.edit_disabled,
             id: `update-${item.columnName}`
           };
@@ -474,7 +478,6 @@ export const buildSingleTable = (
             name: `${item.columnName}`,
             label: `${item.remarks ? item.remarks : item.columnName}`,
             valueFormat: 'YYYY-MM-DDTHH\\:mm\\:ss',
-            hidden: item.edit_hidden,
             disabled: item.edit_disabled,
             id: `update-${item.columnName}`
           };
@@ -490,7 +493,6 @@ export const buildSingleTable = (
             maxLength: item.columnSize,
             source: sourceDict[item.join.dict],
             clearable: true,
-            hidden: item.edit_hidden,
             disabled: item.edit_disabled,
             id: `update-${item.columnName}`
           };
@@ -508,7 +510,6 @@ export const buildSingleTable = (
             maxLength: item.columnSize,
             source: sourceDict[item.join.table],
             clearable: true,
-            hidden: item.edit_hidden,
             disabled: item.edit_disabled,
             id: `update-${item.columnName}`,
             onEvent: {
@@ -549,7 +550,6 @@ export const buildSingleTable = (
             name: `${item.columnName}`,
             label: `${item.remarks ? item.remarks : item.columnName}`,
             maxLength: item.columnSize,
-            hidden: item.edit_hidden,
             disabled: item.edit_disabled,
             id: `update-${item.columnName}`
           };
@@ -566,13 +566,18 @@ export const buildSingleTable = (
   const columns = tableData
     .filter(item => item.table)
     .map(item => {
-      if (isNumberJavaSqlType(item.javaSqlType)) {
+      if (item.primary){
+        let col = {
+          name: item.columnName,
+          hidden: true
+        };
+        return col;
+      }else if (isNumberJavaSqlType(item.javaSqlType)) {
         let col = {
           name: item.columnName,
           label: item.remarks ? item.remarks : item.columnName,
           sortable: true,
           align: 'right',
-          hidden: item.table_hidden,
           searchable: undefined
         };
         if (item.search) {
@@ -591,7 +596,6 @@ export const buildSingleTable = (
           label: item.remarks ? item.remarks : item.columnName,
           sortable: true,
           align: 'center',
-          hidden: item.table_hidden,
           searchable: undefined
         };
         if (item.search) {
@@ -615,7 +619,6 @@ export const buildSingleTable = (
           label: item.remarks ? item.remarks : item.columnName,
           sortable: true,
           align: 'center',
-          hidden: item.table_hidden,
           searchable: undefined
         };
         if (item.search) {
@@ -633,7 +636,6 @@ export const buildSingleTable = (
           name: item.columnName,
           label: item.remarks ? item.remarks : item.columnName,
           sortable: true,
-          hidden: item.table_hidden,
           searchable: undefined
         };
         if (

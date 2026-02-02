@@ -220,6 +220,8 @@ const ColumnRenderJoin = (props: {
       <Modal
         title="关联信息"
         open={show}
+        cancelText={'取消'}
+        okText={'确定'}
         onCancel={() => setShow(false)}
         onOk={onOk}
       >

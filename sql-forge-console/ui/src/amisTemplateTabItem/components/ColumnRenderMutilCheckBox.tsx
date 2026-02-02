@@ -7,15 +7,12 @@ const ColumnRenderMutilCheckBox = ({
   index,
   mutilCheckBoxItems = [
     'primary',
+    'uniqueIndex',
     'table',
-    'table_hidden',
     'search',
-    'check',
     'add',
-    'add_hidden',
     'add_disabled',
     'edit',
-    'edit_hidden',
     'edit_disabled'
   ],
   data,

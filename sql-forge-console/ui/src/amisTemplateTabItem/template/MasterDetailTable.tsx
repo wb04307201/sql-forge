@@ -105,6 +105,10 @@ const MasterDetailTable = forwardRef<
       setMainColumnOptions([]);
     }
     setMainColumn(undefined);
+    setMainData([])
+    setDetailTable(undefined)
+    setDetailColumn(undefined)
+    setDetailData([])
   };
 
   const onMainTableColumnChange = (value: string) => {
@@ -120,6 +124,7 @@ const MasterDetailTable = forwardRef<
       const uniqueIndex = getIndex(primaryKey, tableColumn.indexes);
       const data: DataType[] = columns.map(column => {
         const isPrimaryKey = primaryKey === column.columnName;
+        const isUniqueIndex = uniqueIndex === column.columnName;
         return {
           columnName: column.columnName,
           dataType: column.dataType,
@@ -132,32 +137,25 @@ const MasterDetailTable = forwardRef<
           tableName: mainTable,
           columnType: 'origin',
           primary: isPrimaryKey,
+          uniqueIndex: isUniqueIndex,
           table: !isSysColumn(column.columnName),
-          table_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
           search:
             !isSysColumn(column.columnName) &&
             !isPrimaryKey &&
             !isNumberJavaSqlType(column.javaSqlType),
-          check:
-            !isSysColumn(column.columnName) &&
-            uniqueIndex === column.columnName,
-          add:
-            !isSysColumn(column.columnName) &&
-            !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)),
-          add_hidden:
-            !isSysColumn(column.columnName) &&
-            !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)) &&
-            isPrimaryKey,
+          add: !isSysColumn(column.columnName),
           add_disabled: false,
           edit: !isSysColumn(column.columnName),
-          edit_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
           edit_disabled: false,
           join: undefined
         };
       });
       setMainData(data);
     } else {
-      setMainData([]);
+      setMainData([])
+      setDetailTable(undefined)
+      setDetailColumn(undefined)
+      setDetailData([])
     }
   };
 
@@ -180,7 +178,8 @@ const MasterDetailTable = forwardRef<
     } else {
       setDetailColumnOptions([]);
     }
-    setDetailColumn(undefined);
+    setDetailColumn(undefined)
+    setDetailData([])
   };
 
   const onDetailTableColumnChange = (value: string) => {
@@ -196,6 +195,7 @@ const MasterDetailTable = forwardRef<
       const uniqueIndex = getIndex(primaryKey, tableColumn.indexes, [value]);
       const data: DataType[] = columns.map(column => {
         const isPrimaryKey = primaryKey === column.columnName;
+        const isUniqueIndex = uniqueIndex === column.columnName;
         return {
           columnName: column.columnName,
           dataType: column.dataType,
@@ -208,24 +208,35 @@ const MasterDetailTable = forwardRef<
           tableName: detailTable,
           columnType: 'origin',
           primary: isPrimaryKey,
+          uniqueIndex: isUniqueIndex,
           table: !isSysColumn(column.columnName),
-          table_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
           search: column.columnName === value,
-          check:
-            !isSysColumn(column.columnName) &&
-            uniqueIndex === column.columnName,
-          add:
-            !isSysColumn(column.columnName) &&
-            !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)),
-          add_hidden:
-            !isSysColumn(column.columnName) &&
-            !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)) &&
-            isPrimaryKey,
-          add_disabled: column.columnName === value,
+          add: !isSysColumn(column.columnName),
+          add_disabled: false,
           edit: !isSysColumn(column.columnName),
-          edit_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
-          edit_disabled: column.columnName === value,
+          edit_disabled: false,
           join: undefined
+
+          // columnType: 'origin',
+          // primary: isPrimaryKey,
+          // table: !isSysColumn(column.columnName),
+          // table_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
+          // search: column.columnName === value,
+          // check:
+          //   !isSysColumn(column.columnName) &&
+          //   uniqueIndex === column.columnName,
+          // add:
+          //   !isSysColumn(column.columnName) &&
+          //   !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)),
+          // add_hidden:
+          //   !isSysColumn(column.columnName) &&
+          //   !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)) &&
+          //   isPrimaryKey,
+          // add_disabled: column.columnName === value,
+          // edit: !isSysColumn(column.columnName),
+          // edit_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
+          // edit_disabled: column.columnName === value,
+          // join: undefined
         };
       });
       setDetailData(data);
