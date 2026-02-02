@@ -144,7 +144,7 @@ export const buildSingleTable = (
             item.javaSqlType == 'TIMESTAMP_WITH_TIMEZONE'
           ) {
             return {
-              column: `${table}.${item.columnName}`,
+              column: `${item.tableName}.${item.columnName}`,
               condition: 'BETWEEN',
               value: `$\{${item.columnName} | default:undefined | split\}`
             };
@@ -723,7 +723,7 @@ export const buildSingleTable = (
         icon: 'fa fa-file-excel',
         api: {
           method: 'post',
-          url: `/sql/forge/api/json/insert/${table}`,
+          url: `/sql/forge/api/json/select/${table}`,
           data: selectData
         },
         align: 'right'
@@ -834,54 +834,68 @@ export const buildMainDetailTable = (
     }
   };
 
-  const detailCustomSelectData = {
-    '@column': detailTableData
-      .filter(item => item.isPrimaryKey || item.isTableable)
-      .map(item => {
-        if (
-          item.isTableable &&
-          item.join &&
-          item.join.joinType === 'dict' &&
-          item.join.dict
-        ) {
-          return `${item.join.dict}.${ITEM_NAME} as ${item.columnName}`;
-        } else {
-          return `${detailTable}.${item.columnName}`;
-        }
-      }),
-    '@where': [
-      {
-        column: `${detailColumn}`,
-        condition: 'EQ',
-        value: `$\{${column} | default:\"\"\}`
-      }
-    ],
-    '@join': detailTableData
-      .filter(
-        item =>
-          item.isTableable &&
-          item.join &&
-          item.join.joinType === 'dict' &&
-          item.join.dict
-      )
-      .map(item => {
-        return {
-          type: 'LEFT_OUTER_JOIN',
-          joinTable: `${SYS_DICT_ITEM} ${item.join.dict}`,
-          on: `${table}.${item.columnName} = ${item.join.dict}.${ITEM_CODE} and ${item.join.dict}.${DICT_CODE} = '${item.join.dict}'`
-        };
-      })
-  };
-
   const detailCrudTable = buildSingleTable(
     detailComponentId,
     detailTable,
-    detailTableData,
-    detailCustomSelectData,
-    [detailColumn],
-    [detailColumn],
-    [detailColumn]
+    detailTableData
   );
+
+  const fixDetailCrudTable = {
+    ...detailCrudTable,
+    api: {
+      ...detailCrudTable.api,
+      data: {
+        ...detailCrudTable.api.data,
+        '@where': detailCrudTable.api.data['@where'].map(item => {
+          if (item.column === `${detailTable}.${detailColumn}`) {
+            return {
+              ...item,
+              condition: 'EQ',
+              value: `$\{${column} | default:\"\"\}`
+            };
+          } else {
+            return item;
+          }
+        })
+      }
+    },
+    headerToolbar: detailCrudTable.headerToolbar.map(item => {
+      if (item?.type === 'export-excel') {
+        return {
+          ...item,
+          api: {
+            ...item.api,
+            data: {
+              ...item.api.data,
+              '@where': detailCrudTable.api.data['@where'].map(item => {
+                if (item.column === `${detailTable}.${detailColumn}`) {
+                  return {
+                    ...item,
+                    condition: 'EQ',
+                    value: `$\{${column} | default:\"\"\}`
+                  };
+                } else {
+                  return item;
+                }
+              })
+            }
+          }
+        };
+      } else {
+        return item;
+      }
+    }),
+    columns: detailCrudTable.columns.map(item =>{
+      if(item?.name === detailColumn){
+        return {
+          ...item,
+          searchable: undefined
+        };
+      }else{
+        return item;
+      }
+    })
+  };
 
   return {
     type: 'flex',
@@ -904,7 +918,7 @@ export const buildMainDetailTable = (
           height: '100%'
         },
         type: 'wrapper',
-        body: detailCrudTable
+        body: fixDetailCrudTable
       }
     ]
   };

@@ -112,7 +112,7 @@ const MasterDetailTable = forwardRef<
     const tableColumn: TableColumn | undefined = getTable(
       database,
       schema,
-      value
+      mainTable
     );
     if (tableColumn) {
       const columns: ColumnInfo[] = tableColumn.columns;
@@ -129,17 +129,30 @@ const MasterDetailTable = forwardRef<
           decimalDigits: column.decimalDigits,
           remarks: column.remarks,
           key: uuidv4(),
-          isPrimaryKey: isPrimaryKey,
-          isTableable: !isSysColumn(column.columnName) && !isPrimaryKey,
-          isSearchable:
+          tableName: mainTable,
+          columnType: 'origin',
+          primary: isPrimaryKey,
+          table: !isSysColumn(column.columnName),
+          table_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
+          search:
             !isSysColumn(column.columnName) &&
             !isPrimaryKey &&
             !isNumberJavaSqlType(column.javaSqlType),
-          isShowCheck:
+          check:
             !isSysColumn(column.columnName) &&
             uniqueIndex === column.columnName,
-          isInsertable: !isSysColumn(column.columnName) && !isPrimaryKey,
-          isUpdatable: !isSysColumn(column.columnName) && !isPrimaryKey
+          add:
+            !isSysColumn(column.columnName) &&
+            !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)),
+          add_hidden:
+            !isSysColumn(column.columnName) &&
+            !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)) &&
+            isPrimaryKey,
+          add_disabled: false,
+          edit: !isSysColumn(column.columnName),
+          edit_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
+          edit_disabled: false,
+          join: undefined
         };
       });
       setMainData(data);
@@ -175,7 +188,7 @@ const MasterDetailTable = forwardRef<
     const tableColumn: TableColumn | undefined = getTable(
       database,
       schema,
-      value
+      detailTable
     );
     if (tableColumn) {
       const columns: ColumnInfo[] = tableColumn.columns;
@@ -192,14 +205,27 @@ const MasterDetailTable = forwardRef<
           decimalDigits: column.decimalDigits,
           remarks: column.remarks,
           key: uuidv4(),
-          isPrimaryKey: isPrimaryKey,
-          isTableable: !isSysColumn(column.columnName) && !isPrimaryKey,
-          isSearchable: false,
-          isShowCheck:
+          tableName: detailTable,
+          columnType: 'origin',
+          primary: isPrimaryKey,
+          table: !isSysColumn(column.columnName),
+          table_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
+          search: column.columnName === value,
+          check:
             !isSysColumn(column.columnName) &&
             uniqueIndex === column.columnName,
-          isInsertable: !isSysColumn(column.columnName) && !isPrimaryKey,
-          isUpdatable: !isSysColumn(column.columnName) && !isPrimaryKey
+          add:
+            !isSysColumn(column.columnName) &&
+            !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)),
+          add_hidden:
+            !isSysColumn(column.columnName) &&
+            !(isPrimaryKey && isNumberJavaSqlType(column.javaSqlType)) &&
+            isPrimaryKey,
+          add_disabled: column.columnName === value,
+          edit: !isSysColumn(column.columnName),
+          edit_hidden: !isSysColumn(column.columnName) && isPrimaryKey,
+          edit_disabled: column.columnName === value,
+          join: undefined
         };
       });
       setDetailData(data);
@@ -215,14 +241,14 @@ const MasterDetailTable = forwardRef<
     }
 
     const primaryKey: DataType | undefined = mainData.find(
-      item => item.isPrimaryKey
+      item => item.primary
     );
     if (!primaryKey) {
       Modal.error({title: '错误', content: '主表需要一个主键'});
       return;
     }
     const detailTablePrimaryKey: DataType | undefined = detailData.find(
-      item => item.isPrimaryKey
+      item => item.primary
     );
     if (!detailTablePrimaryKey) {
       Modal.error({title: '错误', content: '子表需要一个主键'});
@@ -325,7 +351,6 @@ const MasterDetailTable = forwardRef<
           <CrudTable
             dataSource={detailData}
             setDataSource={setDetailData}
-            mutilCheckBoxItems={['主', '表', '选', '新', '改']}
             scroll={{y: 'calc(50vh - 165px)'}}
           />
         </Col>
