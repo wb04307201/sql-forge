@@ -34,7 +34,7 @@
 <dependency>
     <groupId>com.gitee.wb04307201.sql-forge</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.5.4</version>
+    <version>1.5.5</version>
 </dependency>
 ```
 
@@ -696,12 +696,9 @@ content-type: application/json
 - Json API调试
 - Template API模板维护，调试
 - Calcite API数据源维护，sql调试，模板管理，调试
-![gif1-5.gif](gif1-5.gif)
-- Amis模板管理，快速创建模板，可视化编辑，预览
-  - 模板化编辑
-    ![gif6-8.gif](gif6-8.gif)
-  - 可视化编辑
-    ![gif9-11.gif](gif9-11.gif)
+  ![gif1-5.gif](gif1-5.gif)
+- Amis模板管理，模板模板化编辑，可视化编辑
+  ![gif6-10.gif](gif6-10.gif)
 
 #### 配置
 可通过`sql.forge.console.enabled=false`关闭**控制台**

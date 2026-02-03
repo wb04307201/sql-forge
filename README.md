@@ -1,10 +1,10 @@
-# SQL Forge
+# SQL Forge - SQL Workshop
 
 <div align="right">
-  English | <a href="README.zh-CN.md">中文</a>
+  <a href="README.md">English</a> | 中文
 </div>
 
-> SQL Forge is more than just an ORM framework, it provides the following features:
+> SQL Forge is not just an ORM framework, it provides the following features:
 - **Entity**: Build `SQL` based on entity objects
 - **Json API**: Call interface to describe database operations in `JSON` format
 - **Template API**: `SQL` template engine
@@ -19,7 +19,7 @@
 ![MIT](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
 
 ## Usage
-### Add Dependencies
+### Introduce Dependencies
 Add JitPack repository
 ```xml
 <repositories>
@@ -106,7 +106,7 @@ user = entityService.run(Entity.save(user));
 int count = entityService.run(Entity.delete(user));
 ```
 
-#### Query Builder Instructions
+#### Query Construction Instructions
 
 ##### 1. Column Selection
 - column(SFunction<T, ?> column) - Select a single column
@@ -138,10 +138,10 @@ int count = entityService.run(Entity.delete(user));
 ##### 4. Pagination
 - page(Integer pageIndex, Integer pageSize) - Set pagination parameters
 
-##### 5. Distinct
+##### 5. Deduplication
 - distinct(Boolean distinct) - Set whether to remove duplicates
 
-#### Object Save Operation Instructions
+#### Object Save Operation Construction Instructions
 
 Determine primary key fields based on the `@Id` annotation; throw `IllegalArgumentException` if no primary key field exists
 - **Insert Condition**: Execute insert operation when primary key value is `null`
@@ -152,13 +152,13 @@ Determine primary key fields based on the `@Id` annotation; throw `IllegalArgume
 
 
 ### Json API Module
-Allows frontends to operate databases without writing backend code, describing needed data structures and operations in `JSON` format, automatically generating corresponding `SQL` for execution and returning results.
+Enables frontends to operate databases without writing backend code, describing needed data structures and operations in `JSON` format, automatically generating corresponding `SQL` for execution and returning results.
 
 - **Request Path**: `sql/forge/api/json/{method}/{tableName}`
 - **Request Method**: `POST`
 - **Content Type**: `application/json`
 - **Path Parameters**:
-  - `{method}`: Operation method type (delete, insert, select, update)
+  - `{method}`: Operation method type(delete、insert、select、update)
   - `{tableName}`: Database table name                             |
 
 #### delete method
@@ -174,12 +174,7 @@ Allows frontends to operate databases without writing backend code, describing n
     }
   ],
   "@with_select": {
-    "columns": ["field_name"],
-    "wheres": [...],
-    "page": {
-      "pageIndex": 0,
-      "pageSize": 10
-    }
+    // Query json after deletion
   }
 }
 ```
@@ -187,7 +182,7 @@ Allows frontends to operate databases without writing backend code, describing n
 #### Parameter Description
 - `@where`: Array of deletion conditions, each containing:
   - column: Field name to match
-  - condition: Condition type (EQ, NOT_EQ, GT, LT, GTEQ, LTEQ, LIKE, NOT_LIKE, LEFT_LIKE, RIGHT_LIKE, BETWEEN, NOT_BETWEEN, IN, NOT_IN, IS_NULL, IS_NOT_NULL)
+  - condition: Condition type (EQ、NOT_EQ、GT、LT、GTEQ、LTEQ、LIKE、NOT_LIKE、LEFT_LIKE、RIGHT_LIKE、BETWEEN、NOT_BETWEEN、IN、NOT_IN、IS_NULL、IS_NOT_NULL)
   - value: Matching value
 - `@with_select`: Optional query conditions to execute a query after deletion
 
@@ -201,50 +196,14 @@ Allows frontends to operate databases without writing backend code, describing n
     "field_name2": "value2"
   },
   "@with_select": {
-    "columns": ["field_name"],
-    "wheres": [...],
-    "page": {
-      "pageIndex": 0,
-      "pageSize": 10
-    }
+    // Query json after insertion
   }
 }
 ```
 
-
 #### Parameter Description
 - `@set`: Key-value pairs of fields and values to insert, at least one field required
 - `@with_select`: Optional query conditions to execute a query after insertion
-
-#### select method
-
-#### Request Format
-```json
-{
-  "@column": ["field_name1", "field_name2"],
-  "@where": [
-    {
-      "column": "field_name",
-      "condition": "condition_type",
-      "value": "value"
-    }
-  ],
-  "@page": {
-    "pageIndex": 0,
-    "pageSize": 10
-  },
-  "@join": [
-    {
-      "type": "JOIN type",
-      "joinTable": "joined_table_name",
-      "on": "join_condition"
-    }
-  ],
-  "@order": ["field_name ASC", "field_name DESC"],
-  "@group": ["field_name"],
-  "@distinct": false
-}
-```
 
 #### select method
 
@@ -278,7 +237,7 @@ Allows frontends to operate databases without writing backend code, describing n
 - `@join`: Array of join query conditions
 - `@order`: Array of sort fields
 - `@group`: Array of group fields
-- `@distinct`: Whether to remove duplicates
+- `@distinct`: Whether to deduplicate
 
 #### selectPage method
 
@@ -317,7 +276,7 @@ Allows frontends to operate databases without writing backend code, describing n
   - pageSize: Page size
 - `@join`: Array of join query conditions
 - `@order`: Array of sort fields
-- `@distinct`: Whether to remove duplicates
+- `@distinct`: Whether to deduplicate
 
 #### update method
 
@@ -336,12 +295,7 @@ Allows frontends to operate databases without writing backend code, describing n
     }
   ],
   "@with_select": {
-    "columns": ["field_name"],
-    "wheres": [...],
-    "page": {
-      "pageIndex": 0,
-      "pageSize": 10
-    }
+    // Query json after update
   }
 }
 ```
@@ -554,7 +508,7 @@ public class Argon2InsertExecute implements IExecute<Insert> {
 ```
 
 #### Configuration
-Disable the **Json API Module** with `sql.forge.api.json.enabled=false`
+Can disable the **Json API Module** with `sql.forge.api.json.enabled=false`
 
 ### Template API Module
 Provides `SQL` template engine functionality, supporting conditional judgment, loops, and other template syntax, dynamically generating `SQL` based on parameters for execution and returning results.
@@ -611,10 +565,10 @@ Response:
 ```
 
 #### Configuration
-Disable the **Template API Module** with `sql.forge.api.template.enabled=false`
+Can disable the **Template API Module** with `sql.forge.api.template.enabled=false`
 
 #### Persisting Templates
-Implement your own template service by extending [IApiTemplateStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/IApiTemplateStorage.java).
+Inherit [IApiTemplateStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/IApiTemplateStorage.java) to implement your own template service
 
 ### Calcite API Module
 `SQL` template engine implemented based on `Apache Calcite`, used for executing cross-database federated queries.
@@ -691,13 +645,13 @@ Response:
 ```
 
 #### Configuration
-Disable the **Calcite API Module** with `sql.forge.api.calcite.enabled=false`
+Can disable the **Calcite API Module** with `sql.forge.api.calcite.enabled=false`
 
 #### Persisting Templates
-Implement your own template service by extending [IApiCalciteStorage.java](sql-forge-calcite/src/main/java/cn/wubo/sql/forge/IApiCalciteStorage.java).
+Inherit [IApiCalciteStorage.java](sql-forge-calcite/src/main/java/cn/wubo/sql/forge/IApiCalciteStorage.java) to implement your own template service
 
 ### Amis Module
-Web pages built quickly using [Amis](https://aisuda.bce.baidu.com/amis/en-US/docs/index) combined with **Json API** module, **Template API** module, and **Calcite API** module.
+Web pages built quickly using [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) combined with **Json API** module, **Template API** module, and **Calcite API** module.
 
 #### Template Management Interfaces
 
@@ -730,10 +684,10 @@ Open web page:
 ![img.png](img.png)
 
 #### Configuration
-Disable **Amis** with `sql.forge.amis.enabled=false`
+Can disable **Amis** with `sql.forge.amis.enabled=false`
 
 #### Persisting Templates
-Implement your own template service by extending [IAmisStorage.java](sql-forge-amis/src/main/java/cn/wubo/sql/forge/IAmisStorage.java).
+Inherit [IAmisStorage.java](sql-forge-amis/src/main/java/cn/wubo/sql/forge/IAmisStorage.java) to implement your own template service
 
 ### Console
 Provides a simple web interface for debugging and template management:
@@ -741,12 +695,9 @@ Provides a simple web interface for debugging and template management:
 - Json API debugging
 - Template API template maintenance, debugging
 - Calcite API data source maintenance, SQL debugging, template management, debugging
-![gif1-5.gif](gif1-5.gif)
-- Amis template management, quick template creation, visual editing, preview
-  - Template editing
-    ![gif6-8.gif](gif6-8.gif)
-  - Visual editing
-    ![gif9-11.gif](gif9-11.gif)
+  ![gif1-5.gif](gif1-5.gif)
+- Amis template management, template templated editing, visual editing
+  ![gif6-10.gif](gif6-10.gif)
 
 #### Configuration
-Disable **Console** with `sql.forge.console.enabled=false`
+Can disable **Console** with `sql.forge.console.enabled=false`
