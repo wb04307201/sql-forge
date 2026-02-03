@@ -242,7 +242,10 @@ export const buildSingleTable = (
         '@set': Object.fromEntries(
           tableData
             .filter(item => item.add && item.columnType === 'origin')
-            .map(item => [item.columnName, `$\{${item.columnName}\}`])
+            .map(item => [
+              item.columnName,
+              `$\{${item.columnName} | default:undefined\}`
+            ])
         )
       }
     },
@@ -259,12 +262,16 @@ export const buildSingleTable = (
     body: tableData
       .filter(item => item.add)
       .map(item => {
-        if (item.primary){
-          return {
-            type: 'uuid',
-            id: `insert-${item.columnName}`
-          };
-        }else if (isNumberJavaSqlType(item.javaSqlType)) {
+        if (item.primary) {
+          if (isNumberJavaSqlType(item.javaSqlType)) {
+            return;
+          } else {
+            return {
+              type: 'uuid',
+              id: `insert-${item.columnName}`
+            };
+          }
+        } else if (isNumberJavaSqlType(item.javaSqlType)) {
           return {
             type: 'input-number',
             name: `${item.columnName}`,
@@ -557,7 +564,7 @@ export const buildSingleTable = (
       })
   };
 
-  const showCheckColumns = tableData.filter(item => item.check) || [];
+  const showCheckColumns = tableData.filter(item => item.uniqueIndex) || [];
   const labelTpl =
     showCheckColumns.length > 0
       ? `$\{${showCheckColumns.map(item => item.columnName).join(' - ')}\}`
@@ -566,13 +573,13 @@ export const buildSingleTable = (
   const columns = tableData
     .filter(item => item.table)
     .map(item => {
-      if (item.primary){
+      if (item.primary) {
         let col = {
           name: item.columnName,
           hidden: true
         };
         return col;
-      }else if (isNumberJavaSqlType(item.javaSqlType)) {
+      } else if (isNumberJavaSqlType(item.javaSqlType)) {
         let col = {
           name: item.columnName,
           label: item.remarks ? item.remarks : item.columnName,
@@ -887,13 +894,13 @@ export const buildMainDetailTable = (
         return item;
       }
     }),
-    columns: detailCrudTable.columns.map(item =>{
-      if(item?.name === detailColumn){
+    columns: detailCrudTable.columns.map(item => {
+      if (item?.name === detailColumn) {
         return {
           ...item,
           searchable: undefined
         };
-      }else{
+      } else {
         return item;
       }
     })
