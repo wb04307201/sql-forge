@@ -10,23 +10,21 @@ import type {
   ColumnInfo,
   DatabaseInfo,
   DataType,
-  JoinInfo,
   OptionType,
-  SchemaTableTypeTable,
-  TableColumn,
-  TableTypeTable
+  TableColumn
 } from '../../type.tsx';
 import apiClient from '../../apiClient.tsx';
-import {Col, Modal, Row, Select, Table, type TableProps} from 'antd';
+import {Col, Form, Modal, Row, Select} from 'antd';
 import {
   buildMainDetailTable,
   getIndex,
   getPrimaryKey,
-  isNumberJavaSqlType
+  isNumberJavaSqlType,
+  isSysColumn
 } from '../utils/CrudBuild';
-import ColumnRenderMutilCheckBox from '../components/ColumnRenderMutilCheckBox';
-import ColumnRenderJoin from '../components/ColumnRenderJoin';
-import ColumnRenderInput from '../components/ColumnRenderInput';
+import CrudTable from '../components/CrudTable';
+import {v4 as uuidv4} from 'uuid';
+import {getSchemas, getTable, getTables} from '../../utils/database';
 
 const MasterDetailTable = forwardRef<
   AmisTemplateCrudMethods,
@@ -40,135 +38,6 @@ const MasterDetailTable = forwardRef<
   const [tableOptions, setTableOptions] = useState<OptionType[]>([]);
   const [mainData, setMainData] = useState<DataType[]>([]);
   const [detailData, setDetailData] = useState<DataType[]>([]);
-  const mainColumns: TableProps<DataType>['columns'] = [
-    {
-      title: '列名',
-      dataIndex: 'columnName'
-    },
-    {
-      title: '类型',
-      dataIndex: 'typeName'
-    },
-    {
-      title: '长度',
-      dataIndex: 'columnSize'
-    },
-    {
-      title: '精度',
-      dataIndex: 'decimalDigits'
-    },
-    {
-      title: '备注',
-      dataIndex: 'remarks',
-      render: (value, _, index: number) => {
-        return (
-          <ColumnRenderInput
-            value={value}
-            index={index}
-            dataIndex={'remarks'}
-            data={mainData}
-            setData={setMainData}
-          />
-        );
-      }
-    },
-    {
-      title: '主 表 查 选 新 改',
-      dataIndex: 'isPrimaryKey',
-      render: (_, row: DataType, index: number) => {
-        return (
-          <ColumnRenderMutilCheckBox
-            row={row}
-            index={index}
-            data={mainData}
-            setData={setMainData}
-          />
-        );
-      }
-    },
-    {
-      title: '关联',
-      dataIndex: 'join',
-      render: (value: JoinInfo, _, index: number) => {
-        return (
-          <ColumnRenderJoin
-            value={value}
-            index={index}
-            data={mainData}
-            setData={setMainData}
-          />
-        );
-      }
-    }
-  ];
-  const detailColumns: TableProps<DataType>['columns'] = [
-    {
-      title: '列名',
-      dataIndex: 'columnName'
-    },
-    {
-      title: '类型',
-      dataIndex: 'typeName'
-    },
-    {
-      title: '长度',
-      dataIndex: 'columnSize'
-    },
-    {
-      title: '精度',
-      dataIndex: 'decimalDigits'
-    },
-    {
-      title: '备注',
-      dataIndex: 'remarks',
-      render: (value, _, index: number) => {
-        return (
-          <ColumnRenderInput
-            value={value}
-            index={index}
-            dataIndex={'remarks'}
-            data={detailData}
-            setData={setDetailData}
-          />
-        );
-      }
-    },
-    {
-      title: '主 表 选 新 改',
-      dataIndex: 'isPrimaryKey',
-      render: (_, row: DataType, index: number) => {
-        return (
-          <ColumnRenderMutilCheckBox
-            row={row}
-            index={index}
-            data={detailData}
-            setData={setDetailData}
-            show={[
-              'isPrimaryKey',
-              'isTableable',
-              'isShowCheck',
-              'isInsertable',
-              'isUpdatable'
-            ]}
-          />
-        );
-      }
-    },
-    {
-      title: '关联',
-      dataIndex: 'join',
-      render: (value: JoinInfo, _, index: number) => {
-        return (
-          <ColumnRenderJoin
-            value={value}
-            index={index}
-            data={detailData}
-            setData={setDetailData}
-          />
-        );
-      }
-    }
-  ];
   const [mainColumn, setMainColumn] = useState<string>();
   const [detailColumn, setDetailColumn] = useState<string>();
   const [mainColumnOptions, setMainColumnOptions] = useState<OptionType[]>([]);
@@ -183,7 +52,7 @@ const MasterDetailTable = forwardRef<
     );
     setDatabase(database);
     setSchemaOptions(
-      database?.schemaTableTypeTables.map(item => ({
+      getSchemas(database).map(item => ({
         value: item.schema.tableSchema,
         label: item.schema.tableSchema
       }))
@@ -209,32 +78,20 @@ const MasterDetailTable = forwardRef<
   const onSchemaChange = (value: string) => {
     setSchema(value);
     setTableOptions(
-      database?.schemaTableTypeTables
-        .find((item: SchemaTableTypeTable) => item.schema.tableSchema === value)
-        ?.tableTypeTables.find(
-          (item: TableTypeTable) =>
-            item.tableType === 'TABLE' ||
-            item.tableType === 'BASE TABLE' ||
-            item.tableType === 'table'
-        )
-        ?.tables.map((item: TableColumn) => ({
-          value: item.table.tableName,
-          label: item.table.tableName
-        })) || []
+      getTables(database, value).map((item: TableColumn) => ({
+        value: item.table.tableName,
+        label: item.table.tableName
+      }))
     );
   };
 
   const onMainTableChange = (value: string) => {
     setMainTable(value);
-    const tableColumn: TableColumn | undefined = database?.schemaTableTypeTables
-      .find((item: SchemaTableTypeTable) => item.schema.tableSchema === schema)
-      ?.tableTypeTables.find(
-        (item: TableTypeTable) =>
-          item.tableType === 'TABLE' ||
-          item.tableType === 'BASE TABLE' ||
-          item.tableType === 'table'
-      )
-      ?.tables.find((item: TableColumn) => item.table.tableName === value);
+    const tableColumn: TableColumn | undefined = getTable(
+      database,
+      schema,
+      value
+    );
     if (tableColumn) {
       setMainColumnOptions(
         tableColumn.columns.map((item: ColumnInfo) => {
@@ -248,26 +105,26 @@ const MasterDetailTable = forwardRef<
       setMainColumnOptions([]);
     }
     setMainColumn(undefined);
+    setMainData([])
+    setDetailTable(undefined)
+    setDetailColumn(undefined)
+    setDetailData([])
   };
 
   const onMainTableColumnChange = (value: string) => {
     setMainColumn(value);
-    const tableColumn: TableColumn | undefined = database?.schemaTableTypeTables
-      .find((item: SchemaTableTypeTable) => item.schema.tableSchema === schema)
-      ?.tableTypeTables.find(
-        (item: TableTypeTable) =>
-          item.tableType === 'TABLE' ||
-          item.tableType === 'BASE TABLE' ||
-          item.tableType === 'table'
-      )
-      ?.tables.find((item: TableColumn) => item.table.tableName === mainTable);
-
+    const tableColumn: TableColumn | undefined = getTable(
+      database,
+      schema,
+      mainTable
+    );
     if (tableColumn) {
       const columns: ColumnInfo[] = tableColumn.columns;
       const primaryKey = getPrimaryKey(tableColumn.primaryKeys);
       const uniqueIndex = getIndex(primaryKey, tableColumn.indexes);
       const data: DataType[] = columns.map(column => {
         const isPrimaryKey = primaryKey === column.columnName;
+        const isUniqueIndex = uniqueIndex === column.columnName;
         return {
           columnName: column.columnName,
           dataType: column.dataType,
@@ -276,33 +133,39 @@ const MasterDetailTable = forwardRef<
           columnSize: column.columnSize,
           decimalDigits: column.decimalDigits,
           remarks: column.remarks,
-          isPrimaryKey: isPrimaryKey,
-          isTableable: !isPrimaryKey,
-          isSearchable:
-            !isPrimaryKey && !isNumberJavaSqlType(column.javaSqlType),
-          isShowCheck: uniqueIndex === column.columnName,
-          isInsertable: !isPrimaryKey,
-          isUpdatable: !isPrimaryKey
+          key: uuidv4(),
+          tableName: mainTable,
+          columnType: 'origin',
+          primary: isPrimaryKey,
+          uniqueIndex: isUniqueIndex,
+          table: !isSysColumn(column.columnName),
+          search:
+            !isSysColumn(column.columnName) &&
+            !isPrimaryKey &&
+            !isNumberJavaSqlType(column.javaSqlType),
+          add: !isSysColumn(column.columnName),
+          add_disabled: false,
+          edit: !isSysColumn(column.columnName),
+          edit_disabled: false,
+          join: undefined
         };
       });
       setMainData(data);
     } else {
-      setMainData([]);
+      setMainData([])
+      setDetailTable(undefined)
+      setDetailColumn(undefined)
+      setDetailData([])
     }
   };
 
   const onDetailTableChange = (value: string) => {
     setDetailTable(value);
-    const tableColumn: TableColumn | undefined = database?.schemaTableTypeTables
-      .find((item: SchemaTableTypeTable) => item.schema.tableSchema === schema)
-      ?.tableTypeTables.find(
-        (item: TableTypeTable) =>
-          item.tableType === 'TABLE' ||
-          item.tableType === 'BASE TABLE' ||
-          item.tableType === 'table'
-      )
-      ?.tables.find((item: TableColumn) => item.table.tableName === value);
-
+    const tableColumn: TableColumn | undefined = getTable(
+      database,
+      schema,
+      value
+    );
     if (tableColumn) {
       setDetailColumnOptions(
         tableColumn.columns.map((item: ColumnInfo) => {
@@ -315,29 +178,24 @@ const MasterDetailTable = forwardRef<
     } else {
       setDetailColumnOptions([]);
     }
-    setDetailColumn(undefined);
+    setDetailColumn(undefined)
+    setDetailData([])
   };
 
   const onDetailTableColumnChange = (value: string) => {
     setDetailColumn(value);
-    const tableColumn: TableColumn | undefined = database?.schemaTableTypeTables
-      .find((item: SchemaTableTypeTable) => item.schema.tableSchema === schema)
-      ?.tableTypeTables.find(
-        (item: TableTypeTable) =>
-          item.tableType === 'TABLE' ||
-          item.tableType === 'BASE TABLE' ||
-          item.tableType === 'table'
-      )
-      ?.tables.find(
-        (item: TableColumn) => item.table.tableName === detailTable
-      );
-
+    const tableColumn: TableColumn | undefined = getTable(
+      database,
+      schema,
+      detailTable
+    );
     if (tableColumn) {
       const columns: ColumnInfo[] = tableColumn.columns;
       const primaryKey = getPrimaryKey(tableColumn.primaryKeys);
       const uniqueIndex = getIndex(primaryKey, tableColumn.indexes, [value]);
       const data: DataType[] = columns.map(column => {
         const isPrimaryKey = primaryKey === column.columnName;
+        const isUniqueIndex = uniqueIndex === column.columnName;
         return {
           columnName: column.columnName,
           dataType: column.dataType,
@@ -346,12 +204,18 @@ const MasterDetailTable = forwardRef<
           columnSize: column.columnSize,
           decimalDigits: column.decimalDigits,
           remarks: column.remarks,
-          isPrimaryKey: isPrimaryKey,
-          isTableable: !isPrimaryKey,
-          isSearchable: false,
-          isShowCheck: uniqueIndex === column.columnName,
-          isInsertable: !isPrimaryKey,
-          isUpdatable: !isPrimaryKey
+          key: uuidv4(),
+          tableName: detailTable,
+          columnType: 'origin',
+          primary: isPrimaryKey,
+          uniqueIndex: isUniqueIndex,
+          table: !isSysColumn(column.columnName),
+          search: column.columnName === value,
+          add: !isSysColumn(column.columnName),
+          add_disabled: column.columnName === value,
+          edit: !isSysColumn(column.columnName),
+          edit_disabled: column.columnName === value,
+          join: undefined
         };
       });
       setDetailData(data);
@@ -367,14 +231,14 @@ const MasterDetailTable = forwardRef<
     }
 
     const primaryKey: DataType | undefined = mainData.find(
-      item => item.isPrimaryKey
+      item => item.primary
     );
     if (!primaryKey) {
       Modal.error({title: '错误', content: '主表需要一个主键'});
       return;
     }
     const detailTablePrimaryKey: DataType | undefined = detailData.find(
-      item => item.isPrimaryKey
+      item => item.primary
     );
     if (!detailTablePrimaryKey) {
       Modal.error({title: '错误', content: '子表需要一个主键'});
@@ -409,56 +273,74 @@ const MasterDetailTable = forwardRef<
 
   return (
     <>
-      <Row style={{height: '33px'}}>
-        <Col span={24}>
-          <Select
-            placeholder="请选择schema"
-            value={schema}
-            onChange={onSchemaChange}
-            options={schemaOptions}
-          />
-          <Select
-            placeholder="请选择主表"
-            value={mainTable}
-            onChange={onMainTableChange}
-            options={tableOptions}
-          />
-          <Select
-            placeholder="请选择关联主列"
-            value={mainColumn}
-            onChange={onMainTableColumnChange}
-            options={mainColumnOptions}
-          />
-          <Select
-            placeholder="请选择子表"
-            value={detailTable}
-            onChange={onDetailTableChange}
-            options={tableOptions}
-          />
-          <Select
-            placeholder="请选择关联子列"
-            value={detailColumn}
-            onChange={onDetailTableColumnChange}
-            options={detailColumnOptions}
-          />
-        </Col>
-      </Row>
+      <Form>
+        <Row style={{height: '33px'}}>
+          <Col span={4}>
+            <Form.Item>
+              <Select
+                placeholder="请选择schema"
+                value={schema}
+                onChange={onSchemaChange}
+                options={schemaOptions}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={5}>
+            <Form.Item>
+              <Select
+                placeholder="请选择主表"
+                value={mainTable}
+                onChange={onMainTableChange}
+                options={tableOptions}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={5}>
+            <Form.Item>
+              <Select
+                placeholder="请选择关联主列"
+                value={mainColumn}
+                onChange={onMainTableColumnChange}
+                options={mainColumnOptions}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={5}>
+            <Form.Item>
+              <Select
+                placeholder="请选择子表"
+                value={detailTable}
+                onChange={onDetailTableChange}
+                options={tableOptions}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={5}>
+            <Form.Item>
+              <Select
+                placeholder="请选择关联子列"
+                value={detailColumn}
+                onChange={onDetailTableColumnChange}
+                options={detailColumnOptions}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+      </Form>
       <Row style={{height: 'calc(50% - 50px)'}}>
         <Col span={24}>
-          <Table
-            columns={mainColumns}
+          <CrudTable
             dataSource={mainData}
-            pagination={false}
+            setDataSource={setMainData}
             scroll={{y: 'calc(50vh - 165px)'}}
           />
         </Col>
       </Row>
       <Row style={{height: 'calc(50% - 50px)'}}>
         <Col span={24}>
-          <Table
-            columns={detailColumns}
+          <CrudTable
             dataSource={detailData}
-            pagination={false}
+            setDataSource={setDetailData}
             scroll={{y: 'calc(50vh - 165px)'}}
           />
         </Col>

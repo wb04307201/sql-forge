@@ -1,89 +1,44 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Checkbox} from 'antd';
-import {DataType} from '../../type';
+import {checkBoxItems, checkBoxItemsKey, DataType} from '../../type';
 
 const ColumnRenderMutilCheckBox = ({
   row,
   index,
-  show = [
-    'isPrimaryKey',
-    'isTableable',
-    'isSearchable',
-    'isShowCheck',
-    'isInsertable',
-    'isUpdatable'
+  mutilCheckBoxItems = [
+    'primary',
+    'uniqueIndex',
+    'table',
+    'search',
+    'add',
+    'add_disabled',
+    'edit',
+    'edit_disabled'
   ],
   data,
   setData
 }: {
   row: DataType;
   index: number;
-  show: string[];
+  mutilCheckBoxItems?: checkBoxItemsKey[];
   data: DataType[];
   setData: (data: DataType[]) => void;
 }) => {
   return (
     <div style={{display: 'flex', alignItems: 'center', gap: '2px'}}>
-      {show.some(item => item === 'isPrimaryKey') && (
-        <Checkbox
-          checked={row.isPrimaryKey}
-          onChange={e => {
-            const newData = [...data];
-            newData[index].isPrimaryKey = e.target.checked;
-            setData(newData);
-          }}
-        />
-      )}
-      {show.some(item => item === 'isTableable') && (
-        <Checkbox
-          checked={row.isTableable}
-          onChange={e => {
-            const newData = [...data];
-            newData[index].isTableable = e.target.checked;
-            setData(newData);
-          }}
-        />
-      )}
-      {show.some(item => item === 'isSearchable') && (
-        <Checkbox
-          checked={row.isSearchable}
-          onChange={e => {
-            const newData = [...data];
-            newData[index].isSearchable = e.target.checked;
-            setData(newData);
-          }}
-        />
-      )}
-      {show.some(item => item === 'isShowCheck') && (
-        <Checkbox
-          checked={row.isShowCheck}
-          onChange={e => {
-            const newData = [...data];
-            newData[index].isShowCheck = e.target.checked;
-            setData(newData);
-          }}
-        />
-      )}
-      {show.some(item => item === 'isInsertable') && (
-        <Checkbox
-          checked={row.isInsertable}
-          onChange={e => {
-            const newData = [...data];
-            newData[index].isInsertable = e.target.checked;
-            setData(newData);
-          }}
-        />
-      )}
-      {show.some(item => item === 'isUpdatable') && (
-        <Checkbox
-          checked={row.isUpdatable}
-          onChange={e => {
-            const newData = [...data];
-            newData[index].isUpdatable = e.target.checked;
-            setData(newData);
-          }}
-        />
-      )}
+      {checkBoxItems.map(item => {
+        return (
+          <Checkbox
+            checked={row[item.key]}
+            onChange={e => {
+              const newData = [...data];
+              newData[index][item.key] = e.target.checked;
+              setData(newData);
+            }}
+            disabled={!mutilCheckBoxItems.some(e => e === item.key)}
+          />
+        );
+      })}
     </div>
   );
 };

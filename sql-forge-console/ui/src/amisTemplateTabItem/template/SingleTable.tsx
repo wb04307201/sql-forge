@@ -10,23 +10,21 @@ import type {
   ColumnInfo,
   DatabaseInfo,
   DataType,
-  JoinInfo,
   OptionType,
-  SchemaTableTypeTable,
-  TableColumn,
-  TableTypeTable
+  TableColumn
 } from '../../type.tsx';
 import apiClient from '../../apiClient.tsx';
-import {Col, Modal, Row, Select, Table, type TableProps} from 'antd';
+import {Col, Form, Modal, Row, Select} from 'antd';
 import {
   buildSingleTable,
   getIndex,
   getPrimaryKey,
-  isNumberJavaSqlType
+  isNumberJavaSqlType,
+  isSysColumn
 } from '../utils/CrudBuild';
-import ColumnRenderMutilCheckBox from '../components/ColumnRenderMutilCheckBox';
-import ColumnRenderJoin from '../components/ColumnRenderJoin';
-import ColumnRenderInput from '../components/ColumnRenderInput';
+import CrudTable from '../components/CrudTable';
+import {v4 as uuidv4} from 'uuid';
+import {getSchemas, getTable, getTables} from '../../utils/database';
 
 const SingleTable = forwardRef<AmisTemplateCrudMethods, AmisTemplateCrudProps>(
   (props, ref) => {
@@ -36,67 +34,6 @@ const SingleTable = forwardRef<AmisTemplateCrudMethods, AmisTemplateCrudProps>(
     const [table, setTable] = useState<string>();
     const [tableOptions, setTableOptions] = useState<OptionType[]>([]);
     const [data, setData] = useState<DataType[]>([]);
-    const columns: TableProps<DataType>['columns'] = [
-      {
-        title: '列名',
-        dataIndex: 'columnName'
-      },
-      {
-        title: '类型',
-        dataIndex: 'typeName'
-      },
-      {
-        title: '长度',
-        dataIndex: 'columnSize'
-      },
-      {
-        title: '精度',
-        dataIndex: 'decimalDigits'
-      },
-      {
-        title: '备注',
-        dataIndex: 'remarks',
-        render: (value, _, index: number) => {
-          return (
-            <ColumnRenderInput
-              value={value}
-              index={index}
-              dataIndex={'remarks'}
-              data={data}
-              setData={setData}
-            />
-          );
-        }
-      },
-      {
-        title: '主 表 查 选 新 改',
-        dataIndex: 'isPrimaryKey',
-        render: (_, row: DataType, index: number) => {
-          return (
-            <ColumnRenderMutilCheckBox
-              row={row}
-              index={index}
-              data={data}
-              setData={setData}
-            />
-          );
-        }
-      },
-      {
-        title: '关联',
-        dataIndex: 'join',
-        render: (value: JoinInfo, _, index: number) => {
-          return (
-            <ColumnRenderJoin
-              value={value}
-              index={index}
-              data={data}
-              setData={setData}
-            />
-          );
-        }
-      }
-    ];
 
     const load = async () => {
       const database: DatabaseInfo = await apiClient.get(
@@ -104,7 +41,7 @@ const SingleTable = forwardRef<AmisTemplateCrudMethods, AmisTemplateCrudProps>(
       );
       setDatabase(database);
       setSchemaOptions(
-        database?.schemaTableTypeTables.map(item => ({
+        getSchemas(database).map(item => ({
           value: item.schema.tableSchema,
           label: item.schema.tableSchema
         }))
@@ -119,38 +56,20 @@ const SingleTable = forwardRef<AmisTemplateCrudMethods, AmisTemplateCrudProps>(
     const onSchemaChange = (value: string) => {
       setSchema(value);
       setTableOptions(
-        database?.schemaTableTypeTables
-          .find(
-            (item: SchemaTableTypeTable) => item.schema.tableSchema === value
-          )
-          ?.tableTypeTables.find(
-            (item: TableTypeTable) =>
-              item.tableType === 'TABLE' ||
-              item.tableType === 'BASE TABLE' ||
-              item.tableType === 'table'
-          )
-          ?.tables.map((item: TableColumn) => ({
-            value: item.table.tableName,
-            label: item.table.tableName
-          })) || []
+        getTables(database, value).map((item: TableColumn) => ({
+          value: item.table.tableName,
+          label: item.table.tableName
+        }))
       );
     };
 
     const onTableChange = (value: string) => {
       setTable(value);
-      const tableColumn: TableColumn | undefined =
-        database?.schemaTableTypeTables
-          .find(
-            (item: SchemaTableTypeTable) => item.schema.tableSchema === schema
-          )
-          ?.tableTypeTables.find(
-            (item: TableTypeTable) =>
-              item.tableType === 'TABLE' ||
-              item.tableType === 'BASE TABLE' ||
-              item.tableType === 'table'
-          )
-          ?.tables.find((item: TableColumn) => item.table.tableName === value);
-
+      const tableColumn: TableColumn | undefined = getTable(
+        database,
+        schema,
+        value
+      );
       if (tableColumn) {
         const columns: ColumnInfo[] = tableColumn.columns;
         const primaryKey = getPrimaryKey(tableColumn.primaryKeys);
@@ -158,6 +77,7 @@ const SingleTable = forwardRef<AmisTemplateCrudMethods, AmisTemplateCrudProps>(
 
         const data: DataType[] = columns.map(column => {
           const isPrimaryKey = primaryKey === column.columnName;
+          const isUniqueIndex = uniqueIndex === column.columnName;
           return {
             columnName: column.columnName,
             dataType: column.dataType,
@@ -166,13 +86,21 @@ const SingleTable = forwardRef<AmisTemplateCrudMethods, AmisTemplateCrudProps>(
             columnSize: column.columnSize,
             decimalDigits: column.decimalDigits,
             remarks: column.remarks,
-            isPrimaryKey: isPrimaryKey,
-            isTableable: !isPrimaryKey,
-            isSearchable:
-              !isPrimaryKey && !isNumberJavaSqlType(column.javaSqlType),
-            isShowCheck: uniqueIndex === column.columnName,
-            isInsertable: !isPrimaryKey,
-            isUpdatable: !isPrimaryKey
+            key: uuidv4(),
+            tableName: value,
+            columnType: 'origin',
+            primary: isPrimaryKey,
+            uniqueIndex: isUniqueIndex,
+            table: !isSysColumn(column.columnName),
+            search:
+              !isSysColumn(column.columnName) &&
+              !isPrimaryKey &&
+              !isNumberJavaSqlType(column.javaSqlType),
+            add: !isSysColumn(column.columnName),
+            add_disabled: false,
+            edit: !isSysColumn(column.columnName),
+            edit_disabled: false,
+            join: undefined
           };
         });
         setData(data);
@@ -187,7 +115,7 @@ const SingleTable = forwardRef<AmisTemplateCrudMethods, AmisTemplateCrudProps>(
         return;
       }
 
-      if (!data.find(item => item.isPrimaryKey)) {
+      if (!data.find(item => item.primary)) {
         Modal.error({title: '错误', content: '需要一个主键'});
         return;
       }
@@ -205,33 +133,35 @@ const SingleTable = forwardRef<AmisTemplateCrudMethods, AmisTemplateCrudProps>(
       getApiTemplateId: () => `SingleTable-${table}`
     }));
 
-
     return (
       <>
-        <Row style={{height: '33px'}}>
-          <Col span={24}>
-            <Select
-              placeholder="请选择schema"
-              value={schema}
-              onChange={onSchemaChange}
-              options={schemaOptions}
-            />
-            <Select
-              placeholder="请选择table"
-              value={table}
-              onChange={onTableChange}
-              options={tableOptions}
-            />
-          </Col>
-        </Row>
+        <Form>
+          <Row style={{height: '33px'}}>
+            <Col span={12}>
+              <Form.Item>
+                <Select
+                  placeholder="请选择schema"
+                  value={schema}
+                  onChange={onSchemaChange}
+                  options={schemaOptions}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item>
+                <Select
+                  placeholder="请选择table"
+                  value={table}
+                  onChange={onTableChange}
+                  options={tableOptions}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
         <Row style={{height: 'calc(100% - 99px)'}}>
           <Col span={24} style={{height: '100%'}}>
-            <Table
-              columns={columns}
-              dataSource={data}
-              pagination={false}
-              scroll={{y: 'calc(100vh - 270px)'}}
-            />
+            <CrudTable dataSource={data} setDataSource={setData} />
           </Col>
         </Row>
       </>

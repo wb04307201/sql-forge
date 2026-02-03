@@ -44,6 +44,8 @@ CREATE TABLE products
 COMMENT
 ON TABLE products IS '产品表';
 COMMENT
+ON COLUMN products.id IS '产品ID';
+COMMENT
 ON COLUMN products.name IS '产品名称';
 COMMENT
 ON COLUMN products.price IS '产品价格';
@@ -58,20 +60,24 @@ CREATE TABLE orders
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id    VARCHAR(36) NOT NULL,
     product_id VARCHAR(36) NOT NULL,
-    order_date TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    order_date DATE            DEFAULT CURRENT_DATE,
     quantity   INT         NOT NULL DEFAULT 1,
     create TIMESTAMP,
     update TIMESTAMP
 );
 
 COMMENT
-ON COLUMN orders.user_id IS '关联的用户ID';
+ON TABLE orders IS '订单表';
 COMMENT
-ON COLUMN orders.product_id IS '关联的产品ID';
+ON COLUMN orders.id IS '订单ID';
+COMMENT
+ON COLUMN orders.user_id IS '用户ID';
+COMMENT
+ON COLUMN orders.product_id IS '产品ID';
 COMMENT
 ON COLUMN orders.quantity IS '订购数量';
 COMMENT
-ON COLUMN orders.order_date IS '订单创建时间';
+ON COLUMN orders.order_date IS '订单日期';
 COMMENT
 ON COLUMN orders.quantity IS '订购数量';
 COMMENT
@@ -92,7 +98,7 @@ CREATE TABLE sql_forge_template
 COMMENT
 ON TABLE sql_forge_template IS '模板表';
 COMMENT
-ON COLUMN sql_forge_template.id IS '主键ID';
+ON COLUMN sql_forge_template.id IS '模板ID';
 COMMENT
 ON COLUMN sql_forge_template.template_type IS '模板类型';
 COMMENT
@@ -114,9 +120,9 @@ CREATE TABLE sys_dict
 );
 
 COMMENT
-ON TABLE sys_dict IS '数据字典主表';
+ON TABLE sys_dict IS '字典表';
 COMMENT
-ON COLUMN sys_dict.id IS '主键ID';
+ON COLUMN sys_dict.id IS '字典ID';
 COMMENT
 ON COLUMN sys_dict.dict_code IS '字典编码';
 COMMENT
@@ -150,11 +156,11 @@ CREATE TABLE sys_dict_item
 -- 创建索引
 CREATE INDEX idx_dict_code ON sys_dict_item (dict_code);
 COMMENT
-ON TABLE sys_dict_item IS '数据字典子表（字典项）';
+ON TABLE sys_dict_item IS '字典项表';
 COMMENT
-ON COLUMN sys_dict_item.id IS '主键ID';
+ON COLUMN sys_dict_item.id IS '字典项ID';
 COMMENT
-ON COLUMN sys_dict_item.dict_code IS '关联字典编码';
+ON COLUMN sys_dict_item.dict_code IS '字典编码';
 COMMENT
 ON COLUMN sys_dict_item.item_code IS '字典项编码';
 COMMENT
