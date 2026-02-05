@@ -96,6 +96,7 @@ class CrudServiceTest {
                     put("id", id);
                     put("username", "wb04307201");
                     put("email", "wb04307201@gitee.com");
+                    put("password", "123456");
                 }},
                 new Select(
                         null,

@@ -3,6 +3,8 @@ package cn.wubo.sql.forge;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 @Data
 @Table(name = "users")
 public class User {
@@ -15,4 +17,10 @@ public class User {
 
     @Column(name = "email")
     private String email;
+
+    @Column(name = "password")
+    private String password;
+
+    @Column(name = "create")
+    private LocalDate create;
 }

@@ -53,6 +53,7 @@ class EntityServiceTest {
         User user = new User();
         user.setUsername("wb04307201");
         user.setEmail("wb04307201@gitee.com");
+        user.setPassword("123456");
         user = entityService.run(Entity.save(user));
         log.info("{}", user);
         user.setEmail("wb04307201@github.com");
@@ -67,7 +68,8 @@ class EntityServiceTest {
         String id = UUID.randomUUID().toString();
        EntityInsert<User> insert = Entity.insert(User.class).set(User::getId, id)
                 .set(User::getUsername, "wb04307201")
-                .set(User::getEmail, "wb04307201@gitee.com");
+                .set(User::getEmail, "wb04307201@gitee.com")
+               .set(User::getPassword, "123456");
        Object key = entityService.run(insert);
        log.info("{}", key);
 
