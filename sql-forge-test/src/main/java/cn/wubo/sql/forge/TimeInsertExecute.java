@@ -10,6 +10,11 @@ import java.util.Map;
 @Component
 public class TimeInsertExecute implements IExecute<Insert> {
     @Override
+    public Boolean support(String tableName, Insert insert) {
+        return true;
+    }
+
+    @Override
     public Insert before(String tableName, Insert insert) {
         if (insert.sets().keySet().stream().noneMatch("create"::equalsIgnoreCase)){
             Map<String, Object> newSets = insert.sets();

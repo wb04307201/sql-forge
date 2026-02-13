@@ -10,6 +10,11 @@ import java.util.Map;
 @Component
 public class TimeUpdateExecute implements IExecute<Update> {
     @Override
+    public Boolean support(String tableName, Update update) {
+        return true;
+    }
+
+    @Override
     public Update before(String tableName, Update update) {
         if (update.sets().keySet().stream().noneMatch("update"::equalsIgnoreCase)){
             Map<String, Object> newSets = update.sets();
