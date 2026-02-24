@@ -1,21 +1,108 @@
-import React, {useEffect, useState} from 'react';
-import Console from './console/Console';
-import View from './view/View';
+import React, {useState} from 'react';
+import {AlertComponent, ToastComponent} from 'amis';
+import AmisRender from './render/AmisRender';
+import {MenuProps, TabsProps} from 'antd';
+import {Layout, Tabs, Menu} from 'antd';
+import keySchema, {KeySchemaProps} from './pages/KeySchema';
+import {ApiOutlined, OpenAIOutlined} from '@ant-design/icons';
+
+type MenuItem = Required<MenuProps>['items'][number];
+type TabsItem = Required<TabsProps>['items'][number];
+
+const items: MenuItem[] = [
+  {
+    key: 'api',
+    label: 'API',
+    icon: <ApiOutlined />,
+    children: [
+      {key: 'sql', label: 'SQL'},
+      {key: 'json', label: 'JSON'},
+      {key: 'templateSql', label: 'SQL模板'},
+      {key: 'templateAmis', label: 'AMIS模板'}
+    ]
+  },
+  {
+    key: 'ai',
+    label: 'AI',
+    icon: <OpenAIOutlined />,
+    children: []
+  }
+];
+
+type TargetKey = React.MouseEvent | React.KeyboardEvent | string;
 
 function App() {
-  const [id, setId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [tabsItems, setTabsItems] = useState<TabsItem[]>([]);
+  const [activeKey, setActiveKey] = useState<string>();
+  const [openKeys, setOpenKeys] = useState<string[]>(['api', 'ai']);
 
-  useEffect(() => {
-    let params = new URL(document.location.href).searchParams;
-    if (params.has('id')) {
-      setId(params.get('id'));
+  const onEdit = (targetKey: TargetKey, action: 'add' | 'remove') => {
+    if (action === 'add') {
+      console.error('add not support');
+    } else {
+      remove(targetKey);
     }
-    setLoading(false);
-  }, []);
+  };
+
+  const remove = (targetKey: TargetKey) => {
+    const targetIndex = tabsItems.findIndex(pane => pane.key === targetKey);
+    const newPanes = tabsItems.filter(pane => pane.key !== targetKey);
+    if (newPanes.length && targetKey === activeKey) {
+      const {key} =
+        newPanes[
+          targetIndex === newPanes.length ? targetIndex - 1 : targetIndex
+        ];
+      setActiveKey(key);
+    }
+    setTabsItems(newPanes);
+  };
 
   return (
-    <>{loading ? <div>Loading...</div> : id ? <View id={id} /> : <Console />}</>
+    <>
+      <ToastComponent key="toast" position={'top-right'} />
+      <AlertComponent key="alert" />
+      <Layout style={{height: '100%', width: '100%'}}>
+        <Layout.Sider>
+          <Menu
+            defaultSelectedKeys={['1']}
+            defaultOpenKeys={['sub1']}
+            mode="inline"
+            theme="dark"
+            items={items}
+            onClick={({_, key}) => {
+              if (tabsItems?.some(item => item.key === key)) {
+                setActiveKey(key);
+                return;
+              }
+
+              const keySchemaProps: KeySchemaProps = keySchema[key];
+
+              setTabsItems([
+                ...tabsItems,
+                {
+                  label: keySchemaProps.label,
+                  key: key,
+                  children: <AmisRender schema={keySchemaProps.schema} />
+                }
+              ]);
+              setActiveKey(key);
+            }}
+            openKeys={openKeys}
+            onOpenChange={setOpenKeys}
+          />
+        </Layout.Sider>
+        <Layout.Content>
+          <Tabs
+            items={tabsItems}
+            activeKey={activeKey}
+            onChange={key => setActiveKey(key)}
+            hideAdd
+            type="editable-card"
+            onEdit={onEdit}
+          />
+        </Layout.Content>
+      </Layout>
+    </>
   );
 }
 

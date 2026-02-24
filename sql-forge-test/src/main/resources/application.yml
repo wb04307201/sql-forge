@@ -3,3 +3,9 @@ spring:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:file:./sql-forge-test/data/testdb;AUTO_SERVER=TRUE
     username: sa
+
+sql:
+  forge:
+    calcite:
+      enabled: true
+      configuration: classpath:model.json

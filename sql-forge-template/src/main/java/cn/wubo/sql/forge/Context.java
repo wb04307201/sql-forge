@@ -7,13 +7,13 @@ import java.util.*;
 
 public class Context {
     @Getter
-    private final SqlGenerationMode mode;
+    private final GenerationSqlMode mode;
     private final Map<String, Object> variables; // 原始变量
     private final ParamMap params = new ParamMap(); // 按顺序收集的参数
     private final StringBuilder sqlBuilder = new StringBuilder(); // SQL 构建器
     private final Stack<Map<String, Object>> scopeStack = new Stack<>(); // 作用域栈（支持变量覆盖）
 
-    public Context(Map<String, Object> variables, SqlGenerationMode mode) {
+    public Context(Map<String, Object> variables, GenerationSqlMode mode) {
         this.mode = mode;
         this.variables = variables;
         this.scopeStack.push(new HashMap<>(variables)); // 初始作用域

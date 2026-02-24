@@ -1,14 +1,14 @@
 package cn.wubo.sql.forge;
 
-import cn.wubo.sql.forge.crud.Insert;
-import cn.wubo.sql.forge.inter.IExecute;
+import cn.wubo.sql.forge.record.IBeforeRecordExecutor;
+import cn.wubo.sql.forge.record.Insert;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
 @Component
-public class TimeInsertExecute implements IExecute<Insert> {
+public class TimeInsertExecute implements IBeforeRecordExecutor<Insert> {
     @Override
     public Boolean support(String tableName, Insert insert) {
         return true;

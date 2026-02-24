@@ -85,30 +85,50 @@ ON COLUMN orders.create IS '创建时间';
 COMMENT
 ON COLUMN orders.update IS '更新时间';
 
--- 4. 模板 sql_forge_template 表
-CREATE TABLE sql_forge_template
+-- 4. 模板 sql_forge_template_sql 表
+CREATE TABLE sql_forge_template_sql
 (
-    id            VARCHAR(64) NOT NULL PRIMARY KEY,
-    template_type VARCHAR(50),
-    context       TEXT,
-    create TIMESTAMP,
-    update TIMESTAMP
+    id           VARCHAR(64) NOT NULL PRIMARY KEY,
+    executor_name VARCHAR(50) NOT NULL,
+    context      TEXT NOT NULL,
+    create       TIMESTAMP,
+    update       TIMESTAMP
 );
 
 COMMENT
-ON TABLE sql_forge_template IS '模板表';
+ON TABLE sql_forge_template_sql IS 'SQL模板表';
 COMMENT
-ON COLUMN sql_forge_template.id IS '模板ID';
+ON COLUMN sql_forge_template_sql.id IS '模板ID';
 COMMENT
-ON COLUMN sql_forge_template.template_type IS '模板类型';
+ON COLUMN sql_forge_template_sql.executor_name IS '数据源';
 COMMENT
-ON COLUMN sql_forge_template.context IS '模板内容';
+ON COLUMN sql_forge_template_sql.context IS '模板内容';
 COMMENT
-ON COLUMN sql_forge_template.create IS '创建时间';
+ON COLUMN sql_forge_template_sql.create IS '创建时间';
 COMMENT
-ON COLUMN sql_forge_template.update IS '更新时间';
+ON COLUMN sql_forge_template_sql.update IS '更新时间';
 
--- 5.字典主表：存储字典类型（如：性别、状态）
+-- 5. 模板 sql_forge_template_amis 表
+CREATE TABLE sql_forge_template_amis
+(
+    id           VARCHAR(64) NOT NULL PRIMARY KEY,
+    context      TEXT NOT NULL,
+    create       TIMESTAMP,
+    update       TIMESTAMP
+);
+
+COMMENT
+ON TABLE sql_forge_template_amis IS 'AMIS模板表';
+COMMENT
+ON COLUMN sql_forge_template_amis.id IS '模板ID';
+COMMENT
+ON COLUMN sql_forge_template_amis.context IS '模板内容';
+COMMENT
+ON COLUMN sql_forge_template_amis.create IS '创建时间';
+COMMENT
+ON COLUMN sql_forge_template_amis.update IS '更新时间';
+
+-- 6.字典主表：存储字典类型（如：性别、状态）
 CREATE TABLE sys_dict
 (
     id          VARCHAR(36)  NOT NULL PRIMARY KEY,
@@ -134,7 +154,7 @@ ON COLUMN sys_dict.create IS '创建时间';
 COMMENT
 ON COLUMN sys_dict.update IS '更新时间';
 
--- 6.字典子表：存储字典明细项（如：男、女）
+-- 7.字典子表：存储字典明细项（如：男、女）
 CREATE TABLE sys_dict_item
 (
     id        VARCHAR(36)  NOT NULL PRIMARY KEY,
@@ -229,6 +249,13 @@ VALUES ('2-2', 'sex', 'female', '女', 2);
 
 
 -- 示例联表查询：查询每个订单的用户、商品信息
+SELECT *
+FROM users;
+SELECT *
+FROM products;
+SELECT *
+FROM orders;
+
 SELECT o.id                   AS order_id,
        u.username,
        p.name                 AS product_name,

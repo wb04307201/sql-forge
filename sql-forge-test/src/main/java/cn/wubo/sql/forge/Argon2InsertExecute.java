@@ -1,7 +1,7 @@
 package cn.wubo.sql.forge;
 
-import cn.wubo.sql.forge.crud.Insert;
-import cn.wubo.sql.forge.inter.IExecute;
+import cn.wubo.sql.forge.record.IBeforeRecordExecutor;
+import cn.wubo.sql.forge.record.Insert;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import org.springframework.stereotype.Component;
@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class Argon2InsertExecute implements IExecute<Insert> {
+public class Argon2InsertExecute implements IBeforeRecordExecutor<Insert> {
     @Override
     public Boolean support(String tableName, Insert insert) {
         return "users".equalsIgnoreCase(tableName);
