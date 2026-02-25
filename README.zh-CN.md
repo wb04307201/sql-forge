@@ -18,6 +18,57 @@
 [![fork](https://img.shields.io/github/forks/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)  
 ![MIT](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
 
+```mermaid
+graph TB
+  subgraph FE[前端]
+    direction LR
+    Amis[Amis渲染页面]
+    Schema[JSON 配置]
+    Amis --> Schema
+  end
+
+  subgraph BE[后端]
+    direction TB
+
+    subgraph Api[API层]
+      direction LR
+      A1[json]
+      A2[sql template]
+      A3[amis template]
+    end
+
+    subgraph Service[服务层]
+      direction LR
+      S1[TemplateSql服务]
+      S2[TemplateAmis服务]
+    end
+
+    subgraph SqlBuilder[执行器]
+      direction LR
+      SB1[record]
+      SB2[entity]
+      SB3[template]
+    end
+
+    subgraph AccessDatabase[数据访问层]
+      direction LR
+      AD1[database: 数据库]
+      AD2[apache calcite: 跨数据库联邦查询]
+    end
+
+    SqlBuilder --> AccessDatabase
+    SB2 --> SB1
+    A1 --> SB1
+    A2 --> S1
+    S1 --> SB3
+    A3 --> S2
+  end
+
+  Schema --> A3
+  Amis --> A1
+  Amis --> A2
+```
+
 ## 使用
 ### 引入依赖
 增加 JitPack 仓库
