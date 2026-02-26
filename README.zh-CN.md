@@ -20,50 +20,32 @@
 
 ```mermaid
 graph TB
-    direction TB
+  Amis[百度Amis低代码]
+  Json[JSON API<br>使用Json进行数据库CRUD</br>]
+  SqlTemplate[SQL模板 API<br>使用模板进行数据库CRUD</br>]
+  AmisTemplate[Amis模板 API<br>存取Amis的Json配置</br>]
+  RecordExecutor[RecordExecutor<br>根据Record组装SQL</br>]
+  Entity[Entity<br>使用实体类进行数据库CRUD,支持部分JPA规范注解</br>]
+  EntityExecutor[EntityExecutor<br>执行Entity</br>]
+  TemplateSqlExcutor[TemplateSqlExcutor<br>根据模板和参数组装SQL</br>]
+  Sql[SQL]
+  subgraph ExecutorService[SQL执行器]
+    direction LR
+    DatabaseExecutor[DatabaseExecutor<br>项目数据库</br>]
+    CalciteExcutor[CalciteExcutor<br>Apache Calcite跨数据库联邦查询</br>]
+  end
 
-    subgraph Page[页面层]
-      direction LR
-      Amis[Amis渲染]
-    end
-
-    subgraph Api[API层]
-      direction LR
-      A1[json]
-      A2[sql template]
-      A3[amis template]
-    end
-
-    subgraph Service[服务层]
-      direction LR
-      S1[TemplateSql服务]
-      S2[TemplateAmis服务]
-    end
-
-    subgraph ORM[ORM层]
-      direction LR
-      SB1[record]
-      SB2[entity]
-      SB3[template]
-    end
-
-    subgraph AccessDatabase[SQL执行层]
-      direction LR
-      AD1[项目数据库]
-      AD2[Apache Calcite<br>跨数据库联邦查询</br>]
-    end
-
-    ORM -- 执行器 --> AccessDatabase
-    SB2 -- 实体类转Record --> SB1
-    A1 -- json转Record --> SB1
-    A2 --> S1
-    S1 -- 模板+参数 --> SB3
-    A3 --> S2
-    Amis -- 使用Json操作数据库 --> A1
-    Amis -- 使用模板操作数据库 --> A2
-    Amis -- 获取页面配置 --> A3
+  Amis -- 调用API --> Json
+  Amis -- 调用API --> SqlTemplate
+  Amis -- 调用API --> AmisTemplate
+  Json -- JSON转换成Record --> RecordExecutor
+  Entity --> EntityExecutor
+  EntityExecutor -- Entity转换成Record--> RecordExecutor
+  RecordExecutor --> Sql
+  SqlTemplate -- 模板+参数 --> TemplateSqlExcutor
+  TemplateSqlExcutor --> Sql
+  Sql -- 根据执行器名称执行SQL --> ExecutorService
 ```
-
 
 ## 使用
 ### 引入依赖
