@@ -4,12 +4,15 @@
   <a href="README.md">English</a> | 中文
 </div>
 
-> SQL Forge 不只是一个ORM框架，它提供以下功能：
-- **Entity**: 根据实体对象构建`SQL`
-- **Json API**: 调用接口通过`JSON`格式描述数据库操作
-- **Template API**: `SQL`模板引擎
-- **Calcite API**: 跨数据库联邦查询
-- **Amis**: 百度Amis低代码前端框架
+> SQL Forge 不只是一个ORM框架，主要提供以下功能：
+- **低代码**：集成百度Amis低代码框架
+- **JSON API模式**：通过JSON格式描述数据库操作，前端可直接调用
+- **SQL模板模式**：使用模板引擎动态生成SQL语句
+- **Entity模式**：根据实体和链式编程‌描述数据库操作,支持部分JPA规范注解
+- **Amis集成模式**：与百度Amis低代码框架深度集成
+- **多样化数据访问**：
+  - **DatabaseExecutor**：连接项目配置的数据库
+  - **CalciteExecutor**：基于Apache Calcite实现跨数据库联邦查询
 
 [![](https://jitpack.io/v/com.gitee.wb04307201/sql-forge.svg)](https://jitpack.io/#com.gitee.wb04307201/sql-forge)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
@@ -18,14 +21,16 @@
 [![fork](https://img.shields.io/github/forks/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)  
 ![MIT](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
 
+
+## 项目全景
 ```mermaid
 graph TB
   Amis[百度Amis低代码]
-  Json[JSON API<br>使用Json进行数据库CRUD</br>]
-  SqlTemplate[SQL模板 API<br>使用模板进行数据库CRUD</br>]
+  Json[JSON API<br>通过JSON格式描述数据库操作</br>]
+  SqlTemplate[SQL模板 API<br>使用模板引擎动态生成SQL语句</br>]
   AmisTemplate[Amis模板 API<br>存取Amis的Json配置</br>]
   RecordExecutor[RecordExecutor<br>根据Record组装SQL</br>]
-  Entity[Entity<br>使用实体类进行数据库CRUD,支持部分JPA规范注解</br>]
+  Entity[Entity<br>根据实体和链式编程‌描述数据库操作,支持部分JPA规范注解</br>]
   EntityExecutor[EntityExecutor<br>执行Entity</br>]
   TemplateSqlExcutor[TemplateSqlExcutor<br>根据模板和参数组装SQL</br>]
   Sql[SQL]
