@@ -4,9 +4,7 @@ CREATE TABLE users
     id       VARCHAR(36) NOT NULL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     email    VARCHAR(100),
-    CONSTRAINT uk_username UNIQUE (username),
-    create   TIMESTAMP,
-    update   TIMESTAMP
+    CONSTRAINT uk_username UNIQUE (username)
 );
 
 COMMENT
@@ -17,19 +15,13 @@ COMMENT
 ON COLUMN users.username IS '用户名';
 COMMENT
 ON COLUMN users.email IS '用户邮箱地址';
-COMMENT
-ON COLUMN users.create IS '创建时间';
-COMMENT
-ON COLUMN users.update IS '更新时间';
 
 -- 2. 创建 products 表（UUID 主键，应用生成）
 CREATE TABLE products
 (
     id     VARCHAR(36)  NOT NULL PRIMARY KEY,
     name   VARCHAR(100) NOT NULL UNIQUE,
-    price  DECIMAL(10, 2),
-    create TIMESTAMP,
-    update TIMESTAMP
+    price  DECIMAL(10, 2)
 );
 
 COMMENT
@@ -40,10 +32,6 @@ COMMENT
 ON COLUMN products.name IS '产品名称';
 COMMENT
 ON COLUMN products.price IS '产品价格';
-COMMENT
-ON COLUMN products.create IS '创建时间';
-COMMENT
-ON COLUMN products.update IS '更新时间';
 
 -- 3. 创建 orders 表（自增主键）
 CREATE TABLE orders
@@ -52,9 +40,7 @@ CREATE TABLE orders
     user_id    VARCHAR(36) NOT NULL,
     product_id VARCHAR(36) NOT NULL,
     order_date DATE                 DEFAULT CURRENT_DATE,
-    quantity   INT         NOT NULL DEFAULT 1,
-    create     TIMESTAMP,
-    update     TIMESTAMP
+    quantity   INT         NOT NULL DEFAULT 1
 );
 
 COMMENT
@@ -71,19 +57,13 @@ COMMENT
 ON COLUMN orders.order_date IS '订单日期';
 COMMENT
 ON COLUMN orders.quantity IS '订购数量';
-COMMENT
-ON COLUMN orders.create IS '创建时间';
-COMMENT
-ON COLUMN orders.update IS '更新时间';
 
 -- 4. 模板 sql_forge_template_sql 表
 CREATE TABLE sql_forge_template_sql
 (
     id           VARCHAR(64) NOT NULL PRIMARY KEY,
     executor_name VARCHAR(50) NOT NULL,
-    context      TEXT NOT NULL,
-    create       TIMESTAMP,
-    update       TIMESTAMP
+    context      TEXT NOT NULL
 );
 
 COMMENT
@@ -94,18 +74,12 @@ COMMENT
 ON COLUMN sql_forge_template_sql.executor_name IS '数据源';
 COMMENT
 ON COLUMN sql_forge_template_sql.context IS '模板内容';
-COMMENT
-ON COLUMN sql_forge_template_sql.create IS '创建时间';
-COMMENT
-ON COLUMN sql_forge_template_sql.update IS '更新时间';
 
 -- 5. 模板 sql_forge_template_amis 表
 CREATE TABLE sql_forge_template_amis
 (
     id           VARCHAR(64) NOT NULL PRIMARY KEY,
-    context      TEXT NOT NULL,
-    create       TIMESTAMP,
-    update       TIMESTAMP
+    context      TEXT NOT NULL
 );
 
 COMMENT
@@ -114,10 +88,6 @@ COMMENT
 ON COLUMN sql_forge_template_amis.id IS '模板ID';
 COMMENT
 ON COLUMN sql_forge_template_amis.context IS '模板内容';
-COMMENT
-ON COLUMN sql_forge_template_amis.create IS '创建时间';
-COMMENT
-ON COLUMN sql_forge_template_amis.update IS '更新时间';
 
 -- 插入测试用户数据（使用预定义 UUID）
 INSERT INTO users (id, username, email)

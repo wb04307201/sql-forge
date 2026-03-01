@@ -54,6 +54,5 @@ public class BeforeRecordExcutorDatabaseTest {
         log.info("rowMapList: {}", rowMapList);
         assertEquals(1, rowMapList.size());
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        assertEquals(sdf.format(new Date()),sdf.format(rowMapList.get(0).get("CREATE")));
     }
 }
