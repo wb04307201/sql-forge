@@ -15,7 +15,7 @@ public class LogSelectExecute implements IBeforeRecordExecutor<Select> {
 
     @Override
     public Select before(String tableName, Select select) {
-        log.info("tableName: {} SQL: {}", tableName, select);
+        log.info("LogSelectExecute tableName: {} record: {}", tableName, select);
         return select;
     }
 }
