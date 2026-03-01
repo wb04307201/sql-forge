@@ -26,6 +26,7 @@ public class SqlForgeProperties {
         @Data
         public static class DatabaseProperties {
             private Boolean enabled = false;
+            private Boolean selectOnly = true;
         }
 
         @Data

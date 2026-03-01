@@ -96,12 +96,16 @@ public class SqlForgeConfiguration {
 
     @Bean("sqlForgeApiDatabaseRouter")
     @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeApiDatabaseRouter(ExecutorService executorService) {
+    public RouterFunction<ServerResponse> sqlForgeApiDatabaseRouter(SqlForgeProperties sqlForgeProperties, ExecutorService executorService) {
         RouterFunctions.Builder builder = route();
         builder.POST("/sql/forge/api/database/execute", request -> {
             String executorName = request.param("executorName").orElse("database");
             SqlScript sqlScript = request.body(SqlScript.class);
-            return ServerResponse.ok().body(executorService.getExecutor(executorName).execute(sqlScript));
+            if (sqlForgeProperties.getApi().getDatabase().getSelectOnly()) {
+                return ServerResponse.ok().body(executorService.getExecutor(executorName).executeQuery(sqlScript));
+            } else {
+                return ServerResponse.ok().body(executorService.getExecutor(executorName).execute(sqlScript));
+            }
         });
 
         return builder.build();
