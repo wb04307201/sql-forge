@@ -4,15 +4,17 @@
   <a href="README.md">English</a> | 中文
 </div>
 
-> SQL Forge 不只是一个ORM框架，主要提供以下功能：
-- **低代码**：集成百度Amis低代码框架
-- **JSON API模式**：通过JSON格式描述数据库操作，前端可直接调用
-- **SQL模板模式**：使用模板引擎动态生成SQL语句
-- **Entity模式**：根据实体和链式编程‌描述数据库操作,支持部分JPA规范注解
-- **Amis集成模式**：与百度Amis低代码框架深度集成
-- **多样化数据访问**：
+> **SQL工坊**不仅是一个ORM框架，更是一套完整的低代码解决方案,它提供以下功能：
+- **页面**：百度Amis低代码框架
+- **ORM框架**
+  - **JSON API**：通过JSON格式描述数据库操作，节省后端编码量
+  - **SQL模板API**：使用模板引擎动态生成SQL语句
+  - **自行实现API 1**：使用`Entity`工具操作数据库操作并实现API
+  - **自行实现API 2**：使用其他ORM框架并实现API
+- **多样化数据访问**
   - **DatabaseExecutor**：连接项目配置的数据库
   - **CalciteExecutor**：基于Apache Calcite实现跨数据库联邦查询
+  - **自行扩展**
 
 [![](https://jitpack.io/v/com.gitee.wb04307201/sql-forge.svg)](https://jitpack.io/#com.gitee.wb04307201/sql-forge)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
@@ -20,7 +22,6 @@
 [![star](https://img.shields.io/github/stars/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)
 [![fork](https://img.shields.io/github/forks/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)  
 ![MIT](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
-
 
 ## 项目全景
 ```mermaid
