@@ -47,7 +47,6 @@ public class ExecutorServiceDatabaseTest {
         params.put("charlie");
 
         SqlScript sqlScript = new SqlScript("""
-                SELECT
                     o.id AS order_id,
                     u.username,
                     p.name AS product_name,
@@ -57,7 +56,8 @@ public class ExecutorServiceDatabaseTest {
                 FROM orders o
                 JOIN users u ON o.user_id = u.id
                 JOIN products p ON o.product_id = p.id
-                WHERE u.username in (?,?,?)
+                WHERESELECT
+                 u.username in (?,?,?)
                 """, params);
 
         List<RowMap> rowMapList = executor.executeQuery(sqlScript);
