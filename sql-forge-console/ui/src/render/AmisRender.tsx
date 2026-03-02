@@ -4,6 +4,7 @@ import copy from "copy-to-clipboard";
 import {fetcherResult, fetchOptions, Schema} from "amis-core/lib/types";
 import {RootRenderProps} from "amis-core/lib/Root";
 import {alert, confirm, toast} from 'amis-ui';
+import keySchema from '../pages/KeySchema';
 
 interface AMISComponentProps {
   schema: Schema;
@@ -22,6 +23,8 @@ AmisRender.defaultProps = {
     options: {
         // 下面三个接口必须实现
         fetcher: (options: fetchOptions): Promise<fetcherResult> => {
+          console.log('options', options)
+
             let {
               url,
               method,
@@ -45,7 +48,14 @@ AmisRender.defaultProps = {
 
             const httpMethod = method?.toLowerCase() || 'get';
 
-            if (httpMethod !== 'post' && httpMethod !== 'put' && httpMethod !== 'patch') {
+            if (httpMethod === 'json'){
+              return new Promise((resolve, reject) => {
+                resolve({
+                  data: keySchema[url.split('?')[0]].schema,
+                  status: 200
+                });
+              });
+            }else if (httpMethod !== 'post' && httpMethod !== 'put' && httpMethod !== 'patch') {
                 if (data) {
                     axiosConfig.params = data;
                 }
