@@ -48,14 +48,7 @@ AmisRender.defaultProps = {
 
             const httpMethod = method?.toLowerCase() || 'get';
 
-            if (httpMethod === 'json'){
-              return new Promise((resolve, reject) => {
-                resolve({
-                  data: keySchema[url.split('?')[0]].schema,
-                  status: 200
-                });
-              });
-            }else if (httpMethod !== 'post' && httpMethod !== 'put' && httpMethod !== 'patch') {
+            if (httpMethod !== 'post' && httpMethod !== 'put' && httpMethod !== 'patch') {
                 if (data) {
                     axiosConfig.params = data;
                 }
