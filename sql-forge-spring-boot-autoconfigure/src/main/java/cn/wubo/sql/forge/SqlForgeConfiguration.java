@@ -95,7 +95,7 @@ public class SqlForgeConfiguration {
     }
 
     @Bean("sqlForgeApiDatabaseRouter")
-    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true")
     public RouterFunction<ServerResponse> sqlForgeApiDatabaseRouter(SqlForgeProperties sqlForgeProperties, ExecutorService executorService) {
         RouterFunctions.Builder builder = route();
         builder.POST("/sql/forge/api/database/execute", request -> {
@@ -171,7 +171,7 @@ public class SqlForgeConfiguration {
             template.setContext(context);
             return ServerResponse.ok().body(templateSqlStorage.list(template));
         });
-        builder.POST("sql/forge/api/template/sql/execute/{id}", accept(MediaType.APPLICATION_JSON), request -> {
+        builder.POST("sql/forge/api/template/sql/{id}", accept(MediaType.APPLICATION_JSON), request -> {
             String id = request.pathVariable("id");
             Map<String, Object> params = request.body(new ParameterizedTypeReference<>() {
             });
@@ -216,7 +216,7 @@ public class SqlForgeConfiguration {
     }
 
     @Bean("sqlForgeApiDatabaseConsoleRouter")
-    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true")
     @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
     public RouterFunction<ServerResponse> sqlForgeApiDatabaseConsoleRouter(ExecutorService executorService) {
         RouterFunctions.Builder builder = route();

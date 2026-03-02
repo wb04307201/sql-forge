@@ -2,6 +2,7 @@ import {buildTableData} from '../utils/CommonUtils';
 
 export default {
   type: 'page',
+  id: 'sql',
   title: 'SQL',
   asideResizor: true,
   data: {
@@ -106,7 +107,7 @@ export default {
       api: {
         method: 'post',
         url: '/sql/forge/api/database/execute',
-        sendOn: 'this.sql != null',
+        sendOn: 'this.sql != null && this.sql != ""',
         adaptor: (payload: any) => {
           console.log('payload', payload);
           if (payload != null && payload.length > 0) {

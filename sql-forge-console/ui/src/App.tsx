@@ -82,7 +82,17 @@ function App() {
                 {
                   label: keySchemaProps.label,
                   key: key,
-                  children: <AmisRender schema={keySchemaProps.schema} />
+                  children: (
+                    <div
+                      style={{
+                        width: '100%',
+                        height: 'calc(100vh - 56px)',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      <AmisRender schema={keySchemaProps.schema} />
+                    </div>
+                  )
                 }
               ]);
               setActiveKey(key);

@@ -3,6 +3,7 @@ import {Editor} from 'amis-editor';
 
 export default {
   type: 'page',
+  id: 'amisTemplate',
   title: 'AMIS模板',
   body: [
     {
@@ -13,7 +14,6 @@ export default {
         url: '/sql/forge/api/template/amis',
         data: {
           id: '${search_id | default:undefined}',
-          type: 'templateAmis',
           executorName: '${search_executorName | default:undefined}',
           context: '${search_context | default:undefined}'
         }

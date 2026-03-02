@@ -2,6 +2,7 @@ import {buildTableData} from '../utils/CommonUtils';
 
 export default {
   type: 'page',
+  id: 'json',
   title: 'JSON',
   body: [
     {
@@ -65,7 +66,7 @@ export default {
             {
               type: 'input-text',
               name: 'table',
-              placeholder: '请输入表名/表名 AS 别名'
+              placeholder: '请输入表名/表名 别名'
             }
           ]
         },

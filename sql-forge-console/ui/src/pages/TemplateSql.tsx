@@ -2,6 +2,7 @@ import {buildTableData} from '../utils/CommonUtils';
 
 export default {
   type: 'page',
+  id: 'sqlTemplate',
   title: 'SQL模板',
   body: [
     {
@@ -12,7 +13,6 @@ export default {
         url: '/sql/forge/api/template/sql',
         data: {
           id: '${search_id | default:undefined}',
-          type: 'templateSql',
           executorName: '${search_executorName | default:undefined}',
           context: '${search_context | default:undefined}'
         }
@@ -253,7 +253,7 @@ export default {
                     id: 'sqlTemplate_crud',
                     api: {
                       method: 'post',
-                      url: '/sql/forge/api/template/sql/execute/${id}',
+                      url: '/sql/forge/api/template/sql/${id}',
                       sendOn: 'this.id != null && this.json != null',
                       requestAdaptor: function (api: any, context: any) {
                         return {
