@@ -15,26 +15,46 @@ function App() {
           title: 'SQL Forge',
           body: [
             {
-              type: 'tabs',
-              id: 'tabs',
-              tabs: [
-                {
-                  title: keySchema.sql.label,
-                  body: keySchema.sql.schema
-                },
-                {
-                  title: keySchema.json.label,
-                  body: keySchema.json.schema
-                },
-                {
-                  title: keySchema.templateSql.label,
-                  body: keySchema.templateSql.schema
-                },
-                {
-                  title: keySchema.templateAmis.label,
-                  body: keySchema.templateAmis.schema
+              type: 'service',
+              schemaApi: {
+                url: '/sql/forge/console/api/state',
+                method: 'get',
+                adaptor: function (payload, response, api, context) {
+                  let tabs: any[] = [];
+                  if (payload.database.enabled){
+                    tabs.push({
+                      title: keySchema.sql.label,
+                      body: keySchema.sql.schema
+                    });
+                  }
+                  if (payload.json.enabled) {
+                    tabs.push({
+                      title: keySchema.json.label,
+                      body: keySchema.json.schema
+                    });
+                  }
+                  if (payload.template.sql.enabled) {
+                    tabs.push({
+                      title: keySchema.templateSql.label,
+                      body: keySchema.templateSql.schema
+                    });
+                  }
+                  if (payload.template.amis.enabled) {
+                    tabs.push({
+                      title: keySchema.templateAmis.label,
+                      body: keySchema.templateAmis.schema
+                    });
+                  }
+
+                  return {
+                    data: {
+                      type: 'tabs',
+                      id: 'tabs',
+                      tabs: [...tabs]
+                    }
+                  };
                 }
-              ]
+              }
             }
           ]
         }}
