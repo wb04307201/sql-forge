@@ -1,4 +1,4 @@
-# SQL Forge - SQL Workshop
+# SQL Forge
 
 <div align="right">
   <a href="README.zh-CN.md">中文</a> | English
