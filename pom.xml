@@ -49,6 +49,7 @@
         <enjoy.version>5.2.5</enjoy.version>
         <mvel2.version>2.5.2.Final</mvel2.version>
         <calcite.version>1.41.0</calcite.version>
+        <spring-ai.version>1.1.2</spring-ai.version>
     </properties>
 
     <dependencyManagement>
@@ -57,6 +58,13 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
