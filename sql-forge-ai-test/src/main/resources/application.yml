@@ -6,8 +6,11 @@ spring:
   flyway:
     placeholder-replacement: false
   ai:
-    zhipuai:
-      api-key: ${ZHIPUAI_API_KEY}
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: ${DASHSCOPE_API_KEY}
+      chat.options:
+          model: qwen-plus
 
 sql:
   forge:

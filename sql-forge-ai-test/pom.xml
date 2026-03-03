@@ -12,7 +12,12 @@
     <dependencies>
         <dependency>
             <groupId>com.gitee.wb04307201</groupId>
-            <artifactId>sql-forge-spring-boot-autoconfigure</artifactId>
+            <artifactId>sql-forge-spring-boot-starter</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.gitee.wb04307201</groupId>
+            <artifactId>sql-forge-ai-spring-boot-autoconfigure</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -52,7 +57,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-zhipuai</artifactId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
     </dependencies>
 

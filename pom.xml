@@ -33,8 +33,9 @@
         <module>sql-forge-entity</module>
         <module>sql-forge-template</module>
         <module>sql-forge-console</module>
-        <module>sql-forge-ai-nl2sql</module>
+        <module>sql-forge-ai-nl2amis</module>
         <module>sql-forge-spring-boot-autoconfigure</module>
+        <module>sql-forge-ai-spring-boot-autoconfigure</module>
         <module>sql-forge-spring-boot-starter</module>
         <module>sql-forge-test</module>
         <module>sql-forge-ai-test</module>
