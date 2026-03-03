@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:file:./sql-forge-ai-test/data/testdb;AUTO_SERVER=TRUE
+    username: sa
+  flyway:
+    placeholder-replacement: false
+  ai:
+    zhipuai:
+      api-key: ${ZHIPUAI_API_KEY}
+
+sql:
+  forge:
+    calcite:
+      enabled: true
+      configuration: classpath:model.json
+    api:
+      database:
+        enabled: true
+        select-only: false
+
+

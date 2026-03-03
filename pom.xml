@@ -37,6 +37,7 @@
         <module>sql-forge-spring-boot-autoconfigure</module>
         <module>sql-forge-spring-boot-starter</module>
         <module>sql-forge-test</module>
+        <module>sql-forge-ai-test</module>
     </modules>
 
     <properties>
