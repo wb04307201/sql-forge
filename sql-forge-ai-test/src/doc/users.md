@@ -1,138 +1,287 @@
-# 用户维护界面需求规格说明书 (基于 Baidu Amis)
+# 用户维护界面开发文档
 
-## 1. 文档概述
-本文档旨在描述“用户维护管理界面”的功能需求、数据结构、接口定义及 UI 交互逻辑。本文档专为指导大语言模型（LLM）生成准确的 **Baidu Amis JSON 配置代码** 而设计。开发时需严格遵循 Amis 组件规范及后端 API 数据协议。
-
-## 2. 页面架构设计
-*   **页面类型**: `page`
-*   **核心组件**: `crud` (增删改查表格)
-*   **组件 ID**: `crud_table`
-*   **布局特性**:
-    *   自动填充高度 (`autoFillHeight`: true)
-    *   显示序号列 (`showIndex`: true)
-    *   主键字段 (`primaryField`): `ID`
-    *   翻页保持选中 (`keepItemSelectionOnPageChange`: true)
-
-## 3. 数据模型与接口协议
-本系统后端采用 **SQL Forge API** 协议，所有接口请求需遵循特定的 JSON 结构（包含 `@column`, `@where`, `@set` 等元数据）。
-
-### 3.1 核心数据表
-*   **主表**: `USERS`
-*   **字典表**: `sys_dict_items` (别名：`sex`)
-*   **关联关系**: `USERS.DICT_SEX` = `sys_dict_items.item_code`
-
-### 3.2 接口定义清单
-
-| 功能 | 接口路径 | 方法 | 说明 | 关键参数映射 |
-| :--- | :--- | :--- | :--- | :--- |
-| **列表查询** | `/sql/forge/api/json/selectPage/USERS` | POST | 分页查询用户 | 需包含 `@page`, `@order`, `@join` (关联性别字典) |
-| **新增用户** | `/sql/forge/api/json/insert/USERS` | POST | 插入单条数据 | `@set` 包含 `ID` (UUID), `USERNAME`, `DICT_SEX`, `EMAIL` |
-| **修改用户** | `/sql/forge/api/json/update/USERS` | POST | 更新单条数据 | `@set` 包含更新字段，`@where` 锁定 `ID` |
-| **删除用户** | `/sql/forge/api/json/delete/USERS` | POST | 删除数据 | `@where` 条件为 `ID IN (...)` 或 `ID = ...` |
-| **详情查询** | `/sql/forge/api/json/select/USERS` | POST | 编辑前回显数据 | `@where` 锁定 `ID`，需配置 `responseData` 取第一条 |
-| **字典数据** | `/sql/forge/api/json/select/sys_dict_items` | POST | 获取性别选项 | `@where` 条件 `dict_code = 'sex'` |
-| **导出 Excel** | `/sql/forge/api/json/select/USERS` | POST | 全量数据导出 | 结构与列表查询类似，但不含分页 |
-
-## 4. 功能模块详细需求
-
-### 4.1 列表与表格 (CRUD Body)
-*   **列定义 (Columns)**:
-    1.  **ID**: 隐藏列 (`hidden`: true)，作为主键。
-    2.  **用户名 (USERNAME)**: 文本显示，支持排序 (`sortable`)，支持搜索。
-    3.  **性别 (SEX)**: 显示字典文本 (`item_name`)，支持排序，支持搜索（多选）。
-    4.  **邮箱 (EMAIL)**: 文本显示，支持排序，支持搜索。
-    5.  **操作列**: 固定在右侧 (`fixed`: "right")，包含“修改”和“删除”按钮。
-*   **分页 (Pagination)**:
-    *   布局：总数、每页条数、页码、跳转 (`total,perPage,pager,go`)。
-    *   参数映射：`pageIndex` 对应 `${page - 1}`, `pageSize` 对应 `${perPage}`。
-*   **排序**:
-    *   支持前端触发，后端接收 `orderBy` 和 `orderDir` 变量。
-
-### 4.2 搜索与过滤 (Filter)
-*   **触发方式**: 开启 `autoGenerateFilter: true`，并在列定义中配置 `searchable`。
-*   **搜索字段**:
-    1.  **用户名**: 模糊查询 (`LIKE`)，输入框，最大长度 50。
-    2.  **性别**: 包含查询 (`IN`)，下拉多选框 (`multiple`: true)，数据源来自字典表。
-    3.  **邮箱**: 模糊查询 (`LIKE`)，输入框，最大长度 100。
-*   **默认值处理**: 所有搜索值需处理 `default:undefined`，空值不传入查询条件。
-
-### 4.3 新增功能 (Create)
-*   **入口**: 顶部工具栏“新增”按钮。
-*   **交互形式**: 侧边抽屉 (`actionType`: "drawer")。
-*   **表单字段**:
-    1.  **ID**: 类型 `uuid`，自动生成，不可见或只读。
-    2.  **用户名**: 文本输入，最大长度 50。
-    3.  **性别**: 下拉选择 (`select`)，数据源动态获取，支持清空 (`clearable`)。
-    4.  **邮箱**: 文本输入，最大长度 100。
-*   **提交逻辑**:
-    *   提交成功后 (`submitSucc`)，触发 `reload` 动作刷新 `crud_table`。
-    *   API 提交数据需映射到 `@set` 对象。
-
-### 4.4 修改功能 (Update)
-*   **入口**: 表格操作列“修改”按钮。
-*   **交互形式**: 侧边抽屉 (`actionType`: "drawer")。
-*   **数据回显**:
-    *   配置 `initApi`，根据当前行 `ID` 查询详情。
-    *   **关键配置**: `responseData` 需设置为 `{ "&": "${items | first}" }` 以扁平化数据。
-*   **表单字段**: 同新增表单，但 ID 字段为隐藏 (`hidden`: true) 的文本框。
-*   **提交逻辑**:
-    *   API 提交需包含 `@where` 条件锁定 `ID`。
-    *   提交成功后刷新表格。
-
-### 4.5 删除功能 (Delete)
-*   **单条删除**:
-    *   位置：操作列。
-    *   交互：点击后弹出确认框 (`confirmText`: "确认要删除？")。
-    *   API：`@where` 条件 `ID = ${ID}`。
-*   **批量删除**:
-    *   位置：表格批量操作栏 (`bulkActions`)。
-    *   交互：选中多行后显示，点击弹出确认框 (`confirmText`: "确定要批量删除？")。
-    *   API：`@where` 条件 `ID IN (${ids | split})`。
-
-### 4.6 导出功能 (Export)
-*   **位置**: 顶部工具栏右侧。
-*   **组件类型**: `export-excel`。
-*   **数据范围**: 受当前搜索条件过滤影响。
-*   **API**: 复用列表查询的 SQL 逻辑，但不包含分页参数。
-
-## 5. UI/UX 细节规范
-*   **图标库**: 使用 FontAwesome (`fa fa-plus`, `fa fa-trash`, `fa fa-pen-to-square` 等)。
-*   **按钮等级**:
-    *   新增：`level`: "primary"
-    *   删除：`level`: "danger"
-*   **表单验证**:
-    *   文本字段需设置 `maxLength` (用户名 50, 性别 100, 邮箱 100)。
-    *   下拉框需设置 `clearable`: true。
-*   **工具栏布局**:
-    *   左侧：新增按钮。
-    *   中间：批量操作。
-    *   右侧：列切换 (`columns-toggler`)、导出按钮。
-
-## 6. 数据字典与适配器 (Adaptor)
-*   **性别字典**:
-    *   字典编码：`sex`
-    *   值字段：`item_code`
-    *   标签字段：`item_name`
-*   **API 适配器 (Adaptor)**:
-    *   在获取下拉选项的 API 中，必须配置 `adaptor` 脚本，将后端返回的 `payload` 转换为 Amis 需要的 `options` 格式。
-    *   **脚本逻辑**:
-        ```javascript
-        return {
-          options: payload.map(item => ({
-            value: item.item_code || item.ITEM_CODE,
-            label: item.item_name || item.ITEM_NAME
-          }))
-        };
-        ```
-
-## 7. Amis 配置生成约束 (针对 LLM)
-在生成 JSON 配置时，请严格遵守以下规则：
-1.  **API 数据结构**: 所有 `api.data` 必须保留 `@column`, `@where`, `@set`, `@join`, `@page` 等特定键名，不可更改为常规 REST 风格。
-2.  **变量映射**: 严格使用 `${变量名}` 语法，注意 `default:undefined` 和 `split` 过滤器的使用。
-3.  **组件 ID**: 保持关键组件 ID 唯一性（如 `crud_table`, `insert-USERNAME`, `update-ID` 等），以便事件联动。
-4.  **事件联动**: 确保 `submitSucc` 事件正确绑定到 `reload` 动作，目标组件 ID 为 `crud_table`。
-5.  **Join 语法**: SQL Join 配置需严格匹配 `type`, `joinTable`, `on` 结构。
-6.  **响应处理**: 编辑回显的 `initApi` 必须包含 `responseData` 处理逻辑，确保表单能正确获取字段值。
+> 本文档用于描述基于百度 Amis + SQL Forge API 搭建的用户维护界面，支持大模型根据本文档 + API接口规范 逆向生成原始界面JSON。
 
 ---
-**使用说明**: 将上述需求文档提供给大模型，并附加指令：“请根据以上需求文档，生成完整的 Baidu Amis JSON 配置代码，确保 API 协议和字段映射与需求完全一致。”
+
+## 一、界面概述
+
+| 属性 | 说明 |
+|------|------|
+| 界面类型 | 用户管理 CRUD 页面 |
+| 核心组件 | `page` > `crud` (id: `crud_table`) |
+| 主数据表 | `USERS` |
+| 关联字典表 | `sys_dict_items` (字典编码: `sex`) |
+| 主键字段 | `ID` |
+| 展示字段 | `USERNAME`, `SEX`(字典名称), `EMAIL` |
+
+### 功能清单
+- ✅ 分页列表展示（支持排序、列显示控制）
+- ✅ 组合条件搜索：用户名(LIKE)、性别(IN多选)、邮箱(LIKE)
+- ✅ 新增用户（抽屉表单 + UUID主键）
+- ✅ 修改用户（抽屉表单 + 数据预加载）
+- ✅ 单条/批量删除（带确认）
+- ✅ Excel导出（带筛选条件）
+- ✅ 性别字段字典映射展示
+
+---
+
+## 二、数据模型定义
+
+### 2.1 主表：USERS
+```json
+{
+  "table": "USERS",
+  "fields": {
+    "ID": {"type": "string", "pk": true, "desc": "用户ID"},
+    "USERNAME": {"type": "string", "max": 50, "desc": "用户名"},
+    "DICT_SEX": {"type": "string", "max": 100, "desc": "性别字典code", "ref": "sys_dict_items.item_code"},
+    "EMAIL": {"type": "string", "max": 100, "desc": "邮箱地址"}
+  }
+}
+```
+
+### 2.2 字典表：sys_dict_items
+```json
+{
+  "table": "sys_dict_items",
+  "fields": {
+    "item_code": {"type": "string", "desc": "字典项值"},
+    "item_name": {"type": "string", "desc": "字典项标签"},
+    "dict_code": {"type": "string", "desc": "字典分类编码"}
+  },
+  "filter": {"dict_code": "sex"}
+}
+```
+
+### 2.3 字段映射关系
+| 界面字段 | 数据库字段 | 说明 |
+|---------|-----------|------|
+| `SEX` (展示) | `sex.item_name` | 列表/搜索中显示性别名称 |
+| `DICT_SEX` (存储) | `USERS.DICT_SEX` | 表单中提交性别code |
+| `SEX` (表单name) | `USERS.DICT_SEX` | ⚠️ 修改表单中name为`SEX`但实际绑定`DICT_SEX`字段 |
+
+---
+
+## 三、API 调用规范（基于 SQL Forge）
+
+> 基础规范：`POST /sql/forge/api/json/{method}/{tableName}`
+
+### 3.1 接口清单
+
+| 功能 | method | tableName | 关键参数 | 说明 |
+|------|--------|-----------|---------|------|
+| 分页查询 | `selectPage` | `USERS` | `@column`, `@where`, `@join`, `@page`, `@order` | 列表主接口 |
+| 单条查询 | `select` | `USERS` | `@where: ID=EQ` | 编辑时加载数据 |
+| 新增 | `insert` | `USERS` | `@set` | 插入新用户 |
+| 修改 | `update` | `USERS` | `@set`, `@where: ID=EQ` | 更新用户信息 |
+| 删除 | `delete` | `USERS` | `@where: ID=EQ/IN` | 单条/批量删除 |
+| 字典加载 | `select` | `sys_dict_items` | `@where: dict_code=EQ` | 性别下拉源 |
+| 导出 | `select` | `USERS` | 同分页查询(无@page) | 导出当前筛选结果 |
+
+### 3.2 关键请求体模板
+
+#### 🔹 分页查询（列表）
+```json
+{
+  "@column": ["USERS.ID", "USERS.USERNAME", "sex.item_name as SEX", "USERS.EMAIL"],
+  "@join": [{
+    "type": "LEFT_OUTER_JOIN",
+    "joinTable": "sys_dict_items sex",
+    "on": "USERS.DICT_SEX = sex.item_code"
+  }],
+  "@where": [
+    {"column": "USERS.USERNAME", "condition": "LIKE", "value": "${USERNAME | default:undefined}"},
+    {"column": "USERS.DICT_SEX", "condition": "IN", "value": "${SEX | default:undefined | split}"},
+    {"column": "USERS.EMAIL", "condition": "LIKE", "value": "${EMAIL | default:undefined}"},
+    {"column": "sex.dict_code", "condition": "EQ", "value": "sex"}
+  ],
+  "@order": ["${default(orderBy && orderDir ? (orderBy + ' ' + orderDir):'',undefined)}"],
+  "@page": {"pageIndex": "${page - 1}", "pageSize": "${perPage}"}
+}
+```
+
+#### 🔹 新增用户
+```json
+{
+  "@set": {
+    "ID": "${ID | default:undefined}",
+    "USERNAME": "${USERNAME | default:undefined}",
+    "DICT_SEX": "${DICT_SEX | default:undefined}",
+    "EMAIL": "${EMAIL | default:undefined}"
+  }
+}
+```
+
+#### 🔹 修改用户（更新）
+```json
+{
+  "@set": {
+    "ID": "${ID}",
+    "USERNAME": "${USERNAME}",
+    "SEX": "${SEX}",
+    "EMAIL": "${EMAIL}"
+  },
+  "@where": [{"column": "USERS.ID", "condition": "EQ", "value": "${ID}"}]
+}
+```
+> ⚠️ 注意：修改表单中字段name为`SEX`，但实际更新的是`USERS.DICT_SEX`字段
+
+#### 🔹 删除（单条/批量）
+```json
+{
+  "@where": [{
+    "column": "ID",
+    "condition": "${批量 ? 'IN' : 'EQ'}",
+    "value": "${批量 ? ids : ID} | split"
+  }]
+}
+```
+
+#### 🔹 字典数据源
+```json
+{
+  "@column": ["item_code", "item_name"],
+  "@where": [{"column": "dict_code", "condition": "EQ", "value": "sex"}]
+}
+```
+前端 adaptor 转换：
+```javascript
+return {
+  options: payload.map(item => ({
+    value: item.item_code || item.ITEM_CODE,
+    label: item.item_name || item.ITEM_NAME
+  }))
+};
+```
+
+---
+
+## 四、Amis 组件配置详解
+
+### 4.1 CRUD 核心配置
+```json
+{
+  "type": "crud",
+  "id": "crud_table",
+  "primaryField": "ID",
+  "autoGenerateFilter": true,
+  "keepItemSelectionOnPageChange": true,
+  "columns": [
+    {"name": "ID", "hidden": true},
+    {
+      "name": "USERNAME",
+      "label": "用户名",
+      "sortable": true,
+      "searchable": {"type": "input-text", "name": "USERNAME", "maxLength": 50}
+    },
+    {
+      "name": "SEX",
+      "label": "性别",
+      "sortable": true,
+      "searchable": {
+        "type": "select",
+        "name": "SEX",
+        "multiple": true,
+        "source": {"url": "/sql/forge/api/json/select/sys_dict_items", "...": "..."}
+      }
+    },
+    {
+      "name": "EMAIL",
+      "label": "用户邮箱地址",
+      "sortable": true,
+      "searchable": {"type": "input-text", "name": "EMAIL", "maxLength": 100}
+    },
+    {
+      "type": "operation",
+      "label": "操作",
+      "fixed": "right",
+      "buttons": [/* 修改/删除按钮 */]
+    }
+  ]
+}
+```
+
+### 4.2 抽屉表单配置要点
+
+#### 新增表单
+- `ID` 字段使用 `type: "uuid"` 自动生成
+- 性别字段 `name: "DICT_SEX"` 绑定数据库存储字段
+- 提交成功后 `actionType: "reload"` 刷新 `crud_table`
+
+#### 修改表单
+- `initApi` 预加载当前记录，`responseData: "&": "${items | first}"` 提取第一条
+- ⚠️ `@join` 中关联表别名可能动态生成（如 `sex_a814d446`），需保持与 `@column` 一致
+- 表单字段 `name: "SEX"` 但实际更新 `USERS.DICT_SEX`
+
+### 4.3 表达式与变量说明
+| 表达式 | 说明 |
+|--------|------|
+| `${page - 1}` | Amis页码(1起始) → API页码(0起始) 转换 |
+| `${SEX \| default:undefined \| split}` | 多选值转数组，空值转undefined避免SQL错误 |
+| `${default(orderBy && orderDir ? (orderBy + ' ' + orderDir):'',undefined)}` | 动态排序字段，空时传undefined |
+| `${ids \| split}` | 批量操作时ID数组转逗号分隔字符串 |
+
+---
+
+## 五、⚠️ 注意事项与常见坑点
+
+1. **字段名不一致**：列表展示`SEX`(字典名称)，表单存储`DICT_SEX`(字典code)，修改表单中`name: "SEX"`但实际绑定`DICT_SEX`
+2. **关联表别名**：修改表单`initApi`中`@join`的别名可能动态生成（如`sex_a814d446`），需确保`@column`中使用相同别名
+3. **导出接口表名错误**：示例中`sys_dict_item`应为`sys_dict_items`（少`s`），实际使用时需修正
+4. **分页索引转换**：Amis的`page`从1开始，API的`pageIndex`从0开始，必须`${page - 1}`
+5. **多选搜索值处理**：必须使用`| split`过滤器将逗号分隔字符串转为数组供`IN`条件使用
+6. **字典源适配器**：必须处理大小写兼容`item_code/ITEM_CODE`，避免后端返回字段名大小写不一致导致绑定失败
+
+---
+
+## 六、逆向生成提示语模板
+
+> 将此提示语 + 本文档 + API接口规范 发送给大模型，可逆向生成原始界面JSON
+
+```markdown
+# 任务：根据开发文档逆向生成百度 Amis 界面 JSON
+
+## 输入信息
+1. 【API接口规范】：SQL Forge JSON-to-SQL 接口规范（select/selectPage/insert/update/delete）
+2. 【开发文档】：用户维护界面开发文档（含数据模型、API清单、组件配置、注意事项）
+
+## 输出要求
+生成完整的 Amis page JSON，满足：
+✅ 使用 crud 组件(id: crud_table)展示 USERS 表数据
+✅ 支持分页、排序、列显示控制、组合搜索(用户名/性别/邮箱)
+✅ 新增/修改使用 drawer 抽屉表单，字段：ID(uuid)/USERNAME/DICT_SEX(字典)/EMAIL
+✅ 性别字段：列表展示字典名称(SEX)，表单存储字典code(DICT_SEX)
+✅ 删除支持单条+批量，带确认提示
+✅ 导出Excel携带当前筛选条件
+✅ 所有API调用符合 SQL Forge 规范，使用@column/@where/@join/@page等参数
+✅ 处理关键表达式：${page-1}、${xxx|split}、default()等
+✅ 字典源使用adaptor转换item_code/item_name为value/label
+
+## 特别约束
+⚠️ 修改表单initApi的@join别名可能动态生成，需保持@column引用一致
+⚠️ 表单字段name与数据库字段映射：SEX表单name → DICT_SEX数据库字段
+⚠️ 分页pageIndex从0开始，必须转换
+⚠️ 多选搜索值必须用|split处理
+
+## 输出格式
+直接输出完整JSON，无需额外说明，确保可直接粘贴到 Amis 编辑器运行。
+```
+
+---
+
+## 七、验证清单（生成后自查）
+
+- [ ] CRUD组件id为`crud_table`，primaryField为`ID`
+- [ ] 列表查询API使用`selectPage`，pageIndex正确转换
+- [ ] 性别搜索为`multiple: true`的select，值用`|split`处理
+- [ ] 新增表单ID字段为`type: "uuid"`
+- [ ] 修改表单initApi使用`responseData: {"&": "${items | first}"}`
+- [ ] 所有字典源配置adaptor转换逻辑
+- [ ] 操作列按钮fixed: "right"
+- [ ] 批量删除API条件使用`IN` + `|split`
+- [ ] 导出接口无@page参数，其他条件与列表查询一致
+
+---
+
+> 💡 使用建议：将本开发文档 + API接口规范 + 逆向提示语 三者组合，可确保大模型生成的JSON与原始界面高度一致。如遇字段映射问题，重点检查`SEX`/`DICT_SEX`的name绑定关系。
