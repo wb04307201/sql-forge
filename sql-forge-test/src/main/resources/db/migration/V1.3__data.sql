@@ -15,39 +15,41 @@ group by student.name');
 -- 图表
 INSERT INTO sql_forge_template_amis (id, context)
 VALUES ('amis-template-chart',  '{
-	"type": "page",
-	"body": {
-		"type": "chart",
-		"api": {
-			"method": "post",
-			"url": "/sql/forge/api/template/sql/execute/sql-template-calcite",
-			"data": {
-				"ids": [
-					1,
-					2,
-					3,
-					4,
-					5,
-					6,
-					7
-				]
-			}
-		},
-		"height": "100vh",
-		"config": {
-			"xAxis": {
-				"type": "category",
-				"data": "${items | pick:name}"
-			},
-			"yAxis": {
-				"type": "value"
-			},
-			"series": [{
-				"data": "${items | pick:grade}",
-				"type": "bar"
-			}]
-		}
-	}
+  "type": "page",
+  "body": {
+    "type": "chart",
+    "api": {
+      "method": "post",
+      "url": "/sql/forge/api/template/sql/sql-template-calcite",
+      "data": {
+        "ids": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      }
+    },
+    "height": "100vh",
+    "config": {
+      "xAxis": {
+        "type": "category",
+        "data": "${items | pick:name}"
+      },
+      "yAxis": {
+        "type": "value"
+      },
+      "series": [
+        {
+          "data": "${items | pick:grade}",
+          "type": "bar"
+        }
+      ]
+    }
+  }
 }');
 -- 字典
 INSERT INTO sql_forge_template_amis (id, context)
