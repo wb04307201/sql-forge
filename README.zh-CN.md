@@ -63,61 +63,17 @@ sql:
 ### Json API 模块
 让前端无需编写后端代码即可操作数据库，通过`JSON`格式描述自己需要的数据结构和操作，后端自动生成对应的`SQL`执行并返回结果。
 
-- **请求路径**: `sql/forge/api/json/{method}/{tableName}?executorName={executorName}`
+- **请求路径**: `/sql/forge/api/json/{method}/{tableName}?executorName={executorName}`
 - **请求方法**: `POST`
 - **内容类型**: `application/json`
 - **路径参数**:
-  - `{method}`: 操作方法类型(delete、insert、select、update)
+  - `{method}`: 操作方法类型(select、selectPage、insert、update、delete)
   - `{tableName}`: 数据库表名称
   - `{executorName}`: 数据库执行器名称,默认支持database(项目数据库),calcite(Apache Calcite跨数据库联邦查询)，支持自行扩展，如不传，默认使用database
 
-#### delete 方法
-
-#### 请求格式
-```json
-{
-  "@where": [
-    {
-      "column": "字段名",
-      "condition": "条件类型",
-      "value": "值"
-    }
-  ],
-  "@with_select": {
-    // 删除后后查询json
-  }
-}
-```
-
-#### 参数说明
-- `@where`: 删除条件数组，每个条件包含：
-  - column: 要匹配的字段名
-  - condition: 条件类型（EQ、NOT_EQ、GT、LT、GTEQ、LTEQ、LIKE、NOT_LIKE、LEFT_LIKE、RIGHT_LIKE、BETWEEN、NOT_BETWEEN、IN、NOT_IN、IS_NULL、IS_NOT_NULL）
-  - value: 匹配的值
-- `@with_select`: 可选的查询条件，用于在删除后执行一个查询
-
-#### insert 方法
-
-#### 请求格式
-```json
-{
-  "@set": {
-    "字段名1": "值1",
-    "字段名2": "值2"
-  },
-  "@with_select": {
-    // 删除后后查询json
-  }
-}
-```
-
-#### 参数说明
-- `@set`: 要插入的字段和值的键值对，至少需要一个字段
-- `@with_select`: 可选的查询条件，用于插入后执行一个查询
-
 #### select 方法
 
-#### 请求格式
+##### 请求格式
 ```json
 {
   "@column": ["字段名1", "字段名2"],
@@ -141,7 +97,7 @@ sql:
 }
 ```
 
-##### 参数说明
+###### 参数说明
 - `@column`: 要查询的字段数组，为空则查询所有字段
 - `@where`: 查询条件数组
 - `@join`: 关联查询条件数组
@@ -151,7 +107,7 @@ sql:
 
 #### selectPage 方法
 
-#### 请求格式
+##### 请求格式
 ```json
 {
   "@column": ["字段名1", "字段名2"],
@@ -188,6 +144,25 @@ sql:
 - `@order`: 排序字段数组
 - `@distince`: 是否去重
 
+#### insert 方法
+
+##### 请求格式
+```json
+{
+  "@set": {
+    "字段名1": "值1",
+    "字段名2": "值2"
+  },
+  "@with_select": {
+    // 插入后查询json
+  }
+}
+```
+
+##### 参数说明
+- `@set`: 要插入的字段和值的键值对，至少需要一个字段
+- `@with_select`: 可选的查询条件，用于插入后执行一个查询
+
 #### update 方法
 
 ##### 请求格式
@@ -205,7 +180,7 @@ sql:
     }
   ],
   "@with_select": {
-    // 删除后后查询json
+    // 更新后查询json
   }
 }
 ```
@@ -214,6 +189,31 @@ sql:
 - `@set`: 要更新的字段和新值的键值对，至少需要一个字段
 - `@where`: 更新条件数组，指定要更新哪些记录
 - `@with_select`: 可选的查询条件，用于更新后执行一个查询
+
+#### delete 方法
+
+##### 请求格式
+```json
+{
+  "@where": [
+    {
+      "column": "字段名",
+      "condition": "条件类型",
+      "value": "值"
+    }
+  ],
+  "@with_select": {
+    // 删除后查询json
+  }
+}
+```
+
+##### 参数说明
+- `@where`: 删除条件数组，每个条件包含：
+  - column: 要匹配的字段名
+  - condition: 条件类型（EQ、NOT_EQ、GT、LT、GTEQ、LTEQ、LIKE、NOT_LIKE、LEFT_LIKE、RIGHT_LIKE、BETWEEN、NOT_BETWEEN、IN、NOT_IN、IS_NULL、IS_NOT_NULL）
+  - value: 匹配的值
+- `@with_select`: 可选的查询条件，用于在删除后执行一个查询
 
 #### 示例
 1. 查询
@@ -406,6 +406,7 @@ Content-Type: application/json
   }
 }
 ```
+
 5. 删除
 ```http request
 POST http://localhost:8080/sql/forge/api/json/delete/users
