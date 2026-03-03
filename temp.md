@@ -11,6 +11,7 @@ graph TB
   EntityExecutor[EntityExecutor<br>执行Entity</br>]
   TemplateSqlExcutor[TemplateSqlExcutor<br>根据模板和参数组装SQL</br>]
   Sql[SQL]
+  DatabaseMetaDData[数据库元数据]
   subgraph ExecutorService[SQL执行器]
     direction LR
     DatabaseExecutor[DatabaseExecutor<br>项目数据库</br>]

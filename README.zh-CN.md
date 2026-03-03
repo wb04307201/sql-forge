@@ -667,8 +667,11 @@ int count = entityService.run(Entity.delete(user));
 ### 控制台
 提供简单的Web界面用于调试和模板管理：
 - 数据库元数据查看，sql调试（默认关闭，通过配置`sql.forge.api.database.enabled=true`开启,默认仅支持查询，可通过`sql.forge.api.database.select-only=false`允许其它操作）
+  ![img_1.png](img_1.png)
 - Json API调试
+  ![img_2.png](img_2.png)
 - SQL Template API模板维护，调试
+  ![img_3.png](img_3.png)
 - Amis Template API模板维护，调试
   ![img_4.png](img_4.png)
 

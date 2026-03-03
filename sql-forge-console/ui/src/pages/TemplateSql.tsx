@@ -46,13 +46,6 @@ export default {
                     required: true
                   },
                   {
-                    type: 'input-text',
-                    name: 'type',
-                    label: '类型',
-                    value: 'templateSql',
-                    disabled: true
-                  },
-                  {
                     type: 'select',
                     name: 'executorName',
                     label: '数据源',
@@ -94,10 +87,6 @@ export default {
             name: 'search-id',
             label: '模板标识'
           }
-        },
-        {
-          name: 'type',
-          label: '类型'
         },
         {
           name: 'executorName',
@@ -168,12 +157,6 @@ export default {
                             name: 'id',
                             label: '模板标识',
                             required: true
-                          },
-                          {
-                            type: 'input-text',
-                            name: 'type',
-                            label: '类型',
-                            disabled: true
                           },
                           {
                             type: 'select',
@@ -300,13 +283,6 @@ export default {
                       type: 'input-text',
                       name: 'id',
                       label: '模板标识',
-                      disabled: true
-                    },
-                    {
-                      type: 'input-text',
-                      name: 'type',
-                      label: '类型',
-                      value: 'templateSql',
                       disabled: true
                     },
                     {
