@@ -6,10 +6,6 @@ package cn.wubo.sql.forge.records;
  */
 public record DatabaseInfo(
         String productName,
-        String productVersion,
-        String url,
-        String userName,
-        String driverName,
-        String driverVersion
+        String productVersion
 ) {
 }

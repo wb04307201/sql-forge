@@ -15,4 +15,5 @@ public class Constant {
     public static final String PAREN_AND = ") \nAND (";
     public static final String PAREN_OR = ") \nOR (";
     public static final String ON_TEMPLATE = "%s ON %s";
+    public static final String NODE_VALUE_TEMPLATE = "%s.%s";
 }

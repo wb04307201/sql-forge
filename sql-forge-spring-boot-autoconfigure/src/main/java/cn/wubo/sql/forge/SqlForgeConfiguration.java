@@ -1,97 +1,130 @@
 package cn.wubo.sql.forge;
 
-import cn.wubo.sql.forge.crud.*;
-import cn.wubo.sql.forge.entity.cache.CacheService;
-import cn.wubo.sql.forge.inter.IExecute;
+import cn.eubo.sql.forge.EntityExecutor;
+import cn.eubo.sql.forge.cache.EntityCacheService;
+import cn.wubo.sql.forge.record.*;
 import cn.wubo.sql.forge.records.SqlScript;
-import cn.wubo.sql.forge.utils.CalciteExcutorUtils;
-import cn.wubo.sql.forge.utils.MetaDataUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.RouterFunctions;
 import org.springframework.web.servlet.function.ServerResponse;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.sql.DataSource;
-
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
-import java.sql.*;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import static org.springframework.web.servlet.function.RequestPredicates.accept;
 import static org.springframework.web.servlet.function.RouterFunctions.route;
 
 @EnableCaching
 @AutoConfiguration
+@EnableConfigurationProperties({SqlForgeProperties.class})
 public class SqlForgeConfiguration {
 
     @Bean
-    public FunctionalState functionalState() {
-        return new FunctionalState();
+    public IExecutor databaseExecutor(DataSource dataSource) {
+        return new DatabaseExecutor(dataSource);
     }
 
     @Bean
-    public Executor executor(DataSource dataSource) {
-        return new Executor(dataSource);
+    @ConditionalOnProperty(name = "sql.forge.calcite.enabled", havingValue = "true")
+    public IExecutor calciteExcutor(ResourceLoader resourceLoader, SqlForgeProperties properties) throws IOException {
+        if (!StringUtils.hasText(properties.getCalcite().getConfiguration())) {
+            throw new IllegalArgumentException("sql.forge.api.calcite.configuration is null");
+        }
+
+        String configPath = properties.getCalcite().getConfiguration();
+        Resource resource = resourceLoader.getResource(configPath);
+
+        if (!resource.exists()) {
+            throw new FileNotFoundException("Calcite配置文件不存在: " + configPath);
+        }
+
+        try (InputStream inputStream = resource.getInputStream()) {
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> modelMap = mapper.readValue(inputStream, new TypeReference<>() {
+            });
+            String model = mapper.writeValueAsString(modelMap);
+            return new CalciteExcutor(model);
+        }
     }
 
     @Bean
-    public CrudService crudService(
-            Executor executor,
-            @Autowired(required = false) List<IExecute<Delete>> deleteExecutes,
-            @Autowired(required = false) List<IExecute<Insert>> insertExecutes,
-            @Autowired(required = false) List<IExecute<Select>> selectExecutes,
-            @Autowired(required = false) List<IExecute<SelectPage>> selectPageExecutes,
-            @Autowired(required = false) List<IExecute<Update>> updateExecutes
+    public ExecutorService executorService(List<IExecutor> executors) {
+        return new ExecutorService(executors);
+    }
+
+    @Bean
+    public RecordExecutor recordExecutor(
+            ExecutorService executorService,
+            @Autowired(required = false) List<IBeforeRecordExecutor<Delete>> deleteExecutes,
+            @Autowired(required = false) List<IBeforeRecordExecutor<Insert>> insertExecutes,
+            @Autowired(required = false) List<IBeforeRecordExecutor<Select>> selectExecutes,
+            @Autowired(required = false) List<IBeforeRecordExecutor<SelectPage>> selectPageExecutes,
+            @Autowired(required = false) List<IBeforeRecordExecutor<Update>> updateExecutes
     ) {
-        return new CrudService(executor,deleteExecutes, insertExecutes, selectExecutes, selectPageExecutes, updateExecutes);
+        return new RecordExecutor(executorService, deleteExecutes, insertExecutes, selectExecutes, selectPageExecutes, updateExecutes);
     }
 
     @Bean
-    public CacheService cacheService() {
-        return new CacheService();
+    public EntityCacheService entityCacheService() {
+        return new EntityCacheService();
     }
 
     @Bean
-    public EntityService entityService(CrudService crudService, CacheService cacheService) {
-        return new EntityService(crudService, cacheService);
+    public EntityExecutor entityExecutor(RecordExecutor recordExecutor, EntityCacheService entityCacheService) {
+        return new EntityExecutor(recordExecutor, entityCacheService);
     }
 
     @Bean("sqlForgeApiDatabaseRouter")
-    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeApiDatabaseRouter(Executor executor) {
+    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true")
+    public RouterFunction<ServerResponse> sqlForgeApiDatabaseRouter(SqlForgeProperties sqlForgeProperties, ExecutorService executorService) {
         RouterFunctions.Builder builder = route();
-        builder.POST("/sql/forge/api/database/current/execute", request -> {
+        builder.POST("/sql/forge/api/database/execute", request -> {
+            String executorName = request.param("executorName").orElse("database");
             SqlScript sqlScript = request.body(SqlScript.class);
-            return ServerResponse.ok().body(executor.execute(sqlScript));
+            if (sqlForgeProperties.getApi().getDatabase().getSelectOnly()) {
+                return ServerResponse.ok().body(executorService.getExecutor(executorName).executeQuery(sqlScript));
+            } else {
+                return ServerResponse.ok().body(executorService.getExecutor(executorName).execute(sqlScript));
+            }
         });
+
         return builder.build();
     }
 
     @Bean("sqlForgeApiJsonRouter")
     @ConditionalOnProperty(name = "sql.forge.api.json.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeApiRouter(FunctionalState functionalState, CrudService crudService) {
-        functionalState.setApiJson(true);
+    public RouterFunction<ServerResponse> sqlForgeApiRouter(RecordExecutor recordExecutor) {
         RouterFunctions.Builder builder = route();
         builder.POST("sql/forge/api/json/{method}/{tableName}", accept(MediaType.APPLICATION_JSON), request -> {
+            String executorName = request.param("executorName").orElse("database");
             String method = request.pathVariable("method");
             String tableName = request.pathVariable("tableName");
             Object obj = switch (method) {
-                case "delete" -> crudService.delete(tableName, request.body(Delete.class));
-                case "insert" -> crudService.insert(tableName, request.body(Insert.class));
-                case "select" -> crudService.select(tableName, request.body(Select.class));
-                case "selectPage" -> crudService.selectPage(tableName, request.body(SelectPage.class));
-                case "update" -> crudService.update(tableName, request.body(Update.class));
+                case "delete" -> recordExecutor.delete(executorName, tableName, request.body(Delete.class));
+                case "insert" -> recordExecutor.insert(executorName, tableName, request.body(Insert.class));
+                case "select" -> recordExecutor.select(executorName, tableName, request.body(Select.class));
+                case "selectPage" -> recordExecutor.selectPage(executorName, tableName, request.body(SelectPage.class));
+                case "update" -> recordExecutor.update(executorName, tableName, request.body(Update.class));
                 default -> throw new IllegalArgumentException("method not found");
             };
             return ServerResponse.ok().body(obj);
@@ -101,170 +134,102 @@ public class SqlForgeConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(name = "sql.forge.api.template.enabled", havingValue = "true", matchIfMissing = true)
-    public IApiTemplateStorage apiTemplateStorage() {
-        return new ApiTemplateStorage();
+    public ITemplateSqlStorage templateSqlStorage() {
+        return new TemplateSqlStorage();
     }
 
     @Bean
-    @ConditionalOnProperty(name = "sql.forge.api.template.enabled", havingValue = "true", matchIfMissing = true)
-    public ApiTemplateExcutor apiTemplateExcutor(IApiTemplateStorage apiTemplateStorage, Executor executor) {
-        return new ApiTemplateExcutor(apiTemplateStorage, executor);
+    public TemplateSqlExcutor templateExcutor(ITemplateSqlStorage templateSqlStorage, ExecutorService executorService) {
+        return new TemplateSqlExcutor(templateSqlStorage, executorService);
     }
 
-    @Bean("sqlForgeApiTemplateRouter")
-    @ConditionalOnProperty(name = "sql.forge.api.template.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeApiTemplateRouter(FunctionalState functionalState, IApiTemplateStorage apiTemplateStorage, ApiTemplateExcutor apiTemplateExcutor) {
-        functionalState.setApiTemplate(true);
+    @Bean("sqlForgeApiTemplateSqlRouter")
+    @ConditionalOnProperty(name = "sql.forge.api.template.sql.enabled", havingValue = "true", matchIfMissing = true)
+    public RouterFunction<ServerResponse> sqlForgeApiTemplateSqlRouter(ITemplateSqlStorage templateSqlStorage, TemplateSqlExcutor templateSqlExcutor) {
         RouterFunctions.Builder builder = route();
-        builder.POST("sql/forge/api/template", accept(MediaType.APPLICATION_JSON), request -> {
-            ApiTemplate apiTemplate = request.body(ApiTemplate.class);
-            apiTemplateStorage.save(apiTemplate);
+        builder.PUT("sql/forge/api/template/sql", accept(MediaType.APPLICATION_JSON), request -> {
+            TemplateSql template = request.body(TemplateSql.class);
+            templateSqlStorage.save(template);
             return ServerResponse.ok().body(true);
         });
-        builder.DELETE("sql/forge/api/template/{id}", accept(MediaType.APPLICATION_JSON), request -> {
+        builder.DELETE("sql/forge/api/template/sql/{id}", accept(MediaType.APPLICATION_JSON), request -> {
             String id = request.pathVariable("id");
-            apiTemplateStorage.remove(id);
+            templateSqlStorage.remove(id);
             return ServerResponse.ok().body(true);
         });
-        builder.GET("sql/forge/api/template/{id}", accept(MediaType.APPLICATION_JSON), request -> {
+        builder.GET("sql/forge/api/template/sql/{id}", accept(MediaType.APPLICATION_JSON), request -> {
             String id = request.pathVariable("id");
-            return ServerResponse.ok().body(apiTemplateStorage.get(id));
+            return ServerResponse.ok().body(templateSqlStorage.get(id));
         });
-        builder.GET("sql/forge/api/template", accept(MediaType.APPLICATION_JSON), request -> ServerResponse.ok().body(apiTemplateStorage.list()));
-        builder.POST("sql/forge/api/template/execute/{id}", accept(MediaType.APPLICATION_JSON), request -> {
+        builder.GET("sql/forge/api/template/sql", accept(MediaType.APPLICATION_JSON), request -> {
+            String id = request.param("id").orElse(null);
+            String executorName = request.param("executorName").orElse(null);
+            String context = request.param("context").orElse(null);
+            TemplateSql template = new TemplateSql();
+            template.setId(id);
+            template.setExecutorName(executorName);
+            template.setContext(context);
+            return ServerResponse.ok().body(templateSqlStorage.list(template));
+        });
+        builder.POST("sql/forge/api/template/sql/{id}", accept(MediaType.APPLICATION_JSON), request -> {
             String id = request.pathVariable("id");
             Map<String, Object> params = request.body(new ParameterizedTypeReference<>() {
             });
-            return ServerResponse.ok().body(apiTemplateExcutor.execute(id, params));
+            return ServerResponse.ok().body(templateSqlExcutor.execute(id, params));
         });
         return builder.build();
     }
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(name = "sql.forge.api.calcite.enabled", havingValue = "true", matchIfMissing = true)
-    public IApiCalciteStorage apiCalciteStorage() {
-        return new ApiCalciteStorage();
+    public ITemplateAmisStorage templateAmisStorage() {
+        return new TemplateAmisStorage();
     }
 
-    @Bean
-    @ConditionalOnProperty(name = "sql.forge.api.calcite.enabled", havingValue = "true", matchIfMissing = true)
-    public ApiCalciteExcutor apiCalciteExcutor(IApiCalciteStorage apiCalciteStorage) {
-        return new ApiCalciteExcutor(apiCalciteStorage);
-    }
-
-    @Bean("sqlForgeApiCalciteRouter")
-    @ConditionalOnProperty(name = "sql.forge.api.calcite.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeApiCalciteRouter(IApiCalciteStorage apiCalciteStorage, ApiCalciteExcutor apiCalciteExcutor) {
+    @Bean("sqlForgeApiTemplateAmisRouter")
+    @ConditionalOnProperty(name = "sql.forge.api.template.amis.enabled", havingValue = "true", matchIfMissing = true)
+    public RouterFunction<ServerResponse> sqlForgeApiTemplateAmisRouter(ITemplateAmisStorage templateAmisStorage) {
         RouterFunctions.Builder builder = route();
-        builder.GET("sql/forge/api/calciteConfig", accept(MediaType.APPLICATION_JSON), request -> ServerResponse.ok().body(apiCalciteStorage.getConfig()));
-        builder.POST("sql/forge/api/calciteConfig", accept(MediaType.APPLICATION_JSON), request -> {
-            ApiCalciteConfig apiCalciteConfig = request.body(ApiCalciteConfig.class);
-            apiCalciteStorage.saveConfig(apiCalciteConfig);
+        builder.PUT("sql/forge/api/template/amis", accept(MediaType.APPLICATION_JSON), request -> {
+            TemplateAmis template = request.body(TemplateAmis.class);
+            templateAmisStorage.save(template);
             return ServerResponse.ok().body(true);
         });
-        builder.POST("sql/forge/api/calcite", accept(MediaType.APPLICATION_JSON), request -> {
-            ApiTemplate apiTemplate = request.body(ApiTemplate.class);
-            apiCalciteStorage.save(apiTemplate);
+        builder.DELETE("sql/forge/api/template/amis/{id}", accept(MediaType.APPLICATION_JSON), request -> {
+            String id = request.pathVariable("id");
+            templateAmisStorage.remove(id);
             return ServerResponse.ok().body(true);
         });
-        builder.DELETE("sql/forge/api/calcite/{id}", accept(MediaType.APPLICATION_JSON), request -> {
+        builder.GET("sql/forge/api/template/amis/{id}", accept(MediaType.APPLICATION_JSON), request -> {
             String id = request.pathVariable("id");
-            apiCalciteStorage.remove(id);
-            return ServerResponse.ok().body(true);
+            return ServerResponse.ok().body(templateAmisStorage.get(id));
         });
-        builder.GET("sql/forge/api/calcite/{id}", accept(MediaType.APPLICATION_JSON), request -> {
-            String id = request.pathVariable("id");
-            return ServerResponse.ok().body(apiCalciteStorage.get(id));
+        builder.GET("sql/forge/api/template/amis", accept(MediaType.APPLICATION_JSON), request -> {
+            String id = request.param("id").orElse(null);
+            String context = request.param("context").orElse(null);
+            TemplateAmis template = new TemplateAmis();
+            template.setId(id);
+            template.setContext(context);
+            return ServerResponse.ok().body(templateAmisStorage.list(template));
         });
-        builder.GET("sql/forge/api/calcite", accept(MediaType.APPLICATION_JSON), request -> ServerResponse.ok().body(apiCalciteStorage.list()));
-        builder.POST("sql/forge/api/calcite/execute/{id}", accept(MediaType.APPLICATION_JSON), request -> {
-            String id = request.pathVariable("id");
-            Map<String, Object> params = request.body(new ParameterizedTypeReference<>() {
-            });
-            return ServerResponse.ok().body(apiCalciteExcutor.execute(id, params));
-        });
-        return builder.build();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(name = "sql.forge.amis.enabled", havingValue = "true", matchIfMissing = true)
-    public IAmisStorage amisStorage() {
-        return new AmisStorage();
-    }
-
-
-    @Bean("sqlForgeAmisRouter")
-    @ConditionalOnProperty(name = "sql.forge.amis.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeAmisRouter(FunctionalState functionalState, IAmisStorage amisStorage) {
-        functionalState.setAmis(true);
-        RouterFunctions.Builder builder = RouterFunctions.route();
-        builder.POST("sql/forge/amis/template", accept(MediaType.APPLICATION_JSON), request -> {
-            ApiTemplate apiTemplate = request.body(ApiTemplate.class);
-            amisStorage.save(apiTemplate);
-            return ServerResponse.ok().body(true);
-        });
-        builder.DELETE("sql/forge/amis/template/{id}", accept(MediaType.APPLICATION_JSON), request -> {
-            String id = request.pathVariable("id");
-            amisStorage.remove(id);
-            return ServerResponse.ok().body(true);
-        });
-        builder.GET("sql/forge/amis/template/{id}", accept(MediaType.APPLICATION_JSON), request -> {
-            String id = request.pathVariable("id");
-            return ServerResponse.ok().body(amisStorage.get(id));
-        });
-        builder.GET("sql/forge/amis/template", accept(MediaType.APPLICATION_JSON), request -> ServerResponse.ok().body(amisStorage.list()));
         return builder.build();
     }
 
     @Bean("sqlForgeApiDatabaseConsoleRouter")
-    @ConditionalOnProperty(name = "sql.forge.api.calcite.enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true")
     @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeApiDatabaseConsoleRouter(FunctionalState functionalState, DataSource dataSource) {
-        functionalState.setApiDatabase(true);
+    public RouterFunction<ServerResponse> sqlForgeApiDatabaseConsoleRouter(ExecutorService executorService) {
         RouterFunctions.Builder builder = route();
-        builder.GET("sql/forge/api/databaseMetaData", request -> {
-            try (Connection connection = DataSourceUtils.getConnection(dataSource)) {
-                return ServerResponse.ok().body(MetaDataUtils.getDataSourceMetaDataTree(connection));
-            }
+        builder.GET("sql/forge/api/database/metaData", request -> {
+            String executorName = request.param("executorName").orElse("database");
+            return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaData());
         });
         return builder.build();
     }
-
-    @Bean("sqlForgeApiCalciteConsoleRouter")
-    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true", matchIfMissing = true)
-    @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeApiCalciteConsoleRouter(FunctionalState functionalState, IApiCalciteStorage apiCalciteStorage) {
-        functionalState.setApiCalcite(true);
-        RouterFunctions.Builder builder = route();
-        builder.GET("sql/forge/api/calciteMetaData", request -> {
-            String config = apiCalciteStorage.getConfig().getContext();
-
-            if (config == null || config.trim().isEmpty()) {
-                return ServerResponse.ok().body(new DataSourceMetaDataTree());
-            }
-
-            Properties info = new Properties();
-            info.setProperty("model", "inline:" + config);
-            info.setProperty("lex", "JAVA");
-
-            try (Connection conn = DriverManager.getConnection("jdbc:calcite:", info)) {
-                return ServerResponse.ok().body(MetaDataUtils.getDataSourceMetaDataTree(conn));
-            }
-        });
-        builder.POST("sql/forge/api/calcite/sql/execute", accept(MediaType.APPLICATION_JSON), request -> {
-            SqlScript sqlScript = request.body(SqlScript.class);
-            return ServerResponse.ok().body(CalciteExcutorUtils.execute(apiCalciteStorage.getConfig().getContext(), sqlScript));
-        });
-        return builder.build();
-    }
-
 
     @Bean("sqlForgeConsoleRouter")
     @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeConsoleRouter(FunctionalState functionalState) {
+    public RouterFunction<ServerResponse> sqlForgeConsoleRouter(SqlForgeProperties sqlForgeProperties, ExecutorService executorService) {
         RouterFunctions.Builder builder = RouterFunctions.route();
         builder.GET("sql/forge/console", request -> {
             String redirectUrl = UriComponentsBuilder.fromPath("/sql/forge/console/index.html")
@@ -273,7 +238,8 @@ public class SqlForgeConfiguration {
                     .toUriString();
             return ServerResponse.temporaryRedirect(URI.create(redirectUrl)).build();
         });
-        builder.GET("sql/forge/console/functionalState", request -> ServerResponse.ok().body(functionalState.getFunctionalState()));
+        builder.GET("sql/forge/api/console/executorName", request -> ServerResponse.ok().body(executorService.getExecutorNames()));
+        builder.GET("sql/forge/console/api/state", request -> ServerResponse.ok().body(sqlForgeProperties.getApi()));
         return builder.build();
     }
 }

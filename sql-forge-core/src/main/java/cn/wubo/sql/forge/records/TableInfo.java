@@ -5,12 +5,6 @@ package cn.wubo.sql.forge.records;
  */
 public record TableInfo(
         String tableName,
-        String tableType,
-        String remarks,
-        String typeCatalog,
-        String typeSchema,
-        String typeName,
-        String selfReferencingColName,
-        String refGeneration
+        String remarks
 ) {
 }

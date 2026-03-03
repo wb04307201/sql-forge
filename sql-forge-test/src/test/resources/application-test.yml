@@ -1,5 +1,13 @@
 spring:
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:file:./data/testdb;AUTO_SERVER=TRUE
+    url: jdbc:h2:mem:testdb
     username: sa
+  flyway:
+    locations: classpath:testdb/migration
+
+sql:
+  forge:
+    calcite:
+      enabled: true
+      configuration: classpath:model-test.json
