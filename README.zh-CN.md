@@ -101,6 +101,9 @@ sql:
 - `@column`: 要查询的字段数组，为空则查询所有字段
 - `@where`: 查询条件数组
 - `@join`: 关联查询条件数组
+  - type: JOIN类型（JOIN, INNER_JOIN, LEFT_OUTER_JOIN, RIGHT_OUTER_JOIN, OUTER_JOIN）
+  - joinTable: 关联表名
+  - on: 关联条件
 - `@order`: 排序字段数组
 - `@group`: 分组字段数组
 - `@distince`: 是否去重

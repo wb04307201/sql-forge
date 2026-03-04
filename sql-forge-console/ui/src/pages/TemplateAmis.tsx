@@ -59,13 +59,6 @@ export default {
                     required: true
                   },
                   {
-                    type: 'input-text',
-                    name: 'type',
-                    label: '类型',
-                    value: 'templateAmis',
-                    disabled: true
-                  },
-                  {
                     type: 'editor',
                     name: 'context',
                     label: 'AMIS模板',
@@ -150,10 +143,6 @@ export default {
           }
         },
         {
-          name: 'type',
-          label: '类型'
-        },
-        {
           name: 'context',
           label: '内容',
           searchable: {
@@ -220,12 +209,6 @@ export default {
                         type: 'input-text',
                         name: 'id',
                         label: '模板标识',
-                        disabled: true
-                      },
-                      {
-                        type: 'input-text',
-                        name: 'type',
-                        label: '类型',
                         disabled: true
                       },
                       {

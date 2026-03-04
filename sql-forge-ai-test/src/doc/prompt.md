@@ -1,6 +1,6 @@
-# 🎯 单表 Amis 界面生成 Prompt 模板
+# 🎯 Amis CRUD 单表维护界面生成 Prompt 模板
 
-以下是一个**可复用、结构化**的 Prompt 模板，您只需替换 `{{TABLE_INFO}}` 和 `{{API_SPEC}}` 即可生成任意单表的 Amis CRUD 界面 JSON：
+以下是一个**可复用、结构化**的 Prompt 模板，您只需替换 `{{TABLE_INFO}}` 和 `{{API_SPEC}}` 即可用于任意单表：
 
 ---
 
@@ -8,158 +8,225 @@
 
 ```markdown
 # 角色定义
-你是一位精通百度 Amis 低代码框架和 RESTful API 集成的前端架构师。你的任务是根据提供的「数据库表结构」和「后端 API 规范」，生成一个功能完整的单表维护界面 Amis JSON 配置。
+你是一位资深前端工程师，精通百度 Amis 低代码框架和 RESTful API 集成。你的任务是根据提供的「表结构信息」和「API 规范」，生成符合规范的 Amis CRUD 页面 JSON 配置。
 
 # 任务目标
-生成一个支持「列表展示 + 分页 + 搜索 + 新增 + 编辑 + 删除 + 导出」的单表 CRUD 界面，要求：
-1. 完全基于提供的 API 规范构造请求
-2. 自动处理字典关联字段的展示与表单渲染
-3. 字段类型智能映射（见下方规则）
-4. 输出纯 JSON，无需额外解释
+生成一个完整的单表维护界面（CRUD），支持：
+✅ 分页列表展示（含字典项关联显示）
+✅ 多条件搜索过滤（支持文本模糊、下拉多选、时间范围等）
+✅ 新增记录（表单校验 + 字典项下拉）
+✅ 编辑记录（回显 + 字典项下拉）
+✅ 单条/批量删除（含二次确认）
+✅ 列显示切换、导出 Excel、排序
 
 # 输入信息
 
-## 1️⃣ 数据库表结构（JSON）
+## 1️⃣ 表结构信息（JSON）
 {{TABLE_INFO}}
 
-## 2️⃣ 后端 API 规范摘要
+## 2️⃣ API 规范（关键摘要）
 {{API_SPEC}}
 
-# 🛠️ 生成规则（请严格遵守）
+> 🔑 核心规则：
+> - 请求路径：`/sql/forge/api/json/{method}/{tableName}?executorName={executorName}`
+> - 请求方法：`POST`，Content-Type: `application/json`
+> - method 取值：`select` | `selectPage` | `insert` | `update` | `delete`
+> - 查询条件使用 `@where` 数组，格式：`{"column": "字段", "condition": "条件类型", "value": "值"}`
+> - 条件类型支持：EQ, NOT_EQ, GT, LT, LIKE, IN, BETWEEN, IS_NULL 等
+> - 分页参数：`"@page": {"pageIndex": 0, "pageSize": 10}`（pageIndex 从 0 开始）
+> - 关联查询使用 `@join`，字典项需关联 `sys_dict_items` 并过滤 `dict_code`
 
-## 🔹 字段类型映射规则
-| 表字段特征 | Amis 表单组件 | 列表列配置 |
-|-----------|------------|-----------|
-| type=string + max≤100 | input-text | 默认文本展示 |
-| type=string + ref存在 | select（source调用字典API） | 展示字典item_name |
-| type=number/int | input-number | 右对齐数字 |
-| type=boolean | switch | 是/否标签 |
-| pk=true | uuid（新增时）/ 隐藏（编辑时） | 列表隐藏 |
-| 字段名含 time/date | input-datetime | 格式化展示 |
+# 输出要求
 
-## 🔹 字典关联处理（ref字段）
-当字段有 `ref` 属性时：
-1. 列表查询：通过 `@join` 关联 `sys_dict_items` 表，使用 `item_name AS 字段别名` 展示
-2. 搜索表单：生成 `select` 组件，`source` 调用字典查询API，过滤条件 `dict_code=xxx`
-3. 增/改表单：同上，`name` 使用原字段编码（如 `DICT_SEX`），`valueField=item_code`
+## 📦 输出格式
+直接输出**纯 JSON**，不要包裹 Markdown 代码块，不要额外解释。
 
-## 🔹 API 请求构造规则
-- 列表分页：`POST /sql/forge/api/json/selectPage/{tableName}`
-  - `@page`: `{pageIndex: "${page - 1}", pageSize: "${perPage}"}`
-  - `@order`: 支持前端排序传参 `"${orderBy && orderDir ? (orderBy + ' ' + orderDir): ''}"`
-- 单条查询：`select/{tableName}` + `@where` 主键 EQ
-- 新增：`insert/{tableName}` + `@set` 表单数据
-- 更新：`update/{tableName}` + `@set` + `@where` 主键
-- 删除：`delete/{tableName}` + `@where` 主键 IN（支持批量）
-- 导出：复用 `select/{tableName}` 接口，去掉分页参数
-
-## 🔹 搜索表单生成
-- `autoGenerateFilter: true` 启用自动过滤
-- 文本字段：`input-text` + `LIKE` 条件
-- 字典字段：`select` + `multiple` + `IN` 条件 + `split` 处理
-- 所有搜索值使用 `${字段名 | default:undefined}` 空值处理
-
-## 🔹 界面结构要求
+## 🧱 Amis 页面结构要求
 ```json
 {
   "type": "page",
   "body": {
     "type": "crud",
-    "id": "crud_table",  // 固定ID，用于刷新
-    "api": { ... },      // 分页查询API
-    "headerToolbar": [  // 新增按钮、列切换、导出
-      { "type": "button", "actionType": "drawer", "drawer": { ... } },  // 新增表单
-      "bulkActions",
-      { "type": "columns-toggler" },
-      { "type": "export-excel", ... }
-    ],
-    "bulkActions": [    // 批量删除
-      { "actionType": "ajax", "api": { ... }, "confirmText": "..." }
-    ],
-    "columns": [        // 列表列 + 操作列
-      { "name": "字段", "label": "...", "sortable": true, "searchable": {...} },
-      {
-        "type": "operation",
-        "buttons": [
-          { "label": "修改", "actionType": "drawer", "drawer": { ... } },  // 编辑表单
-          { "label": "删除", "actionType": "ajax", "api": {...}, "confirmText": "..." }
-        ]
-      }
-    ]
+    "id": "crud_table",
+    "api": { /* 分页查询 API 配置 */ },
+    "headerToolbar": [ /* 新增、导出、列切换 */ ],
+    "footerToolbar": [ /* 分页控件 */ ],
+    "bulkActions": [ /* 批量删除 */ ],
+    "columns": [ /* 列定义 + 操作按钮 */ ]
   }
 }
 ```
 
-## 🔹 关键细节
-1. 所有 API 的 `data` 中的变量使用 Amis 模板语法：`${变量名}`
-2. 分页参数转换：Amis 页码从 1 开始 → API 要求 0 开始：`"${page - 1}"`
-3. 字典查询的 `adaptor` 统一格式：
-   ```js
-   "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name || item.ITEM_NAME\n  }))\n};"
-   ```
-4. 主键字段：新增时用 `uuid` 组件自动生成，编辑/列表时隐藏
-5. 操作列固定右侧：`"fixed": "right"`
-6. 所有危险操作（删除）必须加 `confirmText`
+## 🔧 字段映射规则
+| 表字段类型 | Amis 组件 | 搜索组件 | 备注 |
+|-----------|----------|----------|------|
+| string + search:true | input-text | input-text + LIKE |  maxLength 取自字段 max |
+| string + ref(字典) | select | select + 多选 | source 调用 sys_dict_items |
+| number | input-number | input-number | - |
+| date/datetime | input-datetime | input-datetime-range | - |
+| boolean | switch | - | - |
+| 主键 | hidden | - | 新增时用 uuid 组件生成 |
 
-# 🚫 禁止事项
-- 不要硬编码表名/字段名，必须从输入表结构动态生成
-- 不要遗漏字典字段的关联查询条件（如 `sex.dict_code = 'sex'`）
-- 不要使用未定义的 API 路径或参数
-- 不要输出 Markdown 代码块标记，只返回纯 JSON
+## 🎯 关键实现细节
+1. **字典项关联**：
+   - 列表显示：`@join` 关联 `sys_dict_items`，查询 `item_name` 并 `AS 别名`
+   - 表单下拉：`source` 调用 `select/sys_dict_items`，过滤 `dict_code='xxx'`
+   - 搜索条件：字典字段搜索用 `IN` 条件，值用 `${SEX | default:undefined | split}` 处理多选
 
-# ✅ 输出要求
-直接输出完整的 Amis JSON 配置，格式合法、缩进规范，可被 `amis.embed()` 直接渲染。
+2. **API 数据绑定**：
+   - 分页查询：`@page.pageIndex = "${page - 1}"`（Amis 页码从 1 开始）
+   - 排序：`@order = ["${orderBy && orderDir ? (orderBy + ' ' + orderDir) : ''}"]`
+   - 搜索值：使用 `${字段名 | default:undefined}` 空值处理
 
----
-现在，请根据上方输入的表结构和 API 规范，生成对应的单表维护界面 JSON：
+3. **表单交互**：
+   - 新增：使用 `drawer` + `form`，提交后 `reload` 表格
+   - 编辑：`initApi` 回显数据，`responseData: { "&": "${items | first}" }`
+   - 删除：单条/批量均用 `@where + IN/EQ`，添加 `confirmText`
+
+4. **主键处理**：
+   - 新增时 ID 字段用 `"type": "uuid"` 自动生成
+   - 更新/删除时通过 `@where + EQ` 锁定主键
+
+# 约束条件
+⚠️ 严格遵守：
+1. 所有 API 请求必须使用 `POST` + JSON Body，**不得**使用 URL 参数传查询条件
+2. 字典项关联必须添加 `{"column": "sex.dict_code", "condition": "EQ", "value": "sex"}` 过滤条件
+3. 搜索表单字段名必须与 `@where` 中的 `column` 对应，支持 `${xxx | default:undefined}` 空值保护
+4. 批量操作使用 `IN` 条件，值格式：`"${ids | split}"`
+5. 不要生成后端代码，只输出 Amis JSON 配置
+6. 保持 JSON 格式合法，缩进 2 空格
+
+# 示例参考（简化版）
+<details>
+<summary>📌 查询 API 配置示例</summary>
+
+```json
+"api": {
+  "method": "post",
+  "url": "/sql/forge/api/json/selectPage/USERS",
+  "data": {
+    "@column": ["USERS.ID", "USERS.USERNAME", "sex.item_name as SEX"],
+    "@join": [{"type": "JOIN", "joinTable": "sys_dict_items sex", "on": "USERS.DICT_SEX = sex.item_code"}],
+    "@where": [
+      {"column": "USERS.USERNAME", "condition": "LIKE", "value": "${USERNAME | default:undefined}"},
+      {"column": "sex.dict_code", "condition": "EQ", "value": "sex"}
+    ],
+    "@page": {"pageIndex": "${page - 1}", "pageSize": "${perPage}"},
+    "@order": ["${orderBy && orderDir ? (orderBy + ' ' + orderDir) : ''}"]
+  }
+}
+```
+</details>
+
+# 开始生成
+请根据上方提供的【表结构信息】和【API 规范】，生成完整的 Amis CRUD 页面 JSON 配置：
 ```
 
 ---
 
-## 💡 使用示例
+## 🔄 使用方式
 
 ```javascript
-// 调用大模型时替换变量
+// 伪代码：调用大模型
 const prompt = template
   .replace('{{TABLE_INFO}}', JSON.stringify(tableSchema, null, 2))
-  .replace('{{API_SPEC}}', apiSpecSummary);  // 可精简API规范，只保留关键部分
+  .replace('{{API_SPEC}}', apiSpecSummary); // 可精简 API 规范，保留关键规则
 
-// 建议的 API 规范摘要（精简版）
-const apiSpecSummary = `
-后端 API 基础路径: /sql/forge/api/json/{method}/{tableName}
-支持方法: select | selectPage | insert | update | delete
-请求格式:
-- 查询: { "@column":[], "@where":[], "@join":[], "@order":[], "@page":{pageIndex,pageSize} }
-- 插入: { "@set": {字段:值} }
-- 更新: { "@set": {字段:新值}, "@where":[...] }
-- 删除: { "@where":[...] }
-字典表: sys_dict_items (item_code, dict_code, item_name)
-`;
+const response = await callLLM(prompt);
+const amisJson = JSON.parse(response); // 直接解析使用
 ```
 
 ---
 
-## 🔧 进阶优化建议
+## 💡 优化建议
 
-1. **增加字段备注映射**：在表信息的 `desc` 字段内容自动作为 `label` 或 `placeholder`
-2. **必填校验**：如果表结构扩展 `nullable: false`，生成 `required: true`
-3. **权限控制**：在 prompt 中增加「根据角色隐藏按钮」的规则
-4. **国际化**：要求生成的 `label` 使用 `i18n: 'key'` 格式
-5. **响应处理**：为 `initApi` 添加 `responseData: { "&": "${items | first}" }` 自动提取单条数据
+### 1. API 规范精简技巧
+不必传入完整 API 文档，提取关键规则即可：
+```markdown
+## API 规范摘要
+- 路径：`/sql/forge/api/json/{method}/{table}`
+- 查询条件：`@where: [{column, condition, value}]`，condition 支持 EQ/LIKE/IN/BETWEEN
+- 分页：`@page: {pageIndex: 0-based, pageSize}`
+- 关联：`@join: [{type, joinTable, on}]`
+- 字典项：关联 sys_dict_items 时需加 `dict_code='xxx'` 过滤
+```
+
+### 2. 表信息预处理建议
+在传入前可增强字段语义：
+```json
+{
+  "fields": {
+    "DICT_SEX": {
+      "type": "string",
+      "desc": "性别",
+      "ref": {"table": "sys_dict_items", "filter": {"dict_code": "sex"}},
+      "amisComponent": "select",  // ✅ 预指定组件类型
+      "searchable": true
+    }
+  }
+}
+```
+
+### 3. 后处理校验（可选）
+生成后可用简单规则校验：
+```javascript
+// 检查必要字段
+const requiredKeys = ['type', 'body', 'api', 'columns'];
+requiredKeys.forEach(key => {
+  if (!amisJson.body?.[key]) throw new Error(`Missing ${key}`);
+});
+
+// 检查 API 路径格式
+if (!/\/sql\/forge\/api\/json\/\w+\/\w+/.test(amisJson.body.api.url)) {
+  console.warn('API URL 格式可能不正确');
+}
+```
 
 ---
 
-## ⚠️ 常见问题规避
+## 🎁 附加：一键调用模板（Markdown 格式）
 
-| 问题 | 解决方案 |
-|-----|---------|
-| 字典字段查询重复关联 | 在 `@where` 中固定 `dict_code='xxx'` 条件 |
-| 分页页码偏移 | 明确写死 `"pageIndex": "${page - 1}"` |
-| 多字典表关联别名冲突 | join 时给字典表加随机后缀：`sys_dict_items sex_${random}` |
-| 表单提交字段名错误 | 确保 `@set` 中使用数据库原始字段名（如 `DICT_SEX`），而非展示别名 |
+如果您使用支持 Markdown 的 LLM 平台，可直接复制下方模板：
+
+<details>
+<summary>📋 复制即用 Prompt</summary>
+
+````markdown
+# Role
+你是一位百度 Amis + 低代码 API 集成专家。
+
+# Task
+根据以下【表结构】和【API 规范】，生成单表 CRUD 的 Amis 页面 JSON 配置。
+
+# Table Schema
+```json
+{{TABLE_INFO}}
+```
+
+# API Specification
+```markdown
+- Base URL: `/sql/forge/api/json/{method}/{tableName}`
+- Method: POST, Content-Type: application/json
+- Query: `@where: [{column, condition(EQ|LIKE|IN|...), value}]`
+- Page: `@page: {pageIndex: 0-based, pageSize}`
+- Join: `@join: [{type, joinTable, on}]`
+- Dict: 关联 sys_dict_items 时必须加 `dict_code='xxx'` 过滤
+```
+
+# Output Rules
+1. 直接输出纯 JSON，无 Markdown 包裹
+2. 支持：分页列表、搜索、新增、编辑、删除、批量操作、字典关联
+3. 字段映射：string→input-text, dict→select, pk→uuid/hidden
+4. 搜索值用 `${field | default:undefined}`，分页用 `${page-1}`
+5. 批量操作用 `IN` + `${ids | split}`
+
+# Start
+请生成 Amis CRUD JSON：
+````
+</details>
 
 ---
 
-> 📌 **提示**：将此 prompt 保存为模板文件，配合脚本自动注入表结构 JSON，即可实现「输入表定义 → 输出 Amis 界面」的自动化流程。
+> ✨ **提示**：将此模板保存为 `amis-crud-prompt.md`，每次只需替换 `{{TABLE_INFO}}` 即可复用，大幅提升低代码页面生成效率！
 
-如果需要我针对某个具体表结构演示生成效果，或调整 prompt 适配您的项目规范，请随时告知！🚀
+如需我帮您针对具体表结构生成一次示例，或调整 Prompt 适配特定大模型（如 Qwen、Claude、GPT），请随时告知~ 🚀

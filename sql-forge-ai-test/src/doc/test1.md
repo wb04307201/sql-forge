@@ -1,34 +1,34 @@
 # 角色定义
-你是一位精通百度 Amis 低代码框架和 RESTful API 集成的前端架构师。你的任务是根据提供的「数据库表结构」和「后端 API 规范」，生成一个功能完整的单表维护界面 Amis JSON 配置。
+你是一位资深前端工程师，精通百度 Amis 低代码框架和 RESTful API 集成。你的任务是根据提供的「表结构信息」和「API 规范」，生成符合规范的 Amis CRUD 页面 JSON 配置。
 
 # 任务目标
-生成一个支持「列表展示 + 分页 + 搜索 + 新增 + 编辑 + 删除 + 导出」的单表 CRUD 界面，要求：
-1. 完全基于提供的 API 规范构造请求
-2. 自动处理字典关联字段的展示与表单渲染
-3. 字段类型智能映射（见下方规则）
-4. 输出纯 JSON，无需额外解释
+生成一个完整的单表维护界面（CRUD），支持：
+✅ 分页列表展示（含字典项关联显示）
+✅ 多条件搜索过滤（支持文本模糊、下拉多选、时间范围等）
+✅ 新增记录（表单校验 + 字典项下拉）
+✅ 编辑记录（回显 + 字典项下拉）
+✅ 单条/批量删除（含二次确认）
+✅ 列显示切换、导出 Excel、排序
 
 # 输入信息
 
-## 1️⃣ 数据库表结构（JSON）
+## 1️⃣ 表结构信息（JSON）
 ```json
 [{
-  "table": "USERS",
-  "desc": "用户表",
+  "table": "products",
+  "desc": "商品表",
+  "type": "table",
   "fields": {
-    "ID": {"type": "string", "pk": true, "desc": "用户ID"},
-    "USERNAME": {"type": "string", "max": 50, "desc": "用户名"},
-    "DICT_SEX": {"type": "string", "max": 100, "desc": "性别", "ref": {
-      "table": "sys_dict_items",
-      "on": "item_code",
-      "filter": {"dict_code": "sex"}
-    }},
-    "EMAIL": {"type": "string", "max": 100, "desc": "邮箱地址"}
+    "ID": {"type": "string", "pk": true, "desc": "商品ID"},
+    "name": {"type": "string", "max": 50, "desc": "商品名称","search": true},
+    "dict_categories": {"type": "string", "max": 100, "desc": "商品类型", "ref": {"type":"JOIN","table": "sys_dict_items", "on": "item_code", "filter": {"dict_code": "categories"}},"search": true},
+    "price": {"type": "number", "max": 10, "precision": 2, "desc": "邮箱地址","search": true}
   }
 },
 {
   "table": "sys_dict_items",
   "desc": "字典项表",
+  "type": "ref",
   "fields": {
     "item_code": {"type": "string", "desc": "字典项编码"},
     "dict_code": {"type": "string", "desc": "字典项编码"},
@@ -37,7 +37,7 @@
 }]
 ```
 
-## 2️⃣ 后端 API 规范摘要
+## 2️⃣ API 规范（关键摘要）
 让前端无需编写后端代码即可操作数据库，通过`JSON`格式描述自己需要的数据结构和操作，后端自动生成对应的`SQL`执行并返回结果。
 
 - **请求路径**: `/sql/forge/api/json/{method}/{tableName}?executorName={executorName}`
@@ -78,6 +78,9 @@
 - `@column`: 要查询的字段数组，为空则查询所有字段
 - `@where`: 查询条件数组
 - `@join`: 关联查询条件数组
+  - type: JOIN类型（JOIN, INNER_JOIN, LEFT_OUTER_JOIN, RIGHT_OUTER_JOIN, OUTER_JOIN）
+  - joinTable: 关联表名
+  - on: 关联条件
 - `@order`: 排序字段数组
 - `@group`: 分组字段数组
 - `@distince`: 是否去重
@@ -462,114 +465,534 @@ WHERE (id = ?)
 }
 ```
 
-#### 方法执行前切面
-可通过实现[IExecute.java](sql-forge-crud/src/main/java/cn/wubo/sql/forge/inter/IExecute.java)接口自定义方法执行前的json调整，实现密码加密、自动更新时间戳、权限控制、日志、审计等
+> 🔑 核心规则：
+> - 请求路径：`/sql/forge/api/json/{method}/{tableName}?executorName={executorName}`
+> - 请求方法：`POST`，Content-Type: `application/json`
+> - method 取值：`select` | `selectPage` | `insert` | `update` | `delete`
+> - 查询条件使用 `@where` 数组，格式：`{"column": "字段", "condition": "条件类型", "value": "值"}`
+> - 条件类型支持：EQ, NOT_EQ, GT, LT, LIKE, IN, BETWEEN, IS_NULL 等
+> - 分页参数：`"@page": {"pageIndex": 0, "pageSize": 10}`（pageIndex 从 0 开始）
+> - 关联查询使用 `@join`，字典项需关联 `sys_dict_items` 并过滤 `dict_code`
 
-例如实现在Insert时输出日志：
-```java
-@Slf4j
-@Component
-public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
-  @Override
-  public Boolean support(String tableName, Insert insert) {
-    return true;
-  }
+# 输出要求
 
-  @Override
-  public Insert before(String tableName, Insert insert) {
-    log.info("LogInsertExecute tableName: {} record: {}", tableName, insert);
-    return insert;
-  }
-}
-```
+## 📦 输出格式
+直接输出**纯 JSON**，不要包裹 Markdown 代码块，不要额外解释。
 
-#### 配置
-可通过`sql.forge.api.json.enabled=false`关闭
-
-# 🛠️ 生成规则（请严格遵守）
-
-## 🔹 字段类型映射规则
-| 表字段特征 | Amis 表单组件 | 列表列配置 |
-|-----------|------------|-----------|
-| type=string + max≤100 | input-text | 默认文本展示 |
-| type=string + ref存在 | select（source调用字典API） | 展示字典item_name |
-| type=number/int | input-number | 右对齐数字 |
-| type=boolean | switch | 是/否标签 |
-| pk=true | uuid（新增时）/ 隐藏（编辑时） | 列表隐藏 |
-| 字段名含 time/date | input-datetime | 格式化展示 |
-
-## 🔹 字典关联处理（ref字段）
-当字段有 `ref` 属性时：
-1. 列表查询：通过 `@join` 关联 `sys_dict_items` 表，使用 `item_name AS 字段别名` 展示
-2. 搜索表单：生成 `select` 组件，`source` 调用字典查询API，过滤条件 `dict_code=xxx`
-3. 增/改表单：同上，`name` 使用原字段编码（如 `DICT_SEX`），`valueField=item_code`
-
-## 🔹 API 请求构造规则
-- 列表分页：`POST /sql/forge/api/json/selectPage/{tableName}`
-  - `@page`: `{pageIndex: "${page - 1}", pageSize: "${perPage}"}`
-  - `@order`: 支持前端排序传参 `"${orderBy && orderDir ? (orderBy + ' ' + orderDir): ''}"`
-- 单条查询：`select/{tableName}` + `@where` 主键 EQ
-- 新增：`insert/{tableName}` + `@set` 表单数据
-- 更新：`update/{tableName}` + `@set` + `@where` 主键
-- 删除：`delete/{tableName}` + `@where` 主键 IN（支持批量）
-- 导出：复用 `select/{tableName}` 接口，去掉分页参数
-
-## 🔹 搜索表单生成
-- `autoGenerateFilter: true` 启用自动过滤
-- 文本字段：`input-text` + `LIKE` 条件
-- 字典字段：`select` + `multiple` + `IN` 条件 + `split` 处理
-- 所有搜索值使用 `${字段名 | default:undefined}` 空值处理
-
-## 🔹 界面结构要求
+## 🧱 Amis 页面结构要求
 ```json
 {
   "type": "page",
   "body": {
     "type": "crud",
-    "id": "crud_table",  // 固定ID，用于刷新
-    "api": { ... },      // 分页查询API
-    "headerToolbar": [  // 新增按钮、列切换、导出
-      { "type": "button", "actionType": "drawer", "drawer": { ... } },  // 新增表单
+    "id": "crud_table",
+    "api": { /* 分页查询 API 配置 */ },
+    "headerToolbar": [ /* 新增、导出、列切换 */ ],
+    "footerToolbar": [ /* 分页控件 */ ],
+    "bulkActions": [ /* 批量删除 */ ],
+    "columns": [ /* 列定义 + 操作按钮 */ ]
+  }
+}
+```
+
+## 🔧 字段映射规则
+| 表字段类型                | Amis 组件        | 搜索组件                 | 备注                       |
+|----------------------|----------------|----------------------|--------------------------|
+| string + search:true | input-text     | input-text + LIKE    | maxLength 取自字段 max       |
+| string + ref(字典)     | select         | select + 多选          | source 调用 sys_dict_items |
+| number               | input-number   | input-number         | -                        |
+| date/datetime        | input-datetime | input-datetime-range | -                        |
+| boolean              | switch         | -                    | -                        |
+| 主键                   | hidden         | -                    | 新增时用 uuid 组件生成           |
+
+## 🎯 关键实现细节
+1. **字典项关联**：
+  - 列表显示：`@join` 关联 `sys_dict_items`，查询 `item_name` 并 `AS 别名`
+  - 表单下拉：`source` 调用 `select/sys_dict_items`，过滤 `dict_code='xxx'`
+  - 搜索条件：字典字段搜索用 `IN` 条件，值用 `${SEX | default:undefined | split}` 处理多选
+
+2. **API 数据绑定**：
+  - 分页查询：`@page.pageIndex = "${page - 1}"`（Amis 页码从 1 开始）
+  - 排序：`@order = ["${orderBy && orderDir ? (orderBy + ' ' + orderDir) : ''}"]`
+  - 搜索值：使用 `${字段名 | default:undefined}` 空值处理
+
+3. **表单交互**：
+  - 新增：使用 `drawer` + `form`，提交后 `reload` 表格
+  - 编辑：`initApi` 回显数据，`responseData: { "&": "${items | first}" }`
+  - 删除：单条/批量均用 `@where + IN/EQ`，添加 `confirmText`
+
+4. **主键处理**：
+  - 新增时 ID 字段用 `"type": "uuid"` 自动生成
+  - 更新/删除时通过 `@where + EQ` 锁定主键
+
+# 约束条件
+⚠️ 严格遵守：
+1. 所有 API 请求必须使用 `POST` + JSON Body，**不得**使用 URL 参数传查询条件
+2. 字典项关联必须添加 `{"column": "sex.dict_code", "condition": "EQ", "value": "sex"}` 过滤条件
+3. 搜索表单字段名必须与 `@where` 中的 `column` 对应，支持 `${xxx | default:undefined}` 空值保护
+4. 批量操作使用 `IN` 条件，值格式：`"${ids | split}"`
+5. 不要生成后端代码，只输出 Amis JSON 配置
+6. 保持 JSON 格式合法，缩进 2 空格
+
+# 示例
+## 表结构信息（JSON）
+```json
+[{
+  "table": "USERS",
+  "desc": "用户表",
+  "type": "table",
+  "fields": {
+    "ID": {"type": "string", "pk": true, "desc": "用户ID"},
+    "USERNAME": {"type": "string", "max": 50, "desc": "用户名","search": true},
+    "DICT_SEX": {"type": "string", "max": 100, "desc": "性别", "ref": {"type":"JOIN","table": "sys_dict_items", "on": "item_code", "filter": {"dict_code": "sex"}},"search": true},
+    "EMAIL": {"type": "string", "max": 100, "desc": "邮箱地址","search": true}
+  }
+},
+  {
+    "table": "sys_dict_items",
+    "desc": "字典项表",
+    "type": "ref",
+    "fields": {
+      "item_code": {"type": "string", "desc": "字典项编码"},
+      "dict_code": {"type": "string", "desc": "字典项编码"},
+      "item_name": {"type": "string", "desc": "字典项名称"}
+    }
+  }]
+```
+
+## Amis CRUD 页面 JSON 配置
+```json
+{
+  "type": "page",
+  "body": {
+    "type": "crud",
+    "id": "crud_table",
+    "api": {
+      "method": "post",
+      "url": "/sql/forge/api/json/selectPage/USERS",
+      "data": {
+        "@column": [
+          "USERS.ID",
+          "USERS.USERNAME",
+          "sex.item_name as SEX",
+          "USERS.EMAIL"
+        ],
+        "@join": [
+          {
+            "type": "JOIN",
+            "joinTable": "sys_dict_items sex",
+            "on": "USERS.DICT_SEX = sex.item_code"
+          }
+        ],
+        "@where": [
+          {
+            "column": "USERS.USERNAME",
+            "condition": "LIKE",
+            "value": "${USERNAME | default:undefined}"
+          },
+          {
+            "column": "USERS.DICT_SEX",
+            "condition": "IN",
+            "value": "${SEX | default:undefined | split}"
+          },
+          {
+            "column": "USERS.EMAIL",
+            "condition": "LIKE",
+            "value": "${EMAIL | default:undefined}"
+          },
+          {
+            "column": "sex.dict_code",
+            "condition": "EQ",
+            "value": "sex"
+          }
+        ],
+        "@order": [
+          "${default(orderBy && orderDir ? (orderBy + ' ' + orderDir):'',undefined)}"
+        ],
+        "@page": {
+          "pageIndex": "${page - 1}",
+          "pageSize": "${perPage}"
+        }
+      }
+    },
+    "headerToolbar": [
+      {
+        "label": "新增",
+        "type": "button",
+        "icon": "fa fa-plus",
+        "level": "primary",
+        "actionType": "drawer",
+        "drawer": {
+          "title": "新增表单",
+          "body": {
+            "type": "form",
+            "api": {
+              "method": "post",
+              "url": "/sql/forge/api/json/insert/USERS",
+              "data": {
+                "@set": {
+                  "ID": "${ID | default:undefined}",
+                  "USERNAME": "${USERNAME | default:undefined}",
+                  "DICT_SEX": "${DICT_SEX | default:undefined}",
+                  "EMAIL": "${EMAIL | default:undefined}"
+                }
+              }
+            },
+            "onEvent": {
+              "submitSucc": {
+                "actions": [
+                  {
+                    "actionType": "reload",
+                    "componentId": "crud_table"
+                  }
+                ]
+              }
+            },
+            "body": [
+              {
+                "type": "uuid",
+                "id": "insert-ID",
+                "name": "ID"
+              },
+              {
+                "type": "input-text",
+                "name": "USERNAME",
+                "label": "用户名",
+                "maxLength": 50,
+                "disabled": false,
+                "id": "insert-USERNAME"
+              },
+              {
+                "type": "select",
+                "name": "DICT_SEX",
+                "label": "性别",
+                "maxLength": 100,
+                "source": {
+                  "method": "post",
+                  "url": "/sql/forge/api/json/select/sys_dict_items",
+                  "data": {
+                    "@column": [
+                      "item_code",
+                      "item_name"
+                    ],
+                    "@where": [
+                      {
+                        "column": "dict_code",
+                        "condition": "EQ",
+                        "value": "sex"
+                      }
+                    ]
+                  },
+                  "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name ||  item.ITEM_NAME\n  }))\n};"
+                },
+                "clearable": true,
+                "disabled": false,
+                "id": "insert-SEX"
+              },
+              {
+                "type": "input-text",
+                "name": "EMAIL",
+                "label": "用户邮箱地址",
+                "maxLength": 100,
+                "disabled": false,
+                "id": "insert-EMAIL"
+              }
+            ]
+          }
+        }
+      },
       "bulkActions",
-      { "type": "columns-toggler" },
-      { "type": "export-excel", ... }
+      {
+        "type": "columns-toggler",
+        "draggable": true,
+        "align": "right"
+      },
+      {
+        "type": "export-excel",
+        "label": "导出",
+        "icon": "fa fa-file-excel",
+        "api": {
+          "method": "post",
+          "url": "/sql/forge/api/json/select/USERS",
+          "data": {
+            "@column": [
+              "USERS.ID",
+              "USERS.USERNAME",
+              "sex.item_name as SEX",
+              "USERS.EMAIL"
+            ],
+            "@join": [
+              {
+                "type": "JOIN",
+                "joinTable": "sys_dict_item sex",
+                "on": "USERS.DICT_SEX = sex.item_code"
+              }
+            ],
+            "@where": [
+              {
+                "column": "USERS.USERNAME",
+                "condition": "LIKE",
+                "value": "${USERNAME | default:undefined}"
+              },
+              {
+                "column": "USERS.DICT_SEX",
+                "condition": "IN",
+                "value": "${DICT_SEX | default:undefined | split}"
+              },
+              {
+                "column": "USERS.EMAIL",
+                "condition": "LIKE",
+                "value": "${EMAIL | default:undefined}"
+              },
+              {
+                "column": "sex.dict_code",
+                "condition": "EQ",
+                "value": "sex"
+              }
+            ]
+          }
+        },
+        "align": "right"
+      }
     ],
-    "bulkActions": [    // 批量删除
-      { "actionType": "ajax", "api": { ... }, "confirmText": "..." }
+    "footerToolbar": [
+      "statistics",
+      {
+        "type": "pagination",
+        "layout": "total,perPage,pager,go"
+      }
     ],
-    "columns": [        // 列表列 + 操作列
-      { "name": "字段", "label": "...", "sortable": true, "searchable": {...} },
+    "bulkActions": [
+      {
+        "label": "批量删除",
+        "icon": "fa fa-trash",
+        "actionType": "ajax",
+        "api": {
+          "method": "post",
+          "url": "/sql/forge/api/json/delete/USERS",
+          "data": {
+            "@where": [
+              {
+                "column": "ID",
+                "condition": "IN",
+                "value": "${ids | split}"
+              }
+            ]
+          }
+        },
+        "confirmText": "确定要批量删除?"
+      }
+    ],
+    "keepItemSelectionOnPageChange": true,
+    "labelTpl": "${USERNAME}",
+    "autoFillHeight": true,
+    "autoGenerateFilter": true,
+    "showIndex": true,
+    "primaryField": "ID",
+    "columns": [
+      {
+        "name": "ID",
+        "hidden": true
+      },
+      {
+        "name": "USERNAME",
+        "label": "用户名",
+        "sortable": true,
+        "searchable": {
+          "type": "input-text",
+          "name": "USERNAME",
+          "label": "用户名",
+          "maxLength": 50,
+          "placeholder": "输入用户名"
+        }
+      },
+      {
+        "name": "SEX",
+        "label": "性别",
+        "sortable": true,
+        "searchable": {
+          "type": "select",
+          "name": "SEX",
+          "label": "性别",
+          "maxLength": 100,
+          "placeholder": "输入性别",
+          "multiple": true,
+          "source": {
+            "method": "post",
+            "url": "/sql/forge/api/json/select/sys_dict_items",
+            "data": {
+              "@column": [
+                "item_code",
+                "item_name"
+              ],
+              "@where": [
+                {
+                  "column": "dict_code",
+                  "condition": "EQ",
+                  "value": "sex"
+                }
+              ]
+            },
+            "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name ||  item.ITEM_NAME\n  }))\n};"
+          },
+          "clearable": true
+        }
+      },
+      {
+        "name": "EMAIL",
+        "label": "用户邮箱地址",
+        "sortable": true,
+        "searchable": {
+          "type": "input-text",
+          "name": "EMAIL",
+          "label": "用户邮箱地址",
+          "maxLength": 100,
+          "placeholder": "输入用户邮箱地址"
+        }
+      },
       {
         "type": "operation",
+        "label": "操作",
         "buttons": [
-          { "label": "修改", "actionType": "drawer", "drawer": { ... } },  // 编辑表单
-          { "label": "删除", "actionType": "ajax", "api": {...}, "confirmText": "..." }
-        ]
+          {
+            "label": "修改",
+            "type": "button",
+            "icon": "fa fa-pen-to-square",
+            "actionType": "drawer",
+            "drawer": {
+              "title": "新增表单",
+              "body": {
+                "type": "form",
+                "initApi": {
+                  "method": "post",
+                  "url": "/sql/forge/api/json/select/USERS",
+                  "data": {
+                    "@column": [
+                      "USERS.ID",
+                      "USERS.USERNAME",
+                      "USERS.SEX",
+                      "USERS.EMAIL"
+                    ],
+                    "@join": [
+                      {
+                        "type": "JOIN",
+                        "joinTable": "sys_dict_item sex_a814d446",
+                        "on": "USERS.SEX = sex_a814d446.item_code"
+                      }
+                    ],
+                    "@where": [
+                      {
+                        "column": "USERS.ID",
+                        "condition": "EQ",
+                        "value": "${ID}"
+                      }
+                    ]
+                  },
+                  "responseData": {
+                    "&": "${items | first}"
+                  }
+                },
+                "api": {
+                  "method": "post",
+                  "url": "/sql/forge/api/json/update/USERS",
+                  "data": {
+                    "@set": {
+                      "ID": "${ID}",
+                      "USERNAME": "${USERNAME}",
+                      "SEX": "${SEX}",
+                      "EMAIL": "${EMAIL}"
+                    },
+                    "@where": [
+                      {
+                        "column": "USERS.ID",
+                        "condition": "EQ",
+                        "value": "${ID}"
+                      }
+                    ]
+                  }
+                },
+                "body": [
+                  {
+                    "type": "input-text",
+                    "name": "ID",
+                    "hidden": true,
+                    "id": "update-ID"
+                  },
+                  {
+                    "type": "input-text",
+                    "name": "USERNAME",
+                    "label": "用户名",
+                    "maxLength": 50,
+                    "disabled": false,
+                    "id": "update-USERNAME"
+                  },
+                  {
+                    "type": "select",
+                    "name": "SEX",
+                    "label": "性别",
+                    "maxLength": 100,
+                    "source": {
+                      "method": "post",
+                      "url": "/sql/forge/api/json/select/sys_dict_item",
+                      "data": {
+                        "@column": [
+                          "item_code",
+                          "item_name"
+                        ],
+                        "@where": [
+                          {
+                            "column": "dict_code",
+                            "condition": "EQ",
+                            "value": "sex"
+                          }
+                        ]
+                      },
+                      "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name ||  item.ITEM_NAME\n  }))\n};"
+                    },
+                    "clearable": true,
+                    "disabled": false,
+                    "id": "update-SEX"
+                  },
+                  {
+                    "type": "input-text",
+                    "name": "EMAIL",
+                    "label": "用户邮箱地址",
+                    "maxLength": 100,
+                    "disabled": false,
+                    "id": "update-EMAIL"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "label": "删除",
+            "type": "button",
+            "icon": "fa fa-minus",
+            "actionType": "ajax",
+            "level": "danger",
+            "confirmText": "确认要删除？",
+            "api": {
+              "method": "post",
+              "url": "/sql/forge/api/json/delete/USERS",
+              "data": {
+                "@where": [
+                  {
+                    "column": "ID",
+                    "condition": "EQ",
+                    "value": "${ID}"
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "fixed": "right"
       }
     ]
   }
 }
 ```
 
-## 🔹 关键细节
-1. 所有 API 的 `data` 中的变量使用 Amis 模板语法：`${变量名}`
-2. 分页参数转换：Amis 页码从 1 开始 → API 要求 0 开始：`"${page - 1}"`
-3. 字典查询的 `adaptor` 统一格式：
-   ```js
-   "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name || item.ITEM_NAME\n  }))\n};"
-   ```
-4. 主键字段：新增时用 `uuid` 组件自动生成，编辑/列表时隐藏
-5. 操作列固定右侧：`"fixed": "right"`
-6. 所有危险操作（删除）必须加 `confirmText`
-
-# 🚫 禁止事项
-- 不要硬编码表名/字段名，必须从输入表结构动态生成
-- 不要遗漏字典字段的关联查询条件（如 `sex.dict_code = 'sex'`）
-- 不要使用未定义的 API 路径或参数
-- 不要输出 Markdown 代码块标记，只返回纯 JSON
-
-# ✅ 输出要求
-直接输出完整的 Amis JSON 配置，格式合法、缩进规范，可被 `amis.embed()` 直接渲染。
-
----
-现在，请根据上方输入的表结构和 API 规范，生成对应的单表维护界面 JSON：
+# 开始生成
+请根据上方提供的【表结构信息】和【API 规范】，生成完整的 Amis CRUD 页面 JSON 配置：

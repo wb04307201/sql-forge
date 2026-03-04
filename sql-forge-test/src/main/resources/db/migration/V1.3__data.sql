@@ -740,7 +740,7 @@ VALUES ('amis-template-users',  '{
         ],
         "@join": [
           {
-            "type": "LEFT_OUTER_JOIN",
+            "type": "JOIN",
             "joinTable": "sys_dict_items sex",
             "on": "USERS.DICT_SEX = sex.item_code"
           }
@@ -884,7 +884,7 @@ VALUES ('amis-template-users',  '{
             ],
             "@join": [
               {
-                "type": "LEFT_OUTER_JOIN",
+                "type": "JOIN",
                 "joinTable": "sys_dict_item sex",
                 "on": "USERS.DICT_SEX = sex.item_code"
               }
@@ -1036,7 +1036,7 @@ VALUES ('amis-template-users',  '{
                     ],
                     "@join": [
                       {
-                        "type": "LEFT_OUTER_JOIN",
+                        "type": "JOIN",
                         "joinTable": "sys_dict_item sex_a814d446",
                         "on": "USERS.SEX = sex_a814d446.item_code"
                       }

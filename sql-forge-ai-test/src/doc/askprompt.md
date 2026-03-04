@@ -3,27 +3,24 @@
 [{
   "table": "USERS",
   "desc": "用户表",
+  "type": "table",
   "fields": {
     "ID": {"type": "string", "pk": true, "desc": "用户ID"},
-    "USERNAME": {"type": "string", "max": 50, "desc": "用户名"},
-    "DICT_SEX": {"type": "string", "max": 100, "desc": "性别", "ref": {
-      "table": "sys_dict_items",
-      "on": "item_code",
-      "filter": {"dict_code": "sex"}
-    }
-    }},
-  "EMAIL": {"type": "string", "max": 100, "desc": "邮箱地址"}
-}
-  },
-  {
+    "USERNAME": {"type": "string", "max": 50, "desc": "用户名","search": true},
+    "DICT_SEX": {"type": "string", "max": 100, "desc": "性别", "ref": {"type":"JOIN","table": "sys_dict_items", "on": "item_code", "filter": {"dict_code": "sex"}},"search": true},
+    "EMAIL": {"type": "string", "max": 100, "desc": "邮箱地址","search": true}
+  }
+},
+{
   "table": "sys_dict_items",
   "desc": "字典项表",
+  "type": "ref",
   "fields": {
-  "item_code": {"type": "string", "desc": "字典项编码"},
-  "dict_code": {"type": "string", "desc": "字典项编码"},
-  "item_name": {"type": "string", "desc": "字典项名称"}
+    "item_code": {"type": "string", "desc": "字典项编码"},
+    "dict_code": {"type": "string", "desc": "字典项编码"},
+    "item_name": {"type": "string", "desc": "字典项名称"}
   }
-  }]
+}]
 ```
 
 # API规范
@@ -67,6 +64,9 @@
 - `@column`: 要查询的字段数组，为空则查询所有字段
 - `@where`: 查询条件数组
 - `@join`: 关联查询条件数组
+  - type: JOIN类型（JOIN, INNER_JOIN, LEFT_OUTER_JOIN, RIGHT_OUTER_JOIN, OUTER_JOIN）
+  - joinTable: 关联表名
+  - on: 关联条件
 - `@order`: 排序字段数组
 - `@group`: 分组字段数组
 - `@distince`: 是否去重
@@ -451,30 +451,6 @@ WHERE (id = ?)
 }
 ```
 
-#### 方法执行前切面
-可通过实现[IExecute.java](sql-forge-crud/src/main/java/cn/wubo/sql/forge/inter/IExecute.java)接口自定义方法执行前的json调整，实现密码加密、自动更新时间戳、权限控制、日志、审计等
-
-例如实现在Insert时输出日志：
-```java
-@Slf4j
-@Component
-public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
-  @Override
-  public Boolean support(String tableName, Insert insert) {
-    return true;
-  }
-
-  @Override
-  public Insert before(String tableName, Insert insert) {
-    log.info("LogInsertExecute tableName: {} record: {}", tableName, insert);
-    return insert;
-  }
-}
-```
-
-#### 配置
-可通过`sql.forge.api.json.enabled=false`关闭
-
 # Amis界面json
 ```json
 {
@@ -494,7 +470,7 @@ public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
         ],
         "@join": [
           {
-            "type": "LEFT_OUTER_JOIN",
+            "type": "JOIN",
             "joinTable": "sys_dict_items sex",
             "on": "USERS.DICT_SEX = sex.item_code"
           }
@@ -638,7 +614,7 @@ public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
             ],
             "@join": [
               {
-                "type": "LEFT_OUTER_JOIN",
+                "type": "JOIN",
                 "joinTable": "sys_dict_item sex",
                 "on": "USERS.DICT_SEX = sex.item_code"
               }
@@ -790,7 +766,7 @@ public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
                     ],
                     "@join": [
                       {
-                        "type": "LEFT_OUTER_JOIN",
+                        "type": "JOIN",
                         "joinTable": "sys_dict_item sex_a814d446",
                         "on": "USERS.SEX = sex_a814d446.item_code"
                       }
@@ -910,5 +886,5 @@ public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
 ```
 
 # 问题
-如果我想根据"表信息"、"API规范"，并要求大模型生成"用户表"的单表维护百度Amis的json，生成结果是"Amis界面json",
-我应该使用什么内容的prompt，使"表信息"+"API规范"通过大模型生成"Amis界面json",给我针对单表维护界面的的可复用prompt
+如果我想根据"表信息"、"API规范"，并要求大模型生成"用户表"的单表维护百度Amis的crud组件的json配置，生成结果是"Amis界面json",
+我应该使用什么内容的prompt，使"表信息"+"API规范"通过大模型生成"Amis界面json",给我针对单表维护界面的的可复用prompt模板
