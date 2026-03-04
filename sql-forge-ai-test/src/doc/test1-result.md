@@ -1,76 +1,61 @@
 ```json
 {
   "type": "page",
-  "title": "用户管理",
   "body": {
     "type": "crud",
     "id": "crud_table",
-    "name": "users_crud",
+    "syncLocation": false,
     "api": {
       "method": "post",
       "url": "/sql/forge/api/json/selectPage/USERS",
       "data": {
-        "@column": [
-          "u.ID",
-          "u.USERNAME",
-          "u.DICT_SEX",
-          "sex.item_name AS SEX_NAME",
-          "u.EMAIL"
-        ],
+        "@column": ["ID", "USERNAME", "EMAIL", "sex.item_name AS sex_name"],
         "@where": [
           {
-            "column": "u.USERNAME",
+            "column": "USERNAME",
             "condition": "LIKE",
-            "value": "${username | default:undefined}"
+            "value": "${USERNAME | default: undefined}"
           },
           {
-            "column": "u.DICT_SEX",
+            "column": "DICT_SEX",
             "condition": "IN",
-            "value": "${dict_sex | default:undefined | split}"
-          },
-          {
-            "column": "u.EMAIL",
-            "condition": "LIKE",
-            "value": "${email | default:undefined}"
+            "value": "${DICT_SEX | default: undefined}"
           }
         ],
         "@join": [
           {
-            "type": "LEFT_OUTER_JOIN",
+            "type": "LEFT JOIN",
             "joinTable": "sys_dict_items sex",
-            "on": "u.DICT_SEX = sex.item_code AND sex.dict_code = 'sex'"
+            "on": "DICT_SEX = sex.item_code AND sex.dict_code = 'sex'"
           }
         ],
-        "@order": "${default(orderBy && orderDir ? (orderBy + ' ' + orderDir):'',undefined)}",
+        "@order": "${orderBy && orderDir ? (orderBy + ' ' + orderDir) : ''}",
         "@page": {
           "pageIndex": "${page - 1}",
           "pageSize": "${perPage}"
         }
-      },
-      "adaptor": "return { data: payload.rows || [], count: payload.total || 0 };"
-    },
-    "autoGenerateFilter": {
-      "columns": ["USERNAME", "DICT_SEX", "EMAIL"]
+      }
     },
     "filter": {
-      "title": "条件筛选",
+      "title": "条件搜索",
       "body": [
         {
           "type": "input-text",
-          "name": "username",
+          "name": "USERNAME",
           "label": "用户名",
+          "placeholder": "请输入用户名",
           "addOn": {
             "label": "搜索",
             "type": "submit",
-            "icon": "fa fa-search"
+            "level": "primary"
           }
         },
         {
           "type": "select",
-          "name": "dict_sex",
+          "name": "DICT_SEX",
           "label": "性别",
+          "multiple": true,
           "clearable": true,
-          "mode": "inline",
           "source": {
             "method": "post",
             "url": "/sql/forge/api/json/select/sys_dict_items",
@@ -84,13 +69,8 @@
                 }
               ]
             },
-            "adaptor": "return { options: payload.map(item => ({ value: item.item_code, label: item.item_name })) };"
+            "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name || item.ITEM_NAME\n  }))\n};"
           }
-        },
-        {
-          "type": "input-text",
-          "name": "email",
-          "label": "邮箱"
         }
       ]
     },
@@ -99,56 +79,43 @@
         "type": "button",
         "icon": "fa fa-plus",
         "label": "新增",
+        "level": "primary",
         "actionType": "drawer",
         "drawer": {
-          "id": "insert-drawer",
           "title": "新增用户",
           "size": "lg",
           "body": {
             "type": "form",
-            "id": "insert-form",
             "api": {
               "method": "post",
               "url": "/sql/forge/api/json/insert/USERS",
               "data": {
                 "@set": {
-                  "ID": "${id}",
-                  "USERNAME": "${username | default:undefined}",
-                  "DICT_SEX": "${dict_sex | default:undefined}",
-                  "EMAIL": "${email | default:undefined}"
-                },
-                "@with_select": {
-                  "@column": ["ID"],
-                  "@where": [
-                    {
-                      "column": "ID",
-                      "condition": "EQ",
-                      "value": "${id}"
-                    }
-                  ]
+                  "ID": "${ID}",
+                  "USERNAME": "${USERNAME}",
+                  "DICT_SEX": "${DICT_SEX}",
+                  "EMAIL": "${EMAIL}"
                 }
               }
             },
             "body": [
               {
-                "type": "input-text",
-                "name": "id",
+                "type": "uuid",
+                "name": "ID",
                 "label": "用户ID",
-                "value": "${uuid()}",
                 "hidden": true
               },
               {
                 "type": "input-text",
-                "name": "username",
+                "name": "USERNAME",
                 "label": "用户名",
                 "required": true,
                 "maxLength": 50
               },
               {
                 "type": "select",
-                "name": "dict_sex",
+                "name": "DICT_SEX",
                 "label": "性别",
-                "clearable": true,
                 "source": {
                   "method": "post",
                   "url": "/sql/forge/api/json/select/sys_dict_items",
@@ -162,12 +129,14 @@
                       }
                     ]
                   },
-                  "adaptor": "return { options: payload.map(item => ({ value: item.item_code, label: item.item_name })) };"
-                }
+                  "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name || item.ITEM_NAME\n  }))\n};"
+                },
+                "valueField": "item_code",
+                "labelField": "item_name"
               },
               {
-                "type": "input-email",
-                "name": "email",
+                "type": "input-text",
+                "name": "EMAIL",
                 "label": "邮箱地址",
                 "maxLength": 100
               }
@@ -175,51 +144,42 @@
           }
         }
       },
+      "bulkActions",
+      {
+        "type": "columns-toggler"
+      },
       {
         "type": "export-excel",
-        "icon": "fa fa-download",
         "label": "导出",
+        "icon": "fa fa-download",
         "api": {
           "method": "post",
           "url": "/sql/forge/api/json/select/USERS",
           "data": {
-            "@column": [
-              "u.ID",
-              "u.USERNAME",
-              "u.DICT_SEX",
-              "sex.item_name AS SEX_NAME",
-              "u.EMAIL"
-            ],
+            "@column": ["ID", "USERNAME", "EMAIL", "sex.item_name AS sex_name"],
             "@where": [
               {
-                "column": "u.USERNAME",
+                "column": "USERNAME",
                 "condition": "LIKE",
-                "value": "${username | default:undefined}"
+                "value": "${USERNAME | default: undefined}"
               },
               {
-                "column": "u.DICT_SEX",
+                "column": "DICT_SEX",
                 "condition": "IN",
-                "value": "${dict_sex | default:undefined | split}"
-              },
-              {
-                "column": "u.EMAIL",
-                "condition": "LIKE",
-                "value": "${email | default:undefined}"
+                "value": "${DICT_SEX | default: undefined}"
               }
             ],
             "@join": [
               {
-                "type": "LEFT_OUTER_JOIN",
+                "type": "LEFT JOIN",
                 "joinTable": "sys_dict_items sex",
-                "on": "u.DICT_SEX = sex.item_code AND sex.dict_code = 'sex'"
+                "on": "DICT_SEX = sex.item_code AND sex.dict_code = 'sex'"
               }
             ],
-            "@order": "${default(orderBy && orderDir ? (orderBy + ' ' + orderDir):'',undefined)}"
+            "@order": "${orderBy && orderDir ? (orderBy + ' ' + orderDir) : ''}"
           }
         }
-      },
-      "bulkActions",
-      "columns-toggler"
+      }
     ],
     "bulkActions": [
       {
@@ -233,116 +193,110 @@
               {
                 "column": "ID",
                 "condition": "IN",
-                "value": "${ids | join:','}"
+                "value": "${ids}"
               }
             ]
           }
         },
-        "confirmText": "确定要批量删除选中的用户吗？",
-        "reload": "crud_table"
+        "confirmText": "确定要批量删除选中的用户吗？"
       }
     ],
     "columns": [
       {
         "name": "ID",
         "label": "用户ID",
-        "hidden": true
+        "visible": false
       },
       {
         "name": "USERNAME",
         "label": "用户名",
+        "sortable": true,
         "searchable": {
           "type": "input-text",
           "name": "USERNAME",
-          "addOn": {
-            "label": "搜索",
-            "type": "submit"
+          "placeholder": "请输入用户名"
+        }
+      },
+      {
+        "name": "sex_name",
+        "label": "性别",
+        "sortable": true,
+        "searchable": {
+          "type": "select",
+          "name": "DICT_SEX",
+          "multiple": true,
+          "source": {
+            "method": "post",
+            "url": "/sql/forge/api/json/select/sys_dict_items",
+            "data": {
+              "@column": ["item_code", "item_name"],
+              "@where": [
+                {
+                  "column": "dict_code",
+                  "condition": "EQ",
+                  "value": "sex"
+                }
+              ]
+            },
+            "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name || item.ITEM_NAME\n  }))\n};"
           }
         }
       },
       {
-        "name": "SEX_NAME",
-        "label": "性别",
-        "type": "text"
-      },
-      {
         "name": "EMAIL",
         "label": "邮箱地址",
-        "searchable": {
-          "type": "input-text",
-          "name": "EMAIL"
-        }
+        "sortable": true
       },
       {
         "type": "operation",
         "label": "操作",
-        "width": 150,
+        "fixed": "right",
         "buttons": [
           {
             "type": "button",
             "icon": "fa fa-pencil",
-            "tooltip": "编辑",
+            "tooltip": "修改",
             "actionType": "drawer",
             "drawer": {
-              "id": "update-drawer",
               "title": "编辑用户",
               "size": "lg",
               "body": {
                 "type": "form",
-                "id": "update-form",
-                "initApi": {
-                  "method": "post",
-                  "url": "/sql/forge/api/json/select/USERS",
-                  "data": {
-                    "@column": ["ID", "USERNAME", "DICT_SEX", "EMAIL"],
-                    "@where": [
-                      {
-                        "column": "ID",
-                        "condition": "EQ",
-                        "value": "${id}"
-                      }
-                    ]
-                  },
-                  "adaptor": "return { data: payload[0] || {} };"
-                },
                 "api": {
                   "method": "post",
                   "url": "/sql/forge/api/json/update/USERS",
                   "data": {
                     "@set": {
-                      "USERNAME": "${username | default:undefined}",
-                      "DICT_SEX": "${dict_sex | default:undefined}",
-                      "EMAIL": "${email | default:undefined}"
+                      "USERNAME": "${USERNAME}",
+                      "DICT_SEX": "${DICT_SEX}",
+                      "EMAIL": "${EMAIL}"
                     },
                     "@where": [
                       {
                         "column": "ID",
                         "condition": "EQ",
-                        "value": "${id}"
+                        "value": "${ID}"
                       }
                     ]
                   }
                 },
                 "body": [
                   {
-                    "type": "input-text",
-                    "name": "id",
-                    "label": "用户ID",
-                    "hidden": true,
-                    "static": true
+                    "type": "hidden",
+                    "name": "ID",
+                    "value": "${ID}"
                   },
                   {
                     "type": "input-text",
-                    "name": "username",
+                    "name": "USERNAME",
                     "label": "用户名",
                     "required": true,
                     "maxLength": 50
                   },
                   {
                     "type": "select",
-                    "name": "dict_sex",
+                    "name": "DICT_SEX",
                     "label": "性别",
-                    "clearable": true,
                     "source": {
                       "method": "post",
                       "url": "/sql/forge/api/json/select/sys_dict_items",
@@ -356,12 +310,14 @@
                           }
                         ]
                       },
-                      "adaptor": "return { options: payload.map(item => ({ value: item.item_code, label: item.item_name })) };"
-                    }
+                      "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name || item.ITEM_NAME\n  }))\n};"
+                    },
+                    "valueField": "item_code",
+                    "labelField": "item_name"
                   },
                   {
-                    "type": "input-email",
-                    "name": "email",
+                    "type": "input-text",
+                    "name": "EMAIL",
                     "label": "邮箱地址",
                     "maxLength": 100
                   }
@@ -371,7 +327,7 @@
           },
           {
             "type": "button",
-            "icon": "fa fa-trash",
+            "icon": "fa fa-times text-danger",
             "tooltip": "删除",
             "actionType": "ajax",
             "api": {
@@ -382,14 +338,13 @@
                   {
                     "column": "ID",
                     "condition": "EQ",
-                    "value": "${id}"
+                    "value": "${ID}"
                   }
                 ]
               }
             },
             "confirmText": "确定要删除该用户吗？",
-            "className": "text-danger",
-            "reload": "crud_table"
+            "level": "danger"
           }
         ]
       }
