@@ -109,9 +109,26 @@ sql:
   - on: 关联条件
 - `@order`: 排序字段
 - `@group`: 分组字段
-- `@distince`: 可选参数，是否去重
+- `@distince`: 可选参数，是否去重，默认不去重复
 
-###### 示例
+###### 示例1
+1. 请求
+```http request
+POST http://localhost:8080/sql/forge/api/json/select/USERS
+Content-Type: application/json
+
+{
+  
+}
+```
+
+2. 生成的SQL
+```sql
+SELECT *
+FROM USERS
+```
+
+###### 示例2
 1. 请求
 ```http request
 POST http://localhost:8080/sql/forge/api/json/select/orders o
@@ -186,7 +203,7 @@ JOIN products p ON oi.product_id = p.id
 JOIN sys_dict_items categories ON p.dict_categories = categories.item_code
 WHERE (sex.dict_code = ? AND categories.dict_code = ?)
 ORDER BY o.order_date
-```
+``
 
 #### selectPage 方法
 
@@ -440,7 +457,6 @@ Content-Type: application/json
 ```
 
 2. 生成的SQL
-###### 生成的SQL
 ```sql
 DELETE FROM users
 WHERE (id = ?)
