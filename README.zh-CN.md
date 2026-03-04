@@ -68,7 +68,7 @@ sql:
 - **内容类型**: `application/json`
 - **路径参数**:
   - `{method}`: 操作方法类型(select、selectPage、insert、update、delete)
-  - `{tableName}`: 数据库表名称
+  - `{tableName}`: `表名`或者`表名 别名`
   - `{executorName}`: 数据库执行器名称,默认支持database(项目数据库),calcite(Apache Calcite跨数据库联邦查询)，支持自行扩展，如不传，默认使用database
 
 #### select 方法
@@ -216,7 +216,8 @@ sql:
 - `@with_select`: 可选的查询条件，用于在删除后执行一个查询
 
 #### 示例
-1. 查询
+##### 查询
+###### 请求
 ```http request
 POST http://localhost:8080/sql/forge/api/json/select/orders o
 Content-Type: application/json
@@ -279,7 +280,28 @@ Content-Type: application/json
 }
 ```
 
-2. 分页查询
+###### 生成的SQL
+```sql
+SELECT u.username, sex.item_name             AS sex_name, o.total_amount, p.name               AS product_name, categories.item_name AS product_categories, oi.unit_price, oi.quantity, p.price
+FROM orders o
+JOIN users u ON o.user_id = u.id
+JOIN sys_dict_items sex ON u.dict_sex = sex.item_code
+JOIN order_items oi ON o.id = oi.order_id
+JOIN products p ON oi.product_id = p.id
+JOIN sys_dict_items categories ON p.dict_categories = categories.item_code
+WHERE (sex.dict_code = ? AND categories.dict_code = ?)
+ORDER BY o.order_date
+```
+###### 生成的参数
+```json
+{
+  1: "sex",
+  2: "categories"
+}
+```
+
+##### 分页查询
+###### 请求
 ```http request
 POST http://localhost:8080/sql/forge/api/json/selectPage/orders o
 Content-Type: application/json
@@ -345,6 +367,28 @@ Content-Type: application/json
   }
 }
 ```
+###### 生成的SQL
+```sql
+SELECT u.username, sex.item_name             AS sex_name, o.total_amount, p.name               AS product_name, categories.item_name AS product_categories, oi.unit_price, oi.quantity, p.price
+FROM orders o
+JOIN users u ON o.user_id = u.id
+JOIN sys_dict_items sex ON u.dict_sex = sex.item_code
+JOIN order_items oi ON o.id = oi.order_id
+JOIN products p ON oi.product_id = p.id
+JOIN sys_dict_items categories ON p.dict_categories = categories.item_code
+WHERE (sex.dict_code = ? AND categories.dict_code = ?)
+ORDER BY o.order_date LIMIT ? OFFSET ?
+```
+
+###### 生成的参数
+```json
+{
+  1: "sex",
+  2: "categories",
+  3: 5,
+  4: 0
+}
+```
 
 3. 插入
 ```http request
@@ -355,22 +399,26 @@ Content-Type: application/json
   "@set": {
     "id": "26a05ba3-913d-4085-a505-36d40021c8d1",
     "username": "wb04307201",
+    "dict_sex": "female",
     "email": "wb04307201@gitee.com"
-  },
-  "@with_select": {
-    "@column": null,
-    "@where": [
-      {
-        "column": "id",
-        "condition": "EQ",
-        "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
-      }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
   }
+}
+```
+
+###### 生成的SQL
+```sql
+INSERT INTO users
+  (id, username, dict_sex, email)
+VALUES (?, ?, ?, ?)
+```
+
+###### 生成的参数
+```json
+{
+  1: "26a05ba3-913d-4085-a505-36d40021c8d1",
+  2: "wb04307201",
+  3: "female",
+  4: "wb04307201@gitee.com"
 }
 ```
 
@@ -389,21 +437,22 @@ Content-Type: application/json
       "condition": "EQ",
       "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
     }
-  ],
-  "@with_select": {
-    "@column": null,
-    "@where": [
-      {
-        "column": "id",
-        "condition": "EQ",
-        "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
-      }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
-  }
+  ]
+}
+```
+
+###### 生成的SQL
+```sql
+UPDATE users
+SET email = ?
+WHERE (id = ?)
+```
+
+###### 生成的参数
+```json
+{
+  1: "wb04307201@github.com",
+  2: "26a05ba3-913d-4085-a505-36d40021c8d1"
 }
 ```
 
@@ -419,21 +468,20 @@ Content-Type: application/json
       "condition": "EQ",
       "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
     }
-  ],
-  "@with_select": {
-    "@column": null,
-    "@where": [
-      {
-        "column": "id",
-        "condition": "EQ",
-        "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
-      }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
-  }
+  ]
+}
+```
+
+###### 生成的SQL
+```sql
+DELETE FROM users
+WHERE (id = ?)
+```
+
+###### 生成的参数
+```json
+{
+  1: "26a05ba3-913d-4085-a505-36d40021c8d1"
 }
 ```
 

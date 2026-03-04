@@ -6,21 +6,24 @@
   "fields": {
     "ID": {"type": "string", "pk": true, "desc": "用户ID"},
     "USERNAME": {"type": "string", "max": 50, "desc": "用户名"},
-    "DICT_SEX": {"type": "string", "max": 100, "desc": "性别", "ref": "sys_dict_items.item_code"},
-    "EMAIL": {"type": "string", "max": 100, "desc": "邮箱地址"}
-  }
-},
-
-{
+    "DICT_SEX": {"type": "string", "max": 100, "desc": "性别", "ref": {
+      "table": "sys_dict_items",
+      "on": "item_code",
+      "filter": {"dict_code": "sex"}
+    }
+    }},
+  "EMAIL": {"type": "string", "max": 100, "desc": "邮箱地址"}
+}
+  },
+  {
   "table": "sys_dict_items",
   "desc": "字典项表",
   "fields": {
-    "item_code": {"type": "string", "desc": "字典项编码"},
-    "dict_code": {"type": "string", "desc": "字典项编码"},
-    "item_name": {"type": "string", "desc": "字典项名称"}
-  },
-  "filter": {"dict_code": "sex"}
-}]
+  "item_code": {"type": "string", "desc": "字典项编码"},
+  "dict_code": {"type": "string", "desc": "字典项编码"},
+  "item_name": {"type": "string", "desc": "字典项名称"}
+  }
+  }]
 ```
 
 # API规范
@@ -31,7 +34,7 @@
 - **内容类型**: `application/json`
 - **路径参数**:
   - `{method}`: 操作方法类型(select、selectPage、insert、update、delete)
-  - `{tableName}`: 数据库表名称
+  - `{tableName}`: `表名`或者`表名 别名`
   - `{executorName}`: 数据库执行器名称,默认支持database(项目数据库),calcite(Apache Calcite跨数据库联邦查询)，支持自行扩展，如不传，默认使用database
 
 #### select 方法
@@ -179,7 +182,8 @@
 - `@with_select`: 可选的查询条件，用于在删除后执行一个查询
 
 #### 示例
-1. 查询
+##### 查询
+###### 请求
 ```http request
 POST http://localhost:8080/sql/forge/api/json/select/orders o
 Content-Type: application/json
@@ -242,7 +246,28 @@ Content-Type: application/json
 }
 ```
 
-2. 分页查询
+###### 生成的SQL
+```sql
+SELECT u.username, sex.item_name             AS sex_name, o.total_amount, p.name               AS product_name, categories.item_name AS product_categories, oi.unit_price, oi.quantity, p.price
+FROM orders o
+JOIN users u ON o.user_id = u.id
+JOIN sys_dict_items sex ON u.dict_sex = sex.item_code
+JOIN order_items oi ON o.id = oi.order_id
+JOIN products p ON oi.product_id = p.id
+JOIN sys_dict_items categories ON p.dict_categories = categories.item_code
+WHERE (sex.dict_code = ? AND categories.dict_code = ?)
+ORDER BY o.order_date
+```
+###### 生成的参数
+```json
+{
+  1: "sex",
+  2: "categories"
+}
+```
+
+##### 分页查询
+###### 请求
 ```http request
 POST http://localhost:8080/sql/forge/api/json/selectPage/orders o
 Content-Type: application/json
@@ -308,6 +333,28 @@ Content-Type: application/json
   }
 }
 ```
+###### 生成的SQL
+```sql
+SELECT u.username, sex.item_name             AS sex_name, o.total_amount, p.name               AS product_name, categories.item_name AS product_categories, oi.unit_price, oi.quantity, p.price
+FROM orders o
+JOIN users u ON o.user_id = u.id
+JOIN sys_dict_items sex ON u.dict_sex = sex.item_code
+JOIN order_items oi ON o.id = oi.order_id
+JOIN products p ON oi.product_id = p.id
+JOIN sys_dict_items categories ON p.dict_categories = categories.item_code
+WHERE (sex.dict_code = ? AND categories.dict_code = ?)
+ORDER BY o.order_date LIMIT ? OFFSET ?
+```
+
+###### 生成的参数
+```json
+{
+  1: "sex",
+  2: "categories",
+  3: 5,
+  4: 0
+}
+```
 
 3. 插入
 ```http request
@@ -318,22 +365,26 @@ Content-Type: application/json
   "@set": {
     "id": "26a05ba3-913d-4085-a505-36d40021c8d1",
     "username": "wb04307201",
+    "dict_sex": "female",
     "email": "wb04307201@gitee.com"
-  },
-  "@with_select": {
-    "@column": null,
-    "@where": [
-      {
-        "column": "id",
-        "condition": "EQ",
-        "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
-      }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
   }
+}
+```
+
+###### 生成的SQL
+```sql
+INSERT INTO users
+  (id, username, dict_sex, email)
+VALUES (?, ?, ?, ?)
+```
+
+###### 生成的参数
+```json
+{
+  1: "26a05ba3-913d-4085-a505-36d40021c8d1",
+  2: "wb04307201",
+  3: "female",
+  4: "wb04307201@gitee.com"
 }
 ```
 
@@ -352,21 +403,22 @@ Content-Type: application/json
       "condition": "EQ",
       "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
     }
-  ],
-  "@with_select": {
-    "@column": null,
-    "@where": [
-      {
-        "column": "id",
-        "condition": "EQ",
-        "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
-      }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
-  }
+  ]
+}
+```
+
+###### 生成的SQL
+```sql
+UPDATE users
+SET email = ?
+WHERE (id = ?)
+```
+
+###### 生成的参数
+```json
+{
+  1: "wb04307201@github.com",
+  2: "26a05ba3-913d-4085-a505-36d40021c8d1"
 }
 ```
 
@@ -382,23 +434,46 @@ Content-Type: application/json
       "condition": "EQ",
       "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
     }
-  ],
-  "@with_select": {
-    "@column": null,
-    "@where": [
-      {
-        "column": "id",
-        "condition": "EQ",
-        "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
-      }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
+  ]
+}
+```
+
+###### 生成的SQL
+```sql
+DELETE FROM users
+WHERE (id = ?)
+```
+
+###### 生成的参数
+```json
+{
+  1: "26a05ba3-913d-4085-a505-36d40021c8d1"
+}
+```
+
+#### 方法执行前切面
+可通过实现[IExecute.java](sql-forge-crud/src/main/java/cn/wubo/sql/forge/inter/IExecute.java)接口自定义方法执行前的json调整，实现密码加密、自动更新时间戳、权限控制、日志、审计等
+
+例如实现在Insert时输出日志：
+```java
+@Slf4j
+@Component
+public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
+  @Override
+  public Boolean support(String tableName, Insert insert) {
+    return true;
+  }
+
+  @Override
+  public Insert before(String tableName, Insert insert) {
+    log.info("LogInsertExecute tableName: {} record: {}", tableName, insert);
+    return insert;
   }
 }
 ```
+
+#### 配置
+可通过`sql.forge.api.json.enabled=false`关闭
 
 # Amis界面json
 ```json
