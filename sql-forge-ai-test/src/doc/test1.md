@@ -22,7 +22,6 @@
       "table": "sys_dict_items",
       "on": "item_code",
       "filter": {"dict_code": "sex"}
-    }
     }},
     "EMAIL": {"type": "string", "max": 100, "desc": "邮箱地址"}
   }
