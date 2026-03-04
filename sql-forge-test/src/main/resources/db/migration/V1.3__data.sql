@@ -730,39 +730,39 @@ VALUES ('amis-template-users',  '{
     "id": "crud_table",
     "api": {
       "method": "post",
-      "url": "/sql/forge/api/json/selectPage/USERS",
+      "url": "/sql/forge/api/json/selectPage/USERS U",
       "data": {
         "@column": [
-          "USERS.ID",
-          "USERS.USERNAME",
-          "sex.item_name as SEX",
-          "USERS.EMAIL"
+          "U.ID",
+          "U.USERNAME",
+          "DICT_CODE_sex.ITEM_NAME as DICT_SEX",
+          "U.EMAIL"
         ],
         "@join": [
           {
             "type": "JOIN",
-            "joinTable": "sys_dict_items sex",
-            "on": "USERS.DICT_SEX = sex.item_code"
+            "joinTable": "SYS_DICT_ITEMS DICT_CODE_sex",
+            "on": "U.DICT_SEX = DICT_CODE_sex.ITEM_CODE"
           }
         ],
         "@where": [
           {
-            "column": "USERS.USERNAME",
+            "column": "U.USERNAME",
             "condition": "LIKE",
             "value": "${USERNAME | default:undefined}"
           },
           {
-            "column": "USERS.DICT_SEX",
+            "column": "U.DICT_SEX",
             "condition": "IN",
             "value": "${SEX | default:undefined | split}"
           },
           {
-            "column": "USERS.EMAIL",
+            "column": "U.EMAIL",
             "condition": "LIKE",
             "value": "${EMAIL | default:undefined}"
           },
           {
-            "column": "sex.dict_code",
+            "column": "DICT_CODE_sex.DICT_CODE",
             "condition": "EQ",
             "value": "sex"
           }
@@ -830,15 +830,15 @@ VALUES ('amis-template-users',  '{
                 "maxLength": 100,
                 "source": {
                   "method": "post",
-                  "url": "/sql/forge/api/json/select/sys_dict_items",
+                  "url": "/sql/forge/api/json/select/SYS_DICT_ITEMS",
                   "data": {
                     "@column": [
-                      "item_code",
-                      "item_name"
+                      "ITEM_CODE",
+                      "ITEM_NAME"
                     ],
                     "@where": [
                       {
-                        "column": "dict_code",
+                        "column": "DICT_CODE",
                         "condition": "EQ",
                         "value": "sex"
                       }
@@ -874,39 +874,39 @@ VALUES ('amis-template-users',  '{
         "icon": "fa fa-file-excel",
         "api": {
           "method": "post",
-          "url": "/sql/forge/api/json/select/USERS",
+          "url": "/sql/forge/api/json/select/USERS U",
           "data": {
             "@column": [
-              "USERS.ID",
-              "USERS.USERNAME",
-              "sex.item_name as SEX",
-              "USERS.EMAIL"
+              "U.ID",
+              "U.USERNAME",
+              "DICT_CODE_sex.ITEM_NAME as DICT_SEX",
+              "U.EMAIL"
             ],
             "@join": [
               {
                 "type": "JOIN",
-                "joinTable": "sys_dict_item sex",
-                "on": "USERS.DICT_SEX = sex.item_code"
+                "joinTable": "SYS_DICT_ITEMS DICT_CODE_sex",
+                "on": "U.DICT_SEX = DICT_CODE_sex.ITEM_CODE"
               }
             ],
             "@where": [
               {
-                "column": "USERS.USERNAME",
+                "column": "U.USERNAME",
                 "condition": "LIKE",
                 "value": "${USERNAME | default:undefined}"
               },
               {
-                "column": "USERS.DICT_SEX",
+                "column": "U.DICT_SEX",
                 "condition": "IN",
                 "value": "${DICT_SEX | default:undefined | split}"
               },
               {
-                "column": "USERS.EMAIL",
+                "column": "U.EMAIL",
                 "condition": "LIKE",
                 "value": "${EMAIL | default:undefined}"
               },
               {
-                "column": "sex.dict_code",
+                "column": "DICT_CODE_sex.DICT_CODE",
                 "condition": "EQ",
                 "value": "sex"
               }
@@ -980,15 +980,15 @@ VALUES ('amis-template-users',  '{
           "multiple": true,
           "source": {
             "method": "post",
-            "url": "/sql/forge/api/json/select/sys_dict_items",
+            "url": "/sql/forge/api/json/select/SYS_DICT_ITEMS",
             "data": {
               "@column": [
-                "item_code",
-                "item_name"
+                "ITEM_CODE",
+                "ITEM_NAME"
               ],
               "@where": [
                 {
-                  "column": "dict_code",
+                  "column": "DICT_CODE",
                   "condition": "EQ",
                   "value": "sex"
                 }
@@ -1021,7 +1021,7 @@ VALUES ('amis-template-users',  '{
             "icon": "fa fa-pen-to-square",
             "actionType": "drawer",
             "drawer": {
-              "title": "新增表单",
+              "title": "修改表单",
               "body": {
                 "type": "form",
                 "initApi": {
@@ -1029,21 +1029,14 @@ VALUES ('amis-template-users',  '{
                   "url": "/sql/forge/api/json/select/USERS",
                   "data": {
                     "@column": [
-                      "USERS.ID",
-                      "USERS.USERNAME",
-                      "USERS.SEX",
-                      "USERS.EMAIL"
-                    ],
-                    "@join": [
-                      {
-                        "type": "JOIN",
-                        "joinTable": "sys_dict_item sex_a814d446",
-                        "on": "USERS.SEX = sex_a814d446.item_code"
-                      }
+                      "ID",
+                      "USERNAME",
+                      "SEX",
+                      "EMAIL"
                     ],
                     "@where": [
                       {
-                        "column": "USERS.ID",
+                        "column": "ID",
                         "condition": "EQ",
                         "value": "${ID}"
                       }
@@ -1060,12 +1053,12 @@ VALUES ('amis-template-users',  '{
                     "@set": {
                       "ID": "${ID}",
                       "USERNAME": "${USERNAME}",
-                      "SEX": "${SEX}",
+                      "DICT_SEX": "${SEX}",
                       "EMAIL": "${EMAIL}"
                     },
                     "@where": [
                       {
-                        "column": "USERS.ID",
+                        "column": "ID",
                         "condition": "EQ",
                         "value": "${ID}"
                       }
@@ -1094,15 +1087,15 @@ VALUES ('amis-template-users',  '{
                     "maxLength": 100,
                     "source": {
                       "method": "post",
-                      "url": "/sql/forge/api/json/select/sys_dict_item",
+                      "url": "/sql/forge/api/json/select/SYS_DICT_ITEMS",
                       "data": {
                         "@column": [
-                          "item_code",
-                          "item_name"
+                          "ITEM_CODE",
+                          "ITEM_NAME"
                         ],
                         "@where": [
                           {
-                            "column": "dict_code",
+                            "column": "DICT_CODE",
                             "condition": "EQ",
                             "value": "sex"
                           }

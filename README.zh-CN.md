@@ -45,7 +45,7 @@
 
 ## 使用
 
-### SQL执行器
+### 配置数据源
 #### database-项目数据库
 会从Spring项目已经配的数据源直接引用
 #### calcite-Apache Calcite跨数据库联邦查询
@@ -98,129 +98,21 @@ sql:
 ```
 
 ###### 参数说明
-- `@column`: 要查询的字段数组，为空则查询所有字段
-- `@where`: 查询条件数组
-- `@join`: 关联查询条件数组
-  - type: JOIN类型（JOIN, INNER_JOIN, LEFT_OUTER_JOIN, RIGHT_OUTER_JOIN, OUTER_JOIN）
-  - joinTable: 关联表名
-  - on: 关联条件
-- `@order`: 排序字段数组
-- `@group`: 分组字段数组
-- `@distince`: 是否去重
-
-#### selectPage 方法
-
-##### 请求格式
-```json
-{
-  "@column": ["字段名1", "字段名2"],
-  "@where": [
-    {
-      "column": "字段名",
-      "condition": "条件类型",
-      "value": "值"
-    }
-  ],
-  "@page": {
-    "pageIndex": 0,
-    "pageSize": 10
-  },
-  "@join": [
-    {
-      "type": "JOIN类型",
-      "joinTable": "关联表名",
-      "on": "关联条件"
-    }
-  ],
-  "@order": ["字段名 ASC", "字段名 DESC"],
-  "@distince": false
-}
-```
-
-##### 参数说明
-- `@column`: 要查询的字段数组，为空则查询所有字段
-- `@where`: 查询条件数组
-- `@page`分页参数
-  - pageIndex: 页码（从0开始）
-  - pageSize: 每页大小
-- `@join`: 关联查询条件数组
-- `@order`: 排序字段数组
-- `@distince`: 是否去重
-
-#### insert 方法
-
-##### 请求格式
-```json
-{
-  "@set": {
-    "字段名1": "值1",
-    "字段名2": "值2"
-  },
-  "@with_select": {
-    // 插入后查询json
-  }
-}
-```
-
-##### 参数说明
-- `@set`: 要插入的字段和值的键值对，至少需要一个字段
-- `@with_select`: 可选的查询条件，用于插入后执行一个查询
-
-#### update 方法
-
-##### 请求格式
-```json
-{
-  "@set": {
-    "字段名1": "新值1",
-    "字段名2": "新值2"
-  },
-  "@where": [
-    {
-      "column": "字段名",
-      "condition": "条件类型",
-      "value": "值"
-    }
-  ],
-  "@with_select": {
-    // 更新后查询json
-  }
-}
-```
-
-##### 参数说明
-- `@set`: 要更新的字段和新值的键值对，至少需要一个字段
-- `@where`: 更新条件数组，指定要更新哪些记录
-- `@with_select`: 可选的查询条件，用于更新后执行一个查询
-
-#### delete 方法
-
-##### 请求格式
-```json
-{
-  "@where": [
-    {
-      "column": "字段名",
-      "condition": "条件类型",
-      "value": "值"
-    }
-  ],
-  "@with_select": {
-    // 删除后查询json
-  }
-}
-```
-
-##### 参数说明
-- `@where`: 删除条件数组，每个条件包含：
+- `@column`: 要查询的字段，为空或不传则使用`*`
+- `@where`: 查询条件：
   - column: 要匹配的字段名
   - condition: 条件类型（EQ、NOT_EQ、GT、LT、GTEQ、LTEQ、LIKE、NOT_LIKE、LEFT_LIKE、RIGHT_LIKE、BETWEEN、NOT_BETWEEN、IN、NOT_IN、IS_NULL、IS_NOT_NULL）
   - value: 匹配的值
-- `@with_select`: 可选的查询条件，用于在删除后执行一个查询
+- `@join`: 添加关联表:
+  - type: JOIN类型（JOIN, INNER_JOIN, LEFT_OUTER_JOIN, RIGHT_OUTER_JOIN, OUTER_JOIN）
+  - joinTable: 关联表名
+  - on: 关联条件
+- `@order`: 排序字段
+- `@group`: 分组字段
+- `@distince`: 可选参数，是否去重
 
-#### 示例
-##### 查询
-###### 请求
+###### 示例
+1. 请求
 ```http request
 POST http://localhost:8080/sql/forge/api/json/select/orders o
 Content-Type: application/json
@@ -283,7 +175,7 @@ Content-Type: application/json
 }
 ```
 
-###### 生成的SQL
+2. 生成的SQL
 ```sql
 SELECT u.username, sex.item_name             AS sex_name, o.total_amount, p.name               AS product_name, categories.item_name AS product_categories, oi.unit_price, oi.quantity, p.price
 FROM orders o
@@ -295,16 +187,44 @@ JOIN sys_dict_items categories ON p.dict_categories = categories.item_code
 WHERE (sex.dict_code = ? AND categories.dict_code = ?)
 ORDER BY o.order_date
 ```
-###### 生成的参数
+
+#### selectPage 方法
+
+##### 请求格式
 ```json
 {
-  1: "sex",
-  2: "categories"
+  "@column": ["字段名1", "字段名2"],
+  "@where": [
+    {
+      "column": "字段名",
+      "condition": "条件类型",
+      "value": "值"
+    }
+  ],
+  "@page": {
+    "pageIndex": 0,
+    "pageSize": 10
+  },
+  "@join": [
+    {
+      "type": "JOIN类型",
+      "joinTable": "关联表名",
+      "on": "关联条件"
+    }
+  ],
+  "@order": ["字段名 ASC", "字段名 DESC"],
+  "@distince": false
 }
 ```
 
-##### 分页查询
-###### 请求
+##### 参数说明
+- `@column、@where、@join、@order、@distince`: 参见`select`方法对应参数
+- `@page`: 分页
+  - pageIndex: 页码（从0开始）
+  - pageSize: 每页大小
+
+###### 示例
+1. 请求
 ```http request
 POST http://localhost:8080/sql/forge/api/json/selectPage/orders o
 Content-Type: application/json
@@ -370,7 +290,8 @@ Content-Type: application/json
   }
 }
 ```
-###### 生成的SQL
+
+2. 生成的SQL
 ```sql
 SELECT u.username, sex.item_name             AS sex_name, o.total_amount, p.name               AS product_name, categories.item_name AS product_categories, oi.unit_price, oi.quantity, p.price
 FROM orders o
@@ -383,17 +304,27 @@ WHERE (sex.dict_code = ? AND categories.dict_code = ?)
 ORDER BY o.order_date LIMIT ? OFFSET ?
 ```
 
-###### 生成的参数
+#### insert 方法
+
+##### 请求格式
 ```json
 {
-  1: "sex",
-  2: "categories",
-  3: 5,
-  4: 0
+  "@set": {
+    "字段名1": "值1",
+    "字段名2": "值2"
+  },
+  "@with_select": {
+    // 插入后查询json
+  }
 }
 ```
 
-3. 插入
+##### 参数说明
+- `@set`: 要插入的字段和值的键值对，至少需要一个字段
+- `@with_select`: 可选参数，用于插入后执行一个查询，参见`select`方法
+
+###### 示例
+1. 请求
 ```http request
 POST http://localhost:8080/sql/forge/api/json/insert/users
 Content-Type: application/json
@@ -408,24 +339,42 @@ Content-Type: application/json
 }
 ```
 
-###### 生成的SQL
+2. 生成的SQL
 ```sql
 INSERT INTO users
   (id, username, dict_sex, email)
 VALUES (?, ?, ?, ?)
 ```
 
-###### 生成的参数
+#### update 方法
+
+##### 请求格式
 ```json
 {
-  1: "26a05ba3-913d-4085-a505-36d40021c8d1",
-  2: "wb04307201",
-  3: "female",
-  4: "wb04307201@gitee.com"
+  "@set": {
+    "字段名1": "新值1",
+    "字段名2": "新值2"
+  },
+  "@where": [
+    {
+      "column": "字段名",
+      "condition": "条件类型",
+      "value": "值"
+    }
+  ],
+  "@with_select": {
+    // 更新后查询json
+  }
 }
 ```
 
-4. 更新
+##### 参数说明
+- `@set`: 要更新的字段和新值的键值对，至少需要一个字段
+- `@where`: 参见`select`方法的`@where`
+- `@with_select`: 可选参数，用于更新后执行一个查询，参见`select`方法
+
+###### 示例
+1. 请求
 ```http request
 POST http://localhost:8080/sql/forge/api/json/update/users
 Content-Type: application/json
@@ -444,22 +393,37 @@ Content-Type: application/json
 }
 ```
 
-###### 生成的SQL
+2. 生成的SQL
 ```sql
 UPDATE users
 SET email = ?
 WHERE (id = ?)
 ```
 
-###### 生成的参数
+#### delete 方法
+
+##### 请求格式
 ```json
 {
-  1: "wb04307201@github.com",
-  2: "26a05ba3-913d-4085-a505-36d40021c8d1"
+  "@where": [
+    {
+      "column": "字段名",
+      "condition": "条件类型",
+      "value": "值"
+    }
+  ],
+  "@with_select": {
+    // 删除后查询json
+  }
 }
 ```
 
-5. 删除
+##### 参数说明
+- `@where`: 参见`select`方法的`@where`
+- `@with_select`: 可选参数，用于更新后执行一个查询，参见`select`方法
+
+###### 示例
+1. 请求
 ```http request
 POST http://localhost:8080/sql/forge/api/json/delete/users
 Content-Type: application/json
@@ -475,17 +439,11 @@ Content-Type: application/json
 }
 ```
 
+2. 生成的SQL
 ###### 生成的SQL
 ```sql
 DELETE FROM users
 WHERE (id = ?)
-```
-
-###### 生成的参数
-```json
-{
-  1: "26a05ba3-913d-4085-a505-36d40021c8d1"
-}
 ```
 
 #### 方法执行前切面
