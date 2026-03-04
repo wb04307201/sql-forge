@@ -7,7 +7,7 @@
         <artifactId>sql-forge-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-    <artifactId>sql-forge-ai-nl2amis</artifactId>
+    <artifactId>sql-forge-ai</artifactId>
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
