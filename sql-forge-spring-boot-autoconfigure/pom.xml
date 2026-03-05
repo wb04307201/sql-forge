@@ -30,7 +30,11 @@
             <artifactId>sql-forge-console</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.gitee.wb04307201</groupId>
+            <artifactId>sql-forge-ai</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>

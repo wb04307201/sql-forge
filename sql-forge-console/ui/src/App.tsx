@@ -46,6 +46,11 @@ function App() {
                     });
                   }
 
+                  tabs.push({
+                    title: keySchema.aiAmis.label,
+                    body: keySchema.aiAmis.schema
+                  })
+
                   return {
                     data: {
                       type: 'tabs',

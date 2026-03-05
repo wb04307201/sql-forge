@@ -5,6 +5,24 @@ spring:
     username: sa
   flyway:
     placeholder-replacement: false
+  ai:
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: ${DASHSCOPE_API_KEY}
+      chat:
+        options:
+          model: qwen-plus
+  mvc:
+    async:
+      request-timeout: 60000
+
+server:
+  servlet:
+    session:
+        timeout: 60000
+  tomcat:
+    connection-timeout: 60000
+    keep-alive-timeout: 60000
 
 sql:
   forge:
@@ -15,5 +33,9 @@ sql:
       database:
         enabled: true
         select-only: false
+    ai:
+      enabled: true
+
+
 
 

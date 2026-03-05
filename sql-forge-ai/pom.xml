@@ -11,6 +11,11 @@
     <packaging>jar</packaging>
     <dependencies>
         <dependency>
+            <groupId>com.gitee.wb04307201</groupId>
+            <artifactId>sql-forge-core</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-model</artifactId>
         </dependency>
