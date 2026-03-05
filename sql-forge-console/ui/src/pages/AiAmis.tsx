@@ -64,7 +64,16 @@ export default {
                     labelWidth: '0px',
                     children: ({_value, onChange, _data}) => (
                       <div style={{height: '500px', background: '#f5f5f5'}}>
-                        <div style={{height: '300px'}} id="ai_context"></div>
+                        <div style={{height: '300px'}}>
+                          <textarea
+                            name="text"
+                            id="ai_context"
+                            style={{
+                              height: '100%',
+                              width: '100%'
+                            }}
+                          ></textarea>
+                        </div>
                         <div style={{height: '200px', display: 'flex'}}>
                           <textarea
                             name="text"
@@ -99,6 +108,8 @@ export default {
                                 .then(body => {
                                   const reader = body.getReader();
                                   let answerText = '';
+                                  const decoder = new TextDecoder('utf-8');
+                                  let buffer = ''; // 用于处理可能被截断的 SSE 消息
 
                                   // 读取数据流
                                   function read() {
@@ -111,9 +122,17 @@ export default {
                                           return;
                                         }
                                         // 处理每个数据块
-                                        let context = new TextDecoder(
-                                          'utf-8'
-                                        ).decode(value);
+                                        let context = decoder.decode(value);
+
+                                        if (context.startsWith('data: ')) {
+                                          context = context.substring(6);
+                                        } else if (
+                                          context.startsWith('data:')
+                                        ) {
+                                          context = context.substring(5);
+                                        }
+
+                                        console.log('接收数据块:',JSON.stringify(context))
 
                                         const aiContext =
                                           document.getElementById('ai_context');

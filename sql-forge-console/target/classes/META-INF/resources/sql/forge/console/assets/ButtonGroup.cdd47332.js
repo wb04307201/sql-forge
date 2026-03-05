@@ -1,0 +1,1 @@
+import{a as e,e as o,f as n,B as u}from"./index.69aaf665.js";import{B as f}from"./index.69aaf665.js";var p=function(r){e(t,r);function t(){return r!==null&&r.apply(this,arguments)||this}return t=o([n({type:"button-group"})],t),t}(u);export{p as ButtonGroupRenderer,f as default};

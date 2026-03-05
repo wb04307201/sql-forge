@@ -21,10 +21,15 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.RouterFunctions;
 import org.springframework.web.servlet.function.ServerResponse;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 
@@ -35,6 +40,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static org.springframework.web.servlet.function.RequestPredicates.accept;
 import static org.springframework.web.servlet.function.RouterFunctions.route;
@@ -297,25 +303,25 @@ public class SqlForgeConfiguration implements WebMvcConfigurer {
         return builder.build();
     }
 
-    @Bean
-    @ConditionalOnProperty(name = "sql.forge.ai.enabled", havingValue = "true")
-    @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeAiRouter(SqlForgeProperties sqlForgeProperties, ChatClient chatClient) {
-        RouterFunctions.Builder builder = RouterFunctions.route();
-        builder.POST("sql/forge/ai", request -> {
-            AiRequest aiRequest = request.body(AiRequest.class);
-            String template = sqlForgeProperties.getAi().getPromptTemplate();
-            template = template.replace("{{API_SPEC}}", sqlForgeProperties.getAi().getApiSpec());
-            template = template.replace("{{TABLE_INFO}}", aiRequest.tableInfo());
-            template = template.replace("{{EXAMPLE_TABLE_INFO}}", sqlForgeProperties.getAi().getExampleTableInfo());
-            template = template.replace("{{EXAMPLE_AMIS_INFO}}", sqlForgeProperties.getAi().getExampleAmisInfo());
-            Flux<String> aiResponse = chatClient.prompt().user(template).stream().content();
-            return ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM)
-                    .header("Cache-Control", "no-cache")
-                    .header("Connection", "keep-alive")
-                    .body(aiResponse);
-        });
-
-        return builder.build();
-    }
+//    @Bean
+//    @ConditionalOnProperty(name = "sql.forge.ai.enabled", havingValue = "true")
+//    @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
+//    public RouterFunction<ServerResponse> sqlForgeAiRouter(SqlForgeProperties sqlForgeProperties, ChatClient chatClient) {
+//        RouterFunctions.Builder builder = RouterFunctions.route();
+//        builder.POST("sql/forge/ai", request -> {
+//            AiRequest aiRequest = request.body(AiRequest.class);
+//            String template = sqlForgeProperties.getAi().getPromptTemplate();
+//            template = template.replace("{{API_SPEC}}", sqlForgeProperties.getAi().getApiSpec());
+//            template = template.replace("{{TABLE_INFO}}", aiRequest.tableInfo());
+//            template = template.replace("{{EXAMPLE_TABLE_INFO}}", sqlForgeProperties.getAi().getExampleTableInfo());
+//            template = template.replace("{{EXAMPLE_AMIS_INFO}}", sqlForgeProperties.getAi().getExampleAmisInfo());
+//            Flux<String> aiResponse = chatClient.prompt().user(template).stream().content();
+//            return ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM)
+//                    .header("Cache-Control", "no-cache")
+//                    .header("Connection", "keep-alive")
+//                    .body(aiResponse);
+//        });
+//
+//        return builder.build();
+//    }
 }

@@ -12,17 +12,14 @@ spring:
       chat:
         options:
           model: qwen-plus
+          timeout: 120s
   mvc:
     async:
-      request-timeout: 60000
+      request-timeout: 120000
 
 server:
-  servlet:
-    session:
-        timeout: 60000
   tomcat:
-    connection-timeout: 60000
-    keep-alive-timeout: 60000
+    connection-timeout: 120000
 
 sql:
   forge:
