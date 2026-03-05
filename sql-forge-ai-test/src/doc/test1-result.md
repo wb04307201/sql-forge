@@ -11,7 +11,7 @@
         "@column": [
           "products.ID",
           "products.name",
-          "categories.item_name as dict_categories_name",
+          "categories.item_name as dict_categories",
           "products.price"
         ],
         "@join": [
@@ -68,10 +68,10 @@
               "url": "/sql/forge/api/json/insert/products",
               "data": {
                 "@set": {
-                  "ID": "${ID}",
-                  "name": "${name}",
-                  "dict_categories": "${dict_categories}",
-                  "price": "${price}"
+                  "ID": "${ID | default:undefined}",
+                  "name": "${name | default:undefined}",
+                  "dict_categories": "${dict_categories | default:undefined}",
+                  "price": "${price | default:undefined}"
                 }
               }
             },
@@ -89,6 +89,7 @@
               {
                 "type": "uuid",
                 "name": "ID",
+                "id": "insert-ID",
                 "hidden": true
               },
               {
@@ -96,7 +97,7 @@
                 "name": "name",
                 "label": "商品名称",
                 "maxLength": 50,
-                "required": true
+                "id": "insert-name"
               },
               {
                 "type": "select",
@@ -106,10 +107,7 @@
                   "method": "post",
                   "url": "/sql/forge/api/json/select/sys_dict_items",
                   "data": {
-                    "@column": [
-                      "item_code",
-                      "item_name"
-                    ],
+                    "@column": ["item_code", "item_name"],
                     "@where": [
                       {
                         "column": "dict_code",
@@ -118,16 +116,18 @@
                       }
                     ]
                   },
-                  "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code,\n    label: item.item_name\n  }))\n};"
+                  "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name || item.ITEM_NAME\n  }))\n};"
                 },
-                "clearable": true
+                "clearable": true,
+                "id": "insert-dict_categories"
               },
               {
                 "type": "input-number",
                 "name": "price",
-                "label": "价格",
+                "label": "商品价格",
+                "precision": 2,
                 "max": 10,
-                "precision": 2
+                "id": "insert-price"
               }
             ]
           }
@@ -150,7 +150,7 @@
             "@column": [
               "products.ID",
               "products.name",
-              "categories.item_name as dict_categories_name",
+              "categories.item_name as dict_categories",
               "products.price"
             ],
             "@join": [
@@ -212,7 +212,7 @@
             ]
           }
         },
-        "confirmText": "确定要批量删除选中的商品吗？"
+        "confirmText": "确定要批量删除?"
       }
     ],
     "keepItemSelectionOnPageChange": true,
@@ -239,7 +239,7 @@
         }
       },
       {
-        "name": "dict_categories_name",
+        "name": "dict_categories",
         "label": "商品类型",
         "sortable": true,
         "searchable": {
@@ -252,10 +252,7 @@
             "method": "post",
             "url": "/sql/forge/api/json/select/sys_dict_items",
             "data": {
-              "@column": [
-                "item_code",
-                "item_name"
-              ],
+              "@column": ["item_code", "item_name"],
               "@where": [
                 {
                   "column": "dict_code",
@@ -264,23 +261,21 @@
                 }
               ]
             },
-            "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code,\n    label: item.item_name\n  }))\n};"
+            "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name || item.ITEM_NAME\n  }))\n};"
           },
           "clearable": true
         }
       },
       {
         "name": "price",
-        "label": "价格",
+        "label": "商品价格",
         "sortable": true,
-        "type": "number",
         "searchable": {
           "type": "input-number",
           "name": "price",
-          "label": "价格",
-          "placeholder": "输入价格",
-          "max": 10,
-          "precision": 2
+          "label": "商品价格",
+          "precision": 2,
+          "placeholder": "输入价格"
         }
       },
       {
@@ -293,7 +288,7 @@
             "icon": "fa fa-pen-to-square",
             "actionType": "drawer",
             "drawer": {
-              "title": "编辑商品",
+              "title": "修改商品",
               "body": {
                 "type": "form",
                 "initApi": {
@@ -323,6 +318,7 @@
                   "url": "/sql/forge/api/json/update/products",
                   "data": {
                     "@set": {
+                      "ID": "${ID}",
                       "name": "${name}",
                       "dict_categories": "${dict_categories}",
                       "price": "${price}"
@@ -340,14 +336,15 @@
                   {
                     "type": "input-text",
                     "name": "ID",
-                    "hidden": true
+                    "hidden": true,
+                    "id": "update-ID"
                   },
                   {
                     "type": "input-text",
                     "name": "name",
                     "label": "商品名称",
                     "maxLength": 50,
-                    "required": true
+                    "id": "update-name"
                   },
                   {
                     "type": "select",
@@ -357,10 +354,7 @@
                       "method": "post",
                       "url": "/sql/forge/api/json/select/sys_dict_items",
                       "data": {
-                        "@column": [
-                          "item_code",
-                          "item_name"
-                        ],
+                        "@column": ["item_code", "item_name"],
                         "@where": [
                           {
                             "column": "dict_code",
@@ -369,16 +363,18 @@
                           }
                         ]
                       },
-                      "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code,\n    label: item.item_name\n  }))\n};"
+                      "adaptor": "return {\n  options: payload.map(item => ({\n    value: item.item_code || item.ITEM_CODE,\n    label: item.item_name || item.ITEM_NAME\n  }))\n};"
                     },
-                    "clearable": true
+                    "clearable": true,
+                    "id": "update-dict_categories"
                   },
                   {
                     "type": "input-number",
                     "name": "price",
-                    "label": "价格",
+                    "label": "商品价格",
+                    "precision": 2,
                     "max": 10,
-                    "precision": 2
+                    "id": "update-price"
                   }
                 ]
               }
@@ -390,7 +386,7 @@
             "icon": "fa fa-trash",
             "actionType": "ajax",
             "level": "danger",
-            "confirmText": "确认要删除该商品吗？",
+            "confirmText": "确认要删除？",
             "api": {
               "method": "post",
               "url": "/sql/forge/api/json/delete/products",

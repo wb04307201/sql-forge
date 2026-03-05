@@ -61,7 +61,7 @@ sql:
 继承[IExecutor.java](sql-forge-core/src/main/java/cn/wubo/sql/forge/IExecutor.java)实现自定义执行器
 
 ### Json API 模块
-让前端无需编写后端代码即可操作数据库，通过`JSON`格式描述自己需要的数据结构和操作，后端自动生成对应的`SQL`执行并返回结果。
+通用接口，通过`JSON`格式描述数据操作，后端自动生成对应的`SQL`执行并返回结果。
 
 - **请求路径**: `/sql/forge/api/json/{method}/{tableName}?executorName={executorName}`
 - **请求方法**: `POST`
@@ -203,7 +203,7 @@ JOIN products p ON oi.product_id = p.id
 JOIN sys_dict_items categories ON p.dict_categories = categories.item_code
 WHERE (sex.dict_code = ? AND categories.dict_code = ?)
 ORDER BY o.order_date
-``
+```
 
 #### selectPage 方法
 
