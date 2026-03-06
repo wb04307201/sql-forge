@@ -76,7 +76,7 @@ sql:
 ##### 请求格式
 ```json
 {
-  "@column": ["字段名1", "字段名2"],
+  "@column": ["字段名1","别名.字段名2"],
   "@where": [
     {
       "column": "字段名",
@@ -105,7 +105,7 @@ sql:
   - value: 匹配的值
 - `@join`: 添加关联表:
   - type: JOIN类型（JOIN, INNER_JOIN, LEFT_OUTER_JOIN, RIGHT_OUTER_JOIN, OUTER_JOIN）
-  - joinTable: 关联表名
+  - joinTable: 关联表名/关联表名 别名
   - on: 关联条件
 - `@order`: 排序字段
 - `@group`: 分组字段
@@ -118,13 +118,19 @@ POST http://localhost:8080/sql/forge/api/json/select/USERS
 Content-Type: application/json
 
 {
-  
+  "@column": [
+    "ID",
+    "USERNAME",
+    "DICT_SEX",
+    "EMAIL"
+  ]
 }
+
 ```
 
 2. 生成的SQL
 ```sql
-SELECT *
+SELECT ID, USERNAME, DICT_SEX, EMAIL
 FROM USERS
 ```
 

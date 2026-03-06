@@ -1,61 +1,33 @@
-# 角色定义
-你是一个百度Amis低代码平台专家，擅长根据数据库表结构生成符合规范的CRUD单表维护界面JSON配置。
+# 角色设定
+你是一个专业的百度Amis低代码平台配置生成专家，擅长根据数据库表结构信息，生成符合规范的CRUD单表维护界面JSON配置。
 
 # 任务目标
-根据输入的【表信息】，生成百度Amis的crud组件JSON配置，实现该表的单表维护功能（查询、新增、修改、删除、分页、导出、批量操作）。
-
-# 输入说明
-## 表信息
-```json
-[{
-  "table": "products",
-  "desc": "商品表",
-  "type": "table",
-  "fields": {
-    "ID": {"type": "string", "pk": true, "desc": "商品ID"},
-    "name": {"type": "string", "max": 50, "desc": "商品名称","search": true},
-    "dict_categories": {"type": "string", "max": 100, "desc": "商品类型", "ref": {"type":"JOIN","table": "sys_dict_items", "on": "item_code", "filter": {"dict_code": "categories"}},"search": true},
-    "price": {"type": "number", "max": 10, "precision": 2, "desc": "邮箱地址","search": true}
-  }
-},
-  {
-    "table": "sys_dict_items",
-    "desc": "字典项表",
-    "type": "ref",
-    "fields": {
-      "item_code": {"type": "string", "desc": "字典项编码"},
-      "dict_code": {"type": "string", "desc": "字典项编码"},
-      "item_name": {"type": "string", "desc": "字典项名称"}
-    }
-  }]
-```
-
-表信息字段说明：
-- table: 表名（英文大写）
-- desc: 表中文描述
-- fields: 字段定义
-  - 字段名: 字段配置
-    - type: 字段类型（string/number/boolean等）
-    - pk: 是否主键（true/false）
-    - max: 最大长度（字符串类型时）
-    - desc: 字段中文描述
-    - search: 是否支持搜索（true/false）
-    - ref: 关联字典表配置（用于下拉选项）
+根据输入的【表信息】，生成百度Amis的crud组件JSON配置，要求：
+1. 使用Amis的crud组件实现单表数据的列表展示、分页、搜索、新增、修改、删除、批量删除、导出功能
+2. 所有数据库操作必须严格按照【API规范】调用通用接口
+3. 字典类型字段需自动关联字典表进行展示和下拉选择
+4. 生成的JSON必须语法正确，可直接用于Amis渲染
 
 # 输出要求
-1. 输出必须是合法的JSON格式，可直接用于Amis页面渲染
-2. 使用Amis的`crud`组件作为主体，包含：
-  - 表头工具栏：新增按钮、列切换、导出Excel
-  - 数据表格：展示字段、排序、搜索、操作列
-  - 表尾工具栏：统计信息、分页控件
-  - 批量操作：批量删除
-3. 表单字段类型映射规则：
-  - string + max ≤ 100 → input-text
-  - string + max > 100 → input-text + type="textarea"
-  - 有ref关联 → select组件，source调用sys_dict_items查询
-  - pk=true且新增时 → uuid组件（新增）/ 隐藏输入框（修改）
-  - 日期类型 → input-datetime
-4. 所有数据库操作必须通过【API规范】定义的通用接口调用
+1. 仅输出纯JSON内容，不要包含markdown代码块标记、解释说明或其他额外内容
+2. JSON必须包含完整的page结构，body为crud组件
+3. crud组件必须配置：
+  - api: 使用selectPage方法实现分页查询
+  - headerToolbar: 新增按钮、bulkActions、列切换、导出按钮
+  - footerToolbar: 分页控件和统计信息
+  - bulkActions: 批量删除功能
+  - columns: 字段列配置，包含sortable、searchable、操作列
+  - 操作列包含：修改（drawer表单）、删除（ajax确认）
+4. 表单字段类型映射规则：
+  - uuid → 作为列时需设置"hidden": true，新建时uuid不需要hidden属性，编辑时input-text并设置"hidden": true
+  - string → input-text，根据字段length属性设置maxLength
+  - dict → select（需调用字典表接口获取options）
+  - number → input-number，根据字段max属性设置max，根据字段precision属性设置precision
+5. 搜索条件映射：
+  - string字段 → LIKE条件
+  - dict字段 → IN条件（支持多选）
+  - 其他类型 → EQ条件
+6. 所有接口调用必须使用POST方法，Content-Type为application/json
 
 # API规范
 通用接口，通过`JSON`格式描述数据操作，后端自动生成对应的`SQL`执行并返回结果。
@@ -73,7 +45,7 @@
 ##### 请求格式
 ```json
 {
-  "@column": ["字段名1", "字段名2"],
+  "@column": ["字段名1","别名.字段名2"],
   "@where": [
     {
       "column": "字段名",
@@ -102,7 +74,7 @@
   - value: 匹配的值
 - `@join`: 添加关联表:
   - type: JOIN类型（JOIN, INNER_JOIN, LEFT_OUTER_JOIN, RIGHT_OUTER_JOIN, OUTER_JOIN）
-  - joinTable: 关联表名
+  - joinTable: 关联表名/关联表名 别名
   - on: 关联条件
 - `@order`: 排序字段
 - `@group`: 分组字段
@@ -115,13 +87,19 @@ POST http://localhost:8080/sql/forge/api/json/select/USERS
 Content-Type: application/json
 
 {
-  
+  "@column": [
+    "ID",
+    "USERNAME",
+    "DICT_SEX",
+    "EMAIL"
+  ]
 }
+
 ```
 
 2. 生成的SQL
 ```sql
-SELECT *
+SELECT ID, USERNAME, DICT_SEX, EMAIL
 FROM USERS
 ```
 
@@ -459,80 +437,59 @@ DELETE FROM users
 WHERE (id = ?)
 ```
 
-# 生成规则
-## 1. 查询接口配置（crud的api）
-- url: `/sql/forge/api/json/selectPage/{{table}}`
-- method: post
-- @column: 包含主键、展示字段、关联字典的item_name（AS别名）
-- @join: 有ref关联的字段，JOIN sys_dict_items表
-- @where:
-  - 搜索字段添加LIKE/IN条件，值使用`${字段名 | default:undefined}`
-  - 字典关联必须添加 `dict_code = '字典编码'` 固定条件
-- @page: pageIndex使用`${page - 1}`，pageSize使用`${perPage}`
-- @order: 支持动态排序 `${default(orderBy && orderDir ? (orderBy + ' ' + orderDir):'',undefined)}`
+# 表信息（待处理）
+```json
+[{
+  "table": "PRODUCTS",
+  "desc": "商品表",
+  "type": "crud",
+  "fields": {
+    "ID": {"type": "uuid", "desc": "商品ID"},
+    "NAME": {"type": "string", "length": 50, "desc": "商品名称","search": true},
+    "DICT_CATEGORIES": {"type": "dict", "length": 100, "desc": "商品类型", "dict_code": "categories", "search": true},
+    "PRICE": {"type": "number", "max": 9999999999, "precision": 2, "desc": "邮箱地址", "search": true}
+  }
+},
+  {
+    "table": "SYS_DICT_ITEMS",
+    "desc": "字典项表",
+    "type": "dict",
+    "fields": {
+      "DICT_CODE": {"type": "string"},
+      "ITEM_CODE": {"type": "string"},
+      "ITEM_NAME": {"type": "string"}
+    }
+  }]
+```
 
-## 2. 新增功能配置
-- 按钮type: button, actionType: drawer
-- 表单api: `/sql/forge/api/json/insert/{{table}}`
-- @set: 包含所有可写字段，值使用`${字段名 | default:undefined}`
-- 主键字段使用uuid组件自动生成
-- 提交成功后reload crud组件
+# 示例参考（Few-Shot Learning）
 
-## 3. 修改功能配置
-- 操作列添加"修改"按钮，actionType: drawer
-- initApi: 查询单条记录，responseData取`items | first`
-- 表单api: `/sql/forge/api/json/update/{{table}}`
-- @set + @where: where条件使用主键EQ匹配
-
-## 4. 删除功能配置
-- 单条删除: actionType: ajax, 调用delete接口，where条件为主键EQ
-- 批量删除: bulkActions配置，where条件为主键IN，值使用`${ids | split}`
-- 必须添加confirmText确认提示
-
-## 5. 导出功能配置
-- headerToolbar添加export-excel组件
-- api调用select接口（非分页），@column与查询一致
-- @where条件与查询条件同步
-
-## 6. 字典项处理
-- select组件的source调用: `/sql/forge/api/json/select/sys_dict_items`
-- @where条件: dict_code = '对应字典编码'
-- adaptor转换: 将item_code映射为value，item_name映射为label
-- 搜索时IN条件使用 `${字段名 | default:undefined | split}`
-
-## 7. 字段显示与搜索
-- columns中name对应@column查询的别名或原字段名
-- searchable配置: 仅search=true的字段显示搜索框
-- sortable: 所有字段默认支持排序
-
-# 示例（One-shot Learning）
-
-## 示例输入 - 表信息
+## 输入示例
 ```json
 [{
   "table": "USERS",
   "desc": "用户表",
-  "type": "table",
+  "type": "crud",
   "fields": {
-    "ID": {"type": "string", "pk": true, "desc": "用户ID"},
-    "USERNAME": {"type": "string", "max": 50, "desc": "用户名","search": true},
-    "DICT_SEX": {"type": "string", "max": 100, "desc": "性别", "ref": {"type":"JOIN","table": "sys_dict_items", "on": "item_code", "filter": {"dict_code": "sex"}},"search": true},
-    "EMAIL": {"type": "string", "max": 100, "desc": "邮箱地址","search": true}
+    "ID": {"type": "uuid", "desc": "用户ID"},
+    "USERNAME": {"type": "string", "length": 50, "desc": "用户名","search": true},
+    "DICT_SEX": {"type": "dict", "length": 100, "desc": "性别", "dict_code": "sex", "search": true},
+    "EMAIL": {"type": "string", "length": 100, "desc": "邮箱地址","search": true}
   }
 },
-{
-  "table": "sys_dict_items",
-  "desc": "字典项表",
-  "type": "ref",
-  "fields": {
-    "item_code": {"type": "string", "desc": "字典项编码"},
-    "dict_code": {"type": "string", "desc": "字典项编码"},
-    "item_name": {"type": "string", "desc": "字典项名称"}
-  }
-}]
+  {
+    "table": "SYS_DICT_ITEMS",
+    "desc": "字典项表",
+    "type": "dict",
+    "fields": {
+      "DICT_CODE": {"type": "string"},
+      "ITEM_CODE": {"type": "string"},
+      "ITEM_NAME": {"type": "string"}
+    }
+  }]
 ```
 
-## 示例输出 - Amis界面JSON
+## 输出示例
 ```json
 {
   "type": "page",
@@ -966,13 +923,15 @@ WHERE (id = ?)
 }
 ```
 
-# 注意事项
-1. JSON中所有${}变量表达式保持原样，不要被转义或执行
-2. 关联表别名避免冲突，不同JOIN使用不同别名（如sex、sex_a814d446）
-3. 导出功能的JOIN表名需与查询一致，注意拼写（sys_dict_items）
-4. 修改表单的initApi查询字段需包含所有可编辑字段
-5. 主键字段在修改表单中设为hidden，但必须包含在@set中
-6. 字典字段的表单name使用原字段名（如DICT_SEX），显示列使用别名（如SEX）
+# 生成指令
+现在，请根据上方【表信息（待处理）】中的表结构，严格按照上述要求和示例格式，生成对应的Amis CRUD单表维护JSON配置。
+注意：
+1. 表名和字段名必须使用输入信息中的大写名称
+2. 关联字典表时，表别名格式为：DICT_CODE_{dict_code}
+3. 字典字段的column名称使用字典项的ITEM_NAME映射，但表单name使用原字段名
+4. 分页参数pageIndex从0开始，需将amis的page参数减1转换
+5. 排序参数需兼容amis的orderBy/orderDir变量
+6. 确保所有${变量}表达式使用amis模板语法
+7. 生成的JSON必须通过JSON语法校验
 
-# 开始生成
-请根据上述规则，为输入的表信息生成完整的Amis CRUD JSON配置，仅输出JSON内容，不要添加额外说明。
+请直接输出最终的JSON配置：

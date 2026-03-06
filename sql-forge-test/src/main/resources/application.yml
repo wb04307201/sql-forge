@@ -12,14 +12,6 @@ spring:
       chat:
         options:
           model: qwen-plus
-          timeout: 120s
-  mvc:
-    async:
-      request-timeout: 120000
-
-server:
-  tomcat:
-    connection-timeout: 120000
 
 sql:
   forge:
@@ -32,7 +24,8 @@ sql:
         select-only: false
     ai:
       enabled: true
-
+server:
+  port: 8089
 
 
 

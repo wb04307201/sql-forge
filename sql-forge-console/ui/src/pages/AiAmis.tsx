@@ -64,16 +64,6 @@ export default {
                     labelWidth: '0px',
                     children: ({_value, onChange, _data}) => (
                       <div style={{height: '500px', background: '#f5f5f5'}}>
-                        <div style={{height: '300px'}}>
-                          <textarea
-                            name="text"
-                            id="ai_context"
-                            style={{
-                              height: '100%',
-                              width: '100%'
-                            }}
-                          ></textarea>
-                        </div>
                         <div style={{height: '200px', display: 'flex'}}>
                           <textarea
                             name="text"
@@ -124,20 +114,21 @@ export default {
                                         // 处理每个数据块
                                         let context = decoder.decode(value);
 
-                                        if (context.startsWith('data: ')) {
-                                          context = context.substring(6);
-                                        } else if (
-                                          context.startsWith('data:')
-                                        ) {
-                                          context = context.substring(5);
-                                        }
+                                        console.log('接收数据块1:',context)
 
-                                        console.log('接收数据块:',JSON.stringify(context))
+                                        context = context.split('\n')
+                                          .filter(line => line.trim())
+                                          .map(line => line.replace(/^data:\s*/, ''))
+                                          .join('\n')
+                                          .trim();
+
+                                        console.log('接收数据块2:',context)
 
                                         const aiContext =
                                           document.getElementById('ai_context');
                                         answerText += context;
-                                        aiContext.innerHTML = answerText;
+                                        aiContext.value = answerText;
+                                        aiContext?.scrollTo
 
                                         onChange(answerText);
 
@@ -153,6 +144,16 @@ export default {
                           >
                             AI
                           </button>
+                        </div>
+                        <div style={{height: '300px'}}>
+                          <textarea
+                            name="text"
+                            id="ai_context"
+                            style={{
+                              height: '100%',
+                              width: '100%'
+                            }}
+                          ></textarea>
                         </div>
                       </div>
                     )

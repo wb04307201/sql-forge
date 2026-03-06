@@ -3,24 +3,24 @@
 [{
   "table": "USERS",
   "desc": "用户表",
-  "type": "table",
+  "type": "crud",
   "fields": {
-    "ID": {"type": "string", "pk": true, "desc": "用户ID"},
-    "USERNAME": {"type": "string", "max": 50, "desc": "用户名","search": true},
-    "DICT_SEX": {"type": "string", "max": 100, "desc": "性别", "ref": {"type":"JOIN","table": "sys_dict_items", "on": "item_code", "filter": {"dict_code": "sex"}},"search": true},
-    "EMAIL": {"type": "string", "max": 100, "desc": "邮箱地址","search": true}
+    "ID": {"type": "uuid", "desc": "用户ID"},
+    "USERNAME": {"type": "string", "length": 50, "desc": "用户名","search": true},
+    "DICT_SEX": {"type": "dict", "length": 100, "desc": "性别", "dict_code": "sex", "search": true},
+    "EMAIL": {"type": "string", "length": 100, "desc": "邮箱地址","search": true}
   }
 },
-{
-  "table": "sys_dict_items",
-  "desc": "字典项表",
-  "type": "ref",
-  "fields": {
-    "item_code": {"type": "string", "desc": "字典项编码"},
-    "dict_code": {"type": "string", "desc": "字典项编码"},
-    "item_name": {"type": "string", "desc": "字典项名称"}
-  }
-}]
+  {
+    "table": "SYS_DICT_ITEMS",
+    "desc": "字典项表",
+    "type": "dict",
+    "fields": {
+      "DICT_CODE": {"type": "string"},
+      "ITEM_CODE": {"type": "string"},
+      "ITEM_NAME": {"type": "string"}
+    }
+  }]
 ```
 
 # API规范
@@ -39,7 +39,7 @@
 ##### 请求格式
 ```json
 {
-  "@column": ["字段名1", "字段名2"],
+  "@column": ["字段名1","别名.字段名2"],
   "@where": [
     {
       "column": "字段名",
@@ -68,7 +68,7 @@
   - value: 匹配的值
 - `@join`: 添加关联表:
   - type: JOIN类型（JOIN, INNER_JOIN, LEFT_OUTER_JOIN, RIGHT_OUTER_JOIN, OUTER_JOIN）
-  - joinTable: 关联表名
+  - joinTable: 关联表名/关联表名 别名
   - on: 关联条件
 - `@order`: 排序字段
 - `@group`: 分组字段
@@ -81,13 +81,19 @@ POST http://localhost:8080/sql/forge/api/json/select/USERS
 Content-Type: application/json
 
 {
-  
+  "@column": [
+    "ID",
+    "USERNAME",
+    "DICT_SEX",
+    "EMAIL"
+  ]
 }
+
 ```
 
 2. 生成的SQL
 ```sql
-SELECT *
+SELECT ID, USERNAME, DICT_SEX, EMAIL
 FROM USERS
 ```
 
@@ -870,7 +876,7 @@ WHERE (id = ?)
 2. 按照"API规范"调用通用接口进行数据库操作
 3. 模板中包含"API规范"
 4. 模板中包含一个示例，示例输入使用当前文档中的"表信息"、示例输出使用当前文档中的"Amis界面json"
-5. 模板中输入的"表信息"使用{{TABLE_INFO}}标识
-6. 模板中的"API规范"使用{{API_SPEC}}标识
-7. 模板中的示例输入使用{{EXAMPLE_TABLE_INFO}}标识
-8. 模板中的示例输出使用{{EXAMPLE_AMIS_INFO}}标识
+5. 模板中输入的"表信息"使用{{TABLE_INFO}}标识，有且只有一个
+6. 模板中的"API规范"使用{{API_SPEC}}标识，有且只有一个
+7. 模板中的“输入示例”使用{{EXAMPLE_TABLE_INFO}}标识，有且只有一个
+8. 模板中的“输出示例"使用{{EXAMPLE_AMIS_INFO}}标识，有且只有一个
