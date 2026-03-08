@@ -6,6 +6,7 @@ import cn.wubo.sql.forge.record.*;
 import cn.wubo.sql.forge.records.SqlScript;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +18,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,12 +31,9 @@ import org.springframework.web.servlet.function.RouterFunctions;
 import org.springframework.web.servlet.function.ServerResponse;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Flux;
 
 import javax.sql.DataSource;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -98,26 +95,22 @@ public class SqlForgeConfiguration implements WebMvcConfigurer {
     }
 
     @Bean
+    public FileContentReader fileContentReader(ResourceLoader resourceLoader) {
+        return new FileContentReader(resourceLoader);
+    }
+
+    @Bean
     @ConditionalOnProperty(name = "sql.forge.calcite.enabled", havingValue = "true")
-    public IExecutor calciteExcutor(ResourceLoader resourceLoader, SqlForgeProperties properties) throws IOException {
+    public IExecutor calciteExcutor(FileContentReader resourceLoader, SqlForgeProperties properties) throws IOException {
         if (!StringUtils.hasText(properties.getCalcite().getConfiguration())) {
             throw new IllegalArgumentException("sql.forge.api.calcite.configuration is null");
         }
 
-        String configPath = properties.getCalcite().getConfiguration();
-        Resource resource = resourceLoader.getResource(configPath);
-
-        if (!resource.exists()) {
-            throw new FileNotFoundException("Calcite配置文件不存在: " + configPath);
-        }
-
-        try (InputStream inputStream = resource.getInputStream()) {
+        String modelStr = resourceLoader.readContent(properties.getCalcite().getConfiguration());
             ObjectMapper mapper = new ObjectMapper();
-            Map<String, Object> modelMap = mapper.readValue(inputStream, new TypeReference<>() {
+        mapper.readValue(modelStr, new TypeReference<Map<String, Object>>() {
             });
-            String model = mapper.writeValueAsString(modelMap);
-            return new CalciteExcutor(model);
-        }
+        return new CalciteExcutor(modelStr);
     }
 
     @Bean
@@ -303,25 +296,74 @@ public class SqlForgeConfiguration implements WebMvcConfigurer {
         return builder.build();
     }
 
-//    @Bean
-//    @ConditionalOnProperty(name = "sql.forge.ai.enabled", havingValue = "true")
-//    @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
-//    public RouterFunction<ServerResponse> sqlForgeAiRouter(SqlForgeProperties sqlForgeProperties, ChatClient chatClient) {
-//        RouterFunctions.Builder builder = RouterFunctions.route();
-//        builder.POST("sql/forge/ai", request -> {
-//            AiRequest aiRequest = request.body(AiRequest.class);
-//            String template = sqlForgeProperties.getAi().getPromptTemplate();
-//            template = template.replace("{{API_SPEC}}", sqlForgeProperties.getAi().getApiSpec());
-//            template = template.replace("{{TABLE_INFO}}", aiRequest.tableInfo());
-//            template = template.replace("{{EXAMPLE_TABLE_INFO}}", sqlForgeProperties.getAi().getExampleTableInfo());
-//            template = template.replace("{{EXAMPLE_AMIS_INFO}}", sqlForgeProperties.getAi().getExampleAmisInfo());
-//            Flux<String> aiResponse = chatClient.prompt().user(template).stream().content();
-//            return ServerResponse.ok().contentType(MediaType.TEXT_EVENT_STREAM)
-//                    .header("Cache-Control", "no-cache")
-//                    .header("Connection", "keep-alive")
-//                    .body(aiResponse);
-//        });
-//
-//        return builder.build();
-//    }
+    @Slf4j
+    @RestController
+    @RequestMapping
+    @ConditionalOnProperty(name = "sql.forge.ai.enabled", havingValue = "true")
+    @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
+    public static class SseController {
+
+        private final ChatClient chatClient;
+        private final SqlForgeProperties sqlForgeProperties;
+        private final FileContentReader fileContentReader;
+
+
+        public SseController(ChatClient chatClient, SqlForgeProperties sqlForgeProperties, FileContentReader fileContentReader) {
+            this.chatClient = chatClient;
+            this.sqlForgeProperties = sqlForgeProperties;
+            this.fileContentReader = fileContentReader;
+        }
+
+        @PostMapping(value = "/sql/forge/ai", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+        public SseEmitter streamAi(@RequestBody AiRequest aiRequest) throws IOException {
+            String template = loadTemplate(aiRequest);
+
+            // 1. 显式设置超时时间（单位毫秒），0 表示永不超时
+            SseEmitter emitter = new SseEmitter(0L);
+
+            // 2. 设置超时回调，防止连接泄露
+            emitter.onTimeout(() -> {
+                log.debug("SSE 链接超时");
+                emitter.complete();
+            });
+            emitter.onCompletion(() -> log.debug("SSE 链接完成"));
+            emitter.onError(e -> log.debug("SSE 链接错误：{}", e.getMessage()));
+
+            // 3. 在异步线程中处理 AI 请求，避免阻塞 Tomcat 线程
+            CompletableFuture.runAsync(() -> {
+                try {
+                    // 4. 订阅 Flux 流并将数据发送给 emitter
+                    chatClient.prompt()
+                            .user(template)
+                            .stream()
+                            .content()
+                            .subscribe(
+                                    content -> {
+                                        try {
+                                            emitter.send(content, MediaType.TEXT_PLAIN);
+                                        } catch (IOException e) {
+                                            emitter.completeWithError(e);
+                                        }
+                                    },
+                                    emitter::completeWithError,
+                                    emitter::complete
+                            );
+                } catch (Exception e) {
+                    emitter.completeWithError(e);
+                }
+            });
+
+            return emitter;
+        }
+
+        private String loadTemplate(AiRequest aiRequest) throws IOException {
+            SqlForgeProperties.AiProperties.TemplateProperty templateProperty = sqlForgeProperties.getAi().getTemplates().get(aiRequest.type());
+            String template = fileContentReader.readContent(templateProperty.getPromptTemplate());
+            template = template.replace("{{API_SPEC}}", fileContentReader.readContent(templateProperty.getApiSpec()));
+            template = template.replace("{{TABLE_INFO}}", aiRequest.tableInfo());
+            template = template.replace("{{EXAMPLE_TABLE_INFO}}", fileContentReader.readContent(templateProperty.getExampleTableInfo()));
+            template = template.replace("{{EXAMPLE_AMIS_INFO}}", fileContentReader.readContent(templateProperty.getExampleAmisInfo()));
+            return template;
+        }
+    }
 }

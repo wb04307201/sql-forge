@@ -84,6 +84,7 @@ export default {
                                 method: 'POST',
                                 headers: {'Content-Type': 'application/json'},
                                 body: JSON.stringify({
+                                  type: 'crud',
                                   tableInfo: textarea.value
                                 })
                               })
@@ -114,21 +115,24 @@ export default {
                                         // 处理每个数据块
                                         let context = decoder.decode(value);
 
-                                        console.log('接收数据块1:',context)
+                                        console.log('接收数据块1:', context);
 
-                                        context = context.split('\n')
+                                        context = context
+                                          .split('\n')
                                           .filter(line => line.trim())
-                                          .map(line => line.replace(/^data:\s*/, ''))
+                                          .map(line =>
+                                            line.replace(/^data:\s*/, '')
+                                          )
                                           .join('\n')
                                           .trim();
 
-                                        console.log('接收数据块2:',context)
+                                        console.log('接收数据块2:', context);
 
                                         const aiContext =
                                           document.getElementById('ai_context');
                                         answerText += context;
                                         aiContext.value = answerText;
-                                        aiContext?.scrollTo
+                                        aiContext.scrollTop = aiContext.scrollHeight;
 
                                         onChange(answerText);
 
