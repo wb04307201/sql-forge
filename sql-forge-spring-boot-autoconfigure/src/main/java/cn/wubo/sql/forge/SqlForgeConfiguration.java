@@ -220,9 +220,13 @@ public class SqlForgeConfiguration {
     @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
     public RouterFunction<ServerResponse> sqlForgeApiDatabaseConsoleRouter(ExecutorService executorService) {
         RouterFunctions.Builder builder = route();
-        builder.GET("sql/forge/api/database/metaData", request -> {
+        builder.GET("sql/forge/api/database/metaDataTree", request -> {
             String executorName = request.param("executorName").orElse("database");
             return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTree());
+        });
+        builder.GET("sql/forge/api/database/metaDataTables", request -> {
+            String executorName = request.param("executorName").orElse("database");
+            return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTables());
         });
         return builder.build();
     }

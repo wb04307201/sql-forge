@@ -2,6 +2,8 @@ package cn.wubo.sql.forge;
 
 import cn.wubo.sql.forge.map.ParamMap;
 import cn.wubo.sql.forge.map.RowMap;
+import cn.wubo.sql.forge.records.DatabaseInfo;
+import cn.wubo.sql.forge.records.EntireTableInfo;
 import cn.wubo.sql.forge.records.SqlScript;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -38,9 +40,15 @@ public class ExecutorServiceCalciteTest {
     }
 
     @Test
-    void testMetaData() throws SQLException {
-        TreeNode<?> treeNode = executorService.getExecutor("calcite").getMetaDataTree();
+    void testMetaDataTree() throws SQLException {
+        TreeNode<DatabaseInfo> treeNode = executorService.getExecutor("calcite").getMetaDataTree();
         assertEquals("Calcite", treeNode.getValue());
+    }
+
+    @Test
+    void testMetaDataTables() throws SQLException {
+        List<EntireTableInfo> entireTableInfos = executorService.getExecutor("calcite").getMetaDataTables();
+        log.info("entireTableInfos: {}", entireTableInfos);
     }
 
     @Test
