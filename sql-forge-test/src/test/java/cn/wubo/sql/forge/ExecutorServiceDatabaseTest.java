@@ -33,7 +33,7 @@ public class ExecutorServiceDatabaseTest {
 
     @Test
     void testMetaData() throws SQLException {
-        TreeNode<?> treeNode = executorService.getExecutor().getMetaData();
+        TreeNode<?> treeNode = executorService.getExecutor().getMetaDataTree();
         assertEquals("H2", treeNode.getValue());
     }
 

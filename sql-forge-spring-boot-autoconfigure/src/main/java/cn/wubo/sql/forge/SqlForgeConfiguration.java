@@ -40,8 +40,8 @@ import static org.springframework.web.servlet.function.RouterFunctions.route;
 public class SqlForgeConfiguration {
 
     @Bean
-    public IExecutor databaseExecutor(DataSource dataSource) {
-        return new DatabaseExecutor(dataSource);
+    public IExecutor databaseExecutor(DataSource dataSource, SqlForgeProperties properties) {
+        return new DatabaseExecutor(dataSource,properties);
     }
 
     @Bean
@@ -222,7 +222,7 @@ public class SqlForgeConfiguration {
         RouterFunctions.Builder builder = route();
         builder.GET("sql/forge/api/database/metaData", request -> {
             String executorName = request.param("executorName").orElse("database");
-            return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaData());
+            return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTree());
         });
         return builder.build();
     }

@@ -39,7 +39,7 @@ public class ExecutorServiceCalciteTest {
 
     @Test
     void testMetaData() throws SQLException {
-        TreeNode<?> treeNode = executorService.getExecutor("calcite").getMetaData();
+        TreeNode<?> treeNode = executorService.getExecutor("calcite").getMetaDataTree();
         assertEquals("Calcite", treeNode.getValue());
     }
 

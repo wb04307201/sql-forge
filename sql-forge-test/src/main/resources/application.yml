@@ -8,6 +8,8 @@ spring:
 
 sql:
   forge:
+    schemata:
+      - PUBLIC
     calcite:
       enabled: true
       configuration: classpath:model.json

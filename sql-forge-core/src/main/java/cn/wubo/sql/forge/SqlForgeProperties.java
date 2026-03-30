@@ -3,10 +3,14 @@ package cn.wubo.sql.forge;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @ConfigurationProperties(prefix = "sql.forge")
 public class SqlForgeProperties {
 
+    private List<String> schemata = new ArrayList<>();
     private  CalciteProperties calcite = new CalciteProperties();
     private ApiProperties api = new ApiProperties();
     private ConsoleProperties console = new ConsoleProperties();

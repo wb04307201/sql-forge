@@ -5,6 +5,8 @@ package cn.wubo.sql.forge.records;
  */
 public record TableInfo(
         String tableName,
+        String tableSchema,
+        String tableType,
         String remarks
 ) {
 }
