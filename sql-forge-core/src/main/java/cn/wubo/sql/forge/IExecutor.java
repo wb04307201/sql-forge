@@ -2,8 +2,6 @@ package cn.wubo.sql.forge;
 
 import cn.wubo.sql.forge.enums.DatasourceType;
 import cn.wubo.sql.forge.map.RowMap;
-import cn.wubo.sql.forge.records.DatabaseInfo;
-import cn.wubo.sql.forge.records.EntireTableInfo;
 import cn.wubo.sql.forge.records.SqlScript;
 import jakarta.validation.Valid;
 
@@ -22,7 +20,5 @@ public interface IExecutor {
 
     Object execute(@Valid SqlScript sqlScript) throws SQLException;
 
-    TreeNode<DatabaseInfo> getMetaDataTree() throws SQLException;
-
-    List<EntireTableInfo> getMetaDataTables() throws SQLException;
+    TreeNode<?> getMetaData() throws SQLException;
 }

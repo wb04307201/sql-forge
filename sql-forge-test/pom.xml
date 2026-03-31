@@ -12,7 +12,7 @@
     <dependencies>
         <dependency>
             <groupId>com.gitee.wb04307201</groupId>
-            <artifactId>sql-forge-spring-boot-autoconfigure</artifactId>
+            <artifactId>sql-forge-spring-boot-starter</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -51,9 +51,8 @@
             <version>42.7.8</version>
         </dependency>
         <dependency>
-            <groupId>de.mkammerer</groupId>
-            <artifactId>argon2-jvm</artifactId>
-            <version>2.12</version>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
     </dependencies>
 

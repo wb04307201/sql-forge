@@ -5,11 +5,16 @@ spring:
     username: sa
   flyway:
     placeholder-replacement: false
+  ai:
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: ${DASHSCOPE_API_KEY}
+      chat:
+        options:
+          model: qwen-plus
 
 sql:
   forge:
-    schemata:
-      - PUBLIC
     calcite:
       enabled: true
       configuration: classpath:model.json
@@ -17,5 +22,10 @@ sql:
       database:
         enabled: true
         select-only: false
+    ai:
+      enabled: true
+server:
+  port: 8089
+
 
 

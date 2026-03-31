@@ -3,17 +3,17 @@ package cn.wubo.sql.forge;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Data
 @ConfigurationProperties(prefix = "sql.forge")
 public class SqlForgeProperties {
 
-    private List<String> schemata = new ArrayList<>();
     private  CalciteProperties calcite = new CalciteProperties();
     private ApiProperties api = new ApiProperties();
     private ConsoleProperties console = new ConsoleProperties();
+    private AiProperties ai = new AiProperties();
 
     @Data
     public static class CalciteProperties {
@@ -45,12 +45,12 @@ public class SqlForgeProperties {
 
             @Data
             public static class SqlTemplateProperties {
-                private Boolean enabled = true;
+private Boolean enabled = true;
             }
 
             @Data
             public static class AmisTemplateProperties {
-                private Boolean enabled = true;
+private Boolean enabled = true;
             }
         }
     }
@@ -58,5 +58,32 @@ public class SqlForgeProperties {
     @Data
     public static class ConsoleProperties {
         private Boolean enabled = true;
+    }
+
+    @Data
+    public static class AiProperties {
+        private Boolean enabled = false;
+        public Map<String, TemplateProperty> templates = new HashMap<>() {{
+            put("crud", new TemplateProperty(
+                    "classpath:table2amis/crud/prompt.st",
+                    "classpath:table2amis/crud/exampleTable.st",
+                    "classpath:table2amis/crud/exampleAmis.st"
+            ));
+        }};
+
+        @Data
+        public static class TemplateProperty {
+            private String promptTemplate;
+            private String apiSpec;
+            private String exampleTableInfo;
+            private String exampleAmisInfo;
+
+            public TemplateProperty(String promptTemplate, String exampleTableInfo, String exampleAmisInfo) {
+                this.promptTemplate = promptTemplate;
+                this.exampleTableInfo = exampleTableInfo;
+                this.exampleAmisInfo = exampleAmisInfo;
+                this.apiSpec = "classpath:api/rule.st";
+            }
+        }
     }
 }

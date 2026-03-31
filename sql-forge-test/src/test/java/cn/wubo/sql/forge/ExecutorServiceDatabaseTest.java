@@ -2,7 +2,6 @@ package cn.wubo.sql.forge;
 
 import cn.wubo.sql.forge.map.ParamMap;
 import cn.wubo.sql.forge.map.RowMap;
-import cn.wubo.sql.forge.records.EntireTableInfo;
 import cn.wubo.sql.forge.records.SqlScript;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -34,14 +33,8 @@ public class ExecutorServiceDatabaseTest {
 
     @Test
     void testMetaData() throws SQLException {
-        TreeNode<?> treeNode = executorService.getExecutor().getMetaDataTree();
+        TreeNode<?> treeNode = executorService.getExecutor().getMetaData();
         assertEquals("H2", treeNode.getValue());
-    }
-
-    @Test
-    void testMetaDataTables() throws SQLException {
-        List<EntireTableInfo> entireTableInfos = executorService.getExecutor().getMetaDataTables();
-        log.info("entireTableInfos: {}", entireTableInfos);
     }
 
     @Test
