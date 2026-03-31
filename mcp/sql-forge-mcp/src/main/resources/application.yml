@@ -18,3 +18,10 @@ logging:
     console:
   file:
     name: ./sql-forge-mcp-server.log
+
+
+# application.yml
+sql-forge:
+  api:
+    url: http://localhost:8081
+    executor: database
