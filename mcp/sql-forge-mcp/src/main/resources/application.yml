@@ -1,0 +1,20 @@
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        name: sql-forge-mcp-server
+        version: 0.0.1
+    dashscope:
+      api-key: ${DASHSCOPE_API_KEY}
+      chat:
+        options:
+          model: qwen3.5-plus
+
+logging:
+  pattern:
+    console:
+  file:
+    name: ./sql-forge-mcp-server.log
