@@ -5,6 +5,7 @@ import cn.wubo.sql.forge.mcp.model.*;
 import cn.wubo.sql.forge.mcp.model.ConversationContext.DialogueTurn;
 import cn.wubo.sql.forge.mcp.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.annotation.Tool;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class NL2SQLService {
 
     private final ChatClient chatClient;
@@ -252,7 +254,7 @@ public class NL2SQLService {
     public String executeSQL(@ToolParam(description = "要执行的SQL语句") String sql) {
         try {
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("sqlScript", sql);
+            requestBody.put("sql", sql);
 
             log.info("执行SQL: {}", sql);
 
