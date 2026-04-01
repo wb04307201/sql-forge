@@ -5,6 +5,7 @@ import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Lazy;
 
 @SpringBootApplication
 public class SqlForgeMcpApplication {
@@ -14,7 +15,7 @@ public class SqlForgeMcpApplication {
     }
 
     @Bean
-    public ToolCallbackProvider weatherTools(NL2SQLService nl2SQLService) {
+    public ToolCallbackProvider weatherTools(@Lazy NL2SQLService nl2SQLService) {
         return MethodToolCallbackProvider.builder().toolObjects(nl2SQLService).build();
     }
 }

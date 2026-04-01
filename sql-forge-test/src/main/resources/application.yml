@@ -19,3 +19,5 @@ sql:
         select-only: false
 
 
+server:
+  port: 8081
