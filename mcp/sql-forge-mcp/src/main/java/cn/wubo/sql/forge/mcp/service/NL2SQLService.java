@@ -1,4 +1,4 @@
-package cn.wubo.sql.forge.mcp;
+package cn.wubo.sql.forge.mcp.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.HttpClientErrorException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -30,13 +29,13 @@ public class NL2SQLService {
 
     @Autowired
     public NL2SQLService(
-            @Lazy ChatClient.Builder chatClientBuilder,
+            @Lazy ChatClient chatClient,
             @Value("${sql-forge.api.url:http://localhost:8081}") String apiBaseUrl,
             @Value("${sql-forge.api.executor:database}") String executorName) {
-        this.chatClient = chatClientBuilder.build();
         this.objectMapper = new ObjectMapper();
         this.apiBaseUrl = apiBaseUrl;
         this.executorName = executorName;
+        this.chatClient = chatClient;
 
         // 构建 RestClient（移除重复的错误处理器）
         this.restClient = RestClient.builder()
