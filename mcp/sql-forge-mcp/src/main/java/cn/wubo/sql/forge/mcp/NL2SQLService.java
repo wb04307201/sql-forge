@@ -117,7 +117,7 @@ public class NL2SQLService {
     public String executeSQL(@ToolParam(description = "要执行的SQL语句") String sql) {
         try {
             Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("sqlScript", sql);
+            requestBody.put("sql", sql);
 //            requestBody.put("params", null);
 
             String result = restClient.post()
