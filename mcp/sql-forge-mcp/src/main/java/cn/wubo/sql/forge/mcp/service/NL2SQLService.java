@@ -79,7 +79,8 @@ public class NL2SQLService {
             DialectAdapter dialectAdapter,
             ConversationContextManager contextManager,
             AmbiguityResolver ambiguityResolver,
-            @Autowired(required = false) ChatClient chatClient) {
+            @Autowired(required = false) ChatClient chatClient,
+            @Autowired(required = false) RestClient restClient) {
         this.apiBaseUrl = apiBaseUrl;
         this.executorName = executorName;
         this.intentRecognizer = intentRecognizer;
@@ -96,11 +97,7 @@ public class NL2SQLService {
         this.chatClient = chatClient;
 
         // 构建RestClient
-        this.restClient = RestClient.builder()
-                .baseUrl(apiBaseUrl)
-                .defaultHeader("Content-Type", "application/json")
-                .defaultHeader("Accept", "application/json")
-                .build();
+        this.restClient = restClient;
 
         // 解析方言配置
         this.currentDialect = DialectType.fromDatabaseType(dialect);
