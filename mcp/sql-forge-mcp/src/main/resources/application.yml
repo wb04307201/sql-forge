@@ -12,6 +12,7 @@ spring:
       chat:
         options:
           model: qwen3.5-plus
+          enable_thinking: false
 
 logging:
   pattern:
@@ -26,4 +27,4 @@ sql-forge:
     url: http://localhost:8081
     executor: database
   # 数据库方言：MYSQL, POSTGRESQL, ORACLE, SQL_SERVER, H2, SQLITE, STANDARD_SQL
-  dialect: MYSQL
+  dialect: H2
