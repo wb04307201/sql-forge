@@ -19,7 +19,7 @@ function App() {
       if (id) {
         setLoading(true);
         setViewId(id);
-        axios.get(`sql/forge/api/template/amis/${id}`).then(res => {
+        axios.get(`/sql/forge/api/template/amis/${id}`).then(res => {
           setView(JSON.parse(res.data.context));
           setLoading(false);
         });
