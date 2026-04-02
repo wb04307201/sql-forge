@@ -19,9 +19,11 @@ logging:
   file:
     name: ./sql-forge-mcp-server.log
 
-
-# application.yml
+# sql-forge 配置
 sql-forge:
+  # API 基础地址（指向 sql-forge 服务）
   api:
     url: http://localhost:8081
     executor: database
+  # 数据库方言：MYSQL, POSTGRESQL, ORACLE, SQL_SERVER, H2, SQLITE, STANDARD_SQL
+  dialect: MYSQL
