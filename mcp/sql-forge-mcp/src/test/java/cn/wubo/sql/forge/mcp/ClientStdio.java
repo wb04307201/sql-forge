@@ -22,6 +22,7 @@ import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.spec.McpSchema.CallToolRequest;
 import io.modelcontextprotocol.spec.McpSchema.CallToolResult;
 import io.modelcontextprotocol.spec.McpSchema.ListToolsResult;
+import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Paths;
 import java.util.Map;
@@ -34,10 +35,11 @@ import java.util.Map;
  * ./mvnw clean install -DskipTests
  * </pre>
  */
+@Slf4j
 public class ClientStdio {
 
 	public static void main(String[] args) {
-		String jarPath = "";
+		String jarPath = "./target/sql-forge-mcp-0.0.1-SNAPSHOT.jar";
 
 		var stdioParams = ServerParameters.builder("java")
 				.args("-jar", jarPath)
@@ -50,7 +52,14 @@ public class ClientStdio {
 
 		// List and demonstrate tools
 		ListToolsResult toolsList = client.listTools();
-		System.out.println("Available Tools = " + toolsList);
+		toolsList.tools().forEach(tool -> {
+			log.info("Tool: {}", tool);
+		});
+
+		CallToolResult NL2SQLResult = client.callTool(new CallToolRequest("NL2SQL",
+				Map.of("content", "查询每种商品在所有订单里的数量合计？")));
+
+		log.info("NL2SQLResult: {}", NL2SQLResult.content());
 
 		client.closeGracefully();
 	}

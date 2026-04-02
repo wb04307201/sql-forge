@@ -17,7 +17,7 @@ logging:
   pattern:
     console:
   file:
-    name: ./sql-forge-mcp-server.log
+    name: ./mcp/sql-forge-mcp-server.log
 
 # sql-forge 配置
 sql-forge:
