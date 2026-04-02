@@ -30,7 +30,6 @@ public class NL2SQLService {
     @Autowired
     public NL2SQLService(
             @Lazy ChatClient chatClient,
-            @Lazy RestClient restClient,
             @Value("${sql-forge.api.url:http://localhost:8081}") String apiBaseUrl,
             @Value("${sql-forge.api.executor:database}") String executorName) {
         this.objectMapper = new ObjectMapper();
@@ -39,7 +38,11 @@ public class NL2SQLService {
         this.chatClient = chatClient;
 
         // 构建 RestClient（移除重复的错误处理器）
-        this.restClient = restClient;
+        this.restClient = RestClient.builder()
+                .baseUrl(apiBaseUrl)
+                .defaultHeader("Content-Type", "application/json")
+                .defaultHeader("Accept", "application/json")
+                .build();
     }
 
     /**
@@ -110,7 +113,7 @@ public class NL2SQLService {
      * 执行SQL并返回结果
      */
     @Tool(name = "ExecuteSQL", description = "执行SQL查询并返回结果")
-    public  String executeSQL(@ToolParam(description = "要执行的SQL语句") String sql) {
+    public String executeSQL(@ToolParam(description = "要执行的SQL语句") String sql) {
         try {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("sql", sql);

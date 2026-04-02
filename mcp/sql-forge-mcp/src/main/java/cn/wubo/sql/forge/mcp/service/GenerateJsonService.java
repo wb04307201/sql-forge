@@ -4,17 +4,14 @@ import jakarta.annotation.Resource;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.PropertyPlaceholderHelper;
-import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * @author wangyong
@@ -27,10 +24,6 @@ public class GenerateJsonService {
 
     @Resource
     private ChatClient chatClient;
-    @Resource
-    private RestClient restClient;
-    @Value("${sql-forge.api.url:http\\://localhost\\:8081}")
-    private String apiBaseUrl;
 
     /**
      * 提示词模板
@@ -94,33 +87,6 @@ public class GenerateJsonService {
 
         } catch (IOException e) {
             return "生成json失败";
-        }
-    }
-
-    /**
-     * 保存 JSON 配置模板
-     */
-    @Tool(name = "GenerateJsonSave", description = "保存 JSON 配置模板")
-    public String generateJsonSave(@ToolParam(description = "模板") String context) {
-        try {
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("context", context);
-            String id = UUID.randomUUID().toString();
-            requestBody.put("id", id);
-            requestBody.put("executorName", "database");
-
-            String result = restClient.put()
-                    .uri("sql/forge/api/template/amis")
-                    .body(requestBody)
-                    .retrieve()
-                    .body(String.class);
-            if("true".equals( result)){
-                return apiBaseUrl+"/sql/forge/console/index.html?id="+ id;
-            }
-            return "保存模板失败";
-
-        } catch (Exception e) {
-            return "保存模板失败：" + e.getMessage();
         }
     }
 
