@@ -8,10 +8,11 @@ spring:
         name: sql-forge-mcp-server
         version: 0.0.1
     dashscope:
-      api-key:  sk-c3bc2b92bab14a8bacb395c0365b0631
+      api-key: ${DASHSCOPE_API_KEY}
       chat:
         options:
           model: qwen3.5-plus
+          enable_thinking: false
 
 logging:
   pattern:
@@ -26,7 +27,7 @@ sql-forge:
     url: http://localhost:8081
     executor: database
   # 数据库方言：MYSQL, POSTGRESQL, ORACLE, SQL_SERVER, H2, SQLITE, STANDARD_SQL
-  dialect: MYSQL
+  dialect: H2
   # 模糊查询默认配置
   default:
     # 默认排序字段（用于模糊查询）
