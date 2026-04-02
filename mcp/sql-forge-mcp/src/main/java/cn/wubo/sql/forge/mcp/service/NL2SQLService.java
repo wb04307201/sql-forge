@@ -68,11 +68,21 @@ public class NL2SQLService {
     // 当前数据库方言
     private DialectType currentDialect = DialectType.MYSQL;
 
+    // 默认配置（用于模糊意图查询）
+    private final String defaultSortField;
+    private final String defaultSortDirection;
+    private final int defaultLimit;
+    private final double ambiguityThreshold;
+
     @Autowired
     public NL2SQLService(
             @Value("${sql-forge.api.url:http://localhost:8081}") String apiBaseUrl,
             @Value("${sql-forge.api.executor:database}") String executorName,
             @Value("${sql-forge.dialect:auto}") String dialect,
+            @Value("${sql-forge.default.sort-field:id}") String defaultSortField,
+            @Value("${sql-forge.default.sort-direction:DESC}") String defaultSortDirection,
+            @Value("${sql-forge.default.limit:10}") int defaultLimit,
+            @Value("${sql-forge.default.ambiguity-threshold:0.7}") double ambiguityThreshold,
             IntentRecognizer intentRecognizer,
             TableSelector tableSelector,
             SqlValidator sqlValidator,
@@ -89,6 +99,10 @@ public class NL2SQLService {
         this.dialectAdapter = dialectAdapter;
         this.contextManager = contextManager;
         this.ambiguityResolver = ambiguityResolver;
+        this.defaultSortField = defaultSortField;
+        this.defaultSortDirection = defaultSortDirection;
+        this.defaultLimit = defaultLimit;
+        this.ambiguityThreshold = ambiguityThreshold;
 
         // 初始化ObjectMapper
         this.objectMapper = new ObjectMapper();
@@ -102,7 +116,8 @@ public class NL2SQLService {
         // 解析方言配置
         this.currentDialect = DialectType.fromDatabaseType(dialect);
 
-        log.info("NL2SQLService初始化完成，默认方言: {}", currentDialect.getDisplayName());
+        log.info("NL2SQLService初始化完成，默认方言: {}, 模糊阈值: {}, 默认限制: {}, 默认排序: {} {}",
+                currentDialect.getDisplayName(), ambiguityThreshold, defaultLimit, defaultSortField, defaultSortDirection);
     }
 
     // ==================== 核心工具方法 ====================
@@ -111,7 +126,6 @@ public class NL2SQLService {
      * 将自然语言转换为SQL（标准入口）
      *
      * @param content 自然语言查询描述
-     *
      * @return 生成的SQL语句
      */
     @Tool(name = "NL2SQL", description = "将自然语言描述的需求转换成SQL查询语句，支持复杂查询、聚合、分组、多表关联等场景")
@@ -124,7 +138,6 @@ public class NL2SQLService {
      *
      * @param content   自然语言查询描述
      * @param sessionId 会话ID，用于多轮对话（可为空）
-     *
      * @return 生成的SQL语句或澄清提示
      */
     @Tool(name = "NL2SQLWithContext", description = "使用会话上下文将自然语言转换成SQL，支持多轮对话记忆")
@@ -145,7 +158,11 @@ public class NL2SQLService {
             log.debug("识别到意图: {}, 置信度: {}", intent.getPrimaryIntent(), intent.getConfidence());
 
             // 3. 处理模糊意图
-            if (intent.isAmbiguous()) {
+            boolean isSlightlyAmbiguous = intent.getConfidence() < ambiguityThreshold && intent.getConfidence() >= 0.4;
+            boolean isHighlyAmbiguous = intent.getConfidence() < 0.4;
+
+            if (isHighlyAmbiguous) {
+                // 高度模糊，需要澄清
                 String schemaInfo = getMetaDataFromApi();
                 List<AmbiguityResolver.AmbiguityInterpretation> interpretations =
                         ambiguityResolver.resolveAmbiguity(content, schemaInfo, intent);
@@ -157,6 +174,10 @@ public class NL2SQLService {
                                 .distinct()
                                 .collect(Collectors.toList()));
                 return formatAmbiguousResponse(interpretations);
+            } else if (isSlightlyAmbiguous) {
+                // 轻微模糊，自动填充默认值并继续
+                log.info("检测到轻微模糊意图(置信度: {})，将自动应用默认配置继续生成SQL", intent.getConfidence());
+                contextManager.setAutoFilledDefaults(sessionId, true);
             }
 
             // 4. 获取数据库元数据
@@ -219,7 +240,6 @@ public class NL2SQLService {
      *
      * @param sessionId 会话ID
      * @param feedback  用户澄清反馈
-     *
      * @return 基于澄清重新生成的SQL
      */
     @Tool(name = "ConfirmClarification", description = "处理用户对歧义查询的澄清反馈，例如'前10条'、'按销量排序'等")
@@ -253,7 +273,6 @@ public class NL2SQLService {
      * 执行SQL并返回结果
      *
      * @param sql 要执行的SQL语句
-     *
      * @return 查询结果
      */
     @Tool(name = "ExecuteSQL", description = "执行SQL查询并返回结果集")
@@ -466,23 +485,71 @@ public class NL2SQLService {
         prompt.append("- 类型：").append(intent.getIntentDescription()).append("\n");
         prompt.append("- 置信度：").append(String.format("%.0f%%", intent.getConfidence() * 100)).append("\n");
 
+        // 检查是否需要自动填充默认值
+        boolean isAmbiguous = intent.getConfidence() < ambiguityThreshold || intent.isAmbiguous();
+        boolean needsAutoFill = context != null && context.isAutoFilledDefaults();
+        QueryIntent.SortRequirement effectiveSort = intent.getSortRequirement();
+        QueryIntent.PaginationRequirement effectivePagination = intent.getPagination();
+
+        // 记录自动填充的配置
+        Map<String, Object> autoFilledConfig = new HashMap<>();
+
+        if (isAmbiguous || needsAutoFill) {
+            if (needsAutoFill) {
+                prompt.append("- ⚠️ 检测到轻微模糊意图，已自动填充缺失参数\n");
+            } else {
+                prompt.append("- ⚠️ 检测到模糊意图，将自动应用默认配置\n");
+            }
+
+            // 自动添加默认排序
+            boolean autoFilledSort = false;
+            if (effectiveSort == null || effectiveSort.getOrderByFields() == null || effectiveSort.getOrderByFields().isEmpty()) {
+                effectiveSort = QueryIntent.SortRequirement.builder()
+                        .orderByFields(List.of(defaultSortField))
+                        .descending("DESC".equalsIgnoreCase(defaultSortDirection))
+                        .build();
+                intent.setSortRequirement(effectiveSort);
+                prompt.append("- 默认排序：").append(defaultSortField).append(" (").append(defaultSortDirection).append(")\n");
+                autoFilledConfig.put("sortField", defaultSortField);
+                autoFilledConfig.put("sortDirection", defaultSortDirection);
+                autoFilledSort = true;
+            }
+
+            // 自动添加默认限制
+            boolean autoFilledLimit = false;
+            if (effectivePagination == null || effectivePagination.getLimit() <= 0) {
+                effectivePagination = QueryIntent.PaginationRequirement.builder()
+                        .page(1)
+                        .pageSize(defaultLimit)
+                        .limit(defaultLimit)
+                        .offset(0)
+                        .build();
+                intent.setPagination(effectivePagination);
+                prompt.append("- 默认限制：").append(defaultLimit).append(" 条\n");
+                autoFilledConfig.put("limit", defaultLimit);
+                autoFilledLimit = true;
+            }
+
+            // 记录到上下文
+            if (needsAutoFill && context != null && context.getSessionId() != null) {
+                contextManager.setAutoFilledConfig(context.getSessionId(), autoFilledConfig);
+            }
+        }
+
         if (intent.getAggregateFields() != null && !intent.getAggregateFields().isEmpty()) {
             prompt.append("- 聚合字段：").append(String.join(", ", intent.getAggregateFields())).append("\n");
         }
         if (intent.getGroupByFields() != null && !intent.getGroupByFields().isEmpty()) {
             prompt.append("- 分组字段：").append(String.join(", ", intent.getGroupByFields())).append("\n");
         }
-        if (intent.getSortRequirement() != null) {
-            QueryIntent.SortRequirement sort = intent.getSortRequirement();
-            if (sort.getOrderByFields() != null && !sort.getOrderByFields().isEmpty()) {
-                prompt.append("- 排序：").append(String.join(", ", sort.getOrderByFields()));
-                prompt.append(sort.isDescending() ? " (降序)\n" : " (升序)\n");
-            }
+        if (effectiveSort != null && effectiveSort.getOrderByFields() != null && !effectiveSort.getOrderByFields().isEmpty()) {
+            prompt.append("- 排序：").append(String.join(", ", effectiveSort.getOrderByFields()));
+            prompt.append(effectiveSort.isDescending() ? " (降序)\n" : " (升序)\n");
         }
-        if (intent.getPagination() != null && intent.getPagination().getLimit() > 0) {
-            prompt.append("- 分页：限制 ").append(intent.getPagination().getLimit()).append(" 条");
-            if (intent.getPagination().getOffset() > 0) {
-                prompt.append(", 偏移 ").append(intent.getPagination().getOffset());
+        if (effectivePagination != null && effectivePagination.getLimit() > 0) {
+            prompt.append("- 分页：限制 ").append(effectivePagination.getLimit()).append(" 条");
+            if (effectivePagination.getOffset() > 0) {
+                prompt.append(", 偏移 ").append(effectivePagination.getOffset());
             }
             prompt.append("\n");
         }
@@ -548,6 +615,19 @@ public class NL2SQLService {
         prompt.append("4. 如果需要JOIN，确保ON条件正确\n");
         prompt.append("5. 使用").append(dialectAdapter.getConfig(currentDialect).getIdentifierQuote())
                 .append("表名/列名").append(dialectAdapter.getConfig(currentDialect).getIdentifierQuote()).append("包裹标识符\n");
+
+        // 如果是模糊意图，明确指示使用默认配置
+        if (isAmbiguous) {
+            prompt.append("6. ⚠️ 当前查询意图不明确，必须包含以下配置：\n");
+            if (effectiveSort != null && effectiveSort.getOrderByFields() != null && !effectiveSort.getOrderByFields().isEmpty()) {
+                prompt.append("   - 必须按").append(String.join(", ", effectiveSort.getOrderByFields()))
+                        .append(effectiveSort.isDescending() ? "降序" : "升序").append("排序\n");
+            }
+            if (effectivePagination != null && effectivePagination.getLimit() > 0) {
+                prompt.append("   - 必须限制返回").append(effectivePagination.getLimit()).append("条记录\n");
+            }
+        }
+
         prompt.append("\nSQL：");
 
         return prompt.toString();
@@ -594,6 +674,13 @@ public class NL2SQLService {
      * 格式化正常响应
      */
     private String formatResponse(String sql, SqlValidationResult validation) {
+        return formatResponse(sql, validation, null);
+    }
+
+    /**
+     * 格式化正常响应（带上下文）
+     */
+    private String formatResponse(String sql, SqlValidationResult validation, ConversationContext context) {
         StringBuilder sb = new StringBuilder();
 
         // SQL结果
@@ -602,6 +689,20 @@ public class NL2SQLService {
 
         // 方言信息
         sb.append("【📊 方言】").append(currentDialect.getDisplayName()).append("\n\n");
+
+        // 自动填充提示（如果有）
+        if (context != null && context.isAutoFilledDefaults() && context.getAutoFilledConfig() != null) {
+            sb.append("【⚠️ 自动填充】\n");
+            Map<String, Object> config = context.getAutoFilledConfig();
+            if (config.containsKey("sortField")) {
+                sb.append("  • 排序字段: ").append(config.get("sortField"))
+                        .append(" (").append(config.get("sortDirection")).append(")\n");
+            }
+            if (config.containsKey("limit")) {
+                sb.append("  • 查询限制: ").append(config.get("limit")).append(" 条\n");
+            }
+            sb.append("\n");
+        }
 
         // 警告
         if (validation.getWarnings() != null && !validation.getWarnings().isEmpty()) {

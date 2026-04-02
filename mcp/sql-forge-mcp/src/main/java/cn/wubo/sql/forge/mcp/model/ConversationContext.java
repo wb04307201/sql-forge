@@ -80,6 +80,17 @@ public class ConversationContext {
     private List<String> clarificationQuestions;
 
     /**
+     * 是否自动填充了默认值（用于轻微模糊意图）
+     */
+    @Builder.Default
+    private boolean autoFilledDefaults = false;
+
+    /**
+     * 自动填充的配置详情
+     */
+    private Map<String, Object> autoFilledConfig;
+
+    /**
      * 对话轮次
      */
     @Data

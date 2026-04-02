@@ -171,6 +171,22 @@ public class ConversationContextManager {
     }
 
     /**
+     * 设置自动填充默认值状态
+     */
+    public void setAutoFilledDefaults(String sessionId, boolean autoFilled) {
+        ConversationContext context = getOrCreateContext(sessionId);
+        context.setAutoFilledDefaults(autoFilled);
+    }
+
+    /**
+     * 设置自动填充配置详情
+     */
+    public void setAutoFilledConfig(String sessionId, java.util.Map<String, Object> config) {
+        ConversationContext context = getOrCreateContext(sessionId);
+        context.setAutoFilledConfig(config);
+    }
+
+    /**
      * 清除会话上下文
      */
     public void clearContext(String sessionId) {
