@@ -3,9 +3,6 @@ package cn.wubo.sql.forge.mcp.enums;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * 查询意图类型枚举
  */

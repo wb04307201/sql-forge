@@ -1,9 +1,11 @@
 package cn.wubo.sql.forge.mcp.service;
 
 import cn.wubo.sql.forge.mcp.enums.DialectType;
-import cn.wubo.sql.forge.mcp.model.*;
+import cn.wubo.sql.forge.mcp.model.ConversationContext;
 import cn.wubo.sql.forge.mcp.model.ConversationContext.DialogueTurn;
-import cn.wubo.sql.forge.mcp.service.*;
+import cn.wubo.sql.forge.mcp.model.QueryIntent;
+import cn.wubo.sql.forge.mcp.model.SqlValidationResult;
+import cn.wubo.sql.forge.mcp.model.TableSelection;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,12 +18,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * 自然语言转SQL服务 - 深度优化版本
- *
+ * <p>
  * 功能特性：
  * 1. 意图识别：自动识别查询类型（简单查询、聚合查询、分组查询、JOIN查询等）
  * 2. 智能表选择：根据用户查询语义选择相关表并评分
@@ -29,13 +34,13 @@ import java.util.stream.Collectors;
  * 4. SQL验证：语法、语义、性能、安全性多维度验证
  * 5. 多轮对话：支持会话上下文，保持查询上下文连续性
  * 6. 模糊意图处理：自动识别模糊查询，生成澄清问题
- *
+ * <p>
  * 使用方法：
  * 1. 基础查询：直接调用 NL2SQL("查询所有用户信息")
  * 2. 多轮对话：调用 NL2SQLWithContext(content, sessionId)
  * 3. 澄清反馈：调用 ConfirmClarification(sessionId, feedback)
  * 4. 切换方言：调用 SetDialect("POSTGRESQL")
- *
+ * <p>
  * 依赖说明：
  * - 不依赖 sql-forge-core 或 sql-forge-spring-boot-autoconfigure
  * - 使用 RestClient 调用 sql-forge API 获取元数据
@@ -109,6 +114,7 @@ public class NL2SQLService {
      * 将自然语言转换为SQL（标准入口）
      *
      * @param content 自然语言查询描述
+     *
      * @return 生成的SQL语句
      */
     @Tool(name = "NL2SQL", description = "将自然语言描述的需求转换成SQL查询语句，支持复杂查询、聚合、分组、多表关联等场景")
@@ -121,6 +127,7 @@ public class NL2SQLService {
      *
      * @param content   自然语言查询描述
      * @param sessionId 会话ID，用于多轮对话（可为空）
+     *
      * @return 生成的SQL语句或澄清提示
      */
     @Tool(name = "NL2SQLWithContext", description = "使用会话上下文将自然语言转换成SQL，支持多轮对话记忆")
@@ -215,6 +222,7 @@ public class NL2SQLService {
      *
      * @param sessionId 会话ID
      * @param feedback  用户澄清反馈
+     *
      * @return 基于澄清重新生成的SQL
      */
     @Tool(name = "ConfirmClarification", description = "处理用户对歧义查询的澄清反馈，例如'前10条'、'按销量排序'等")
@@ -248,6 +256,7 @@ public class NL2SQLService {
      * 执行SQL并返回结果
      *
      * @param sql 要执行的SQL语句
+     *
      * @return 查询结果
      */
     @Tool(name = "ExecuteSQL", description = "执行SQL查询并返回结果集")
