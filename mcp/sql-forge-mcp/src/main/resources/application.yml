@@ -29,3 +29,17 @@ sql-forge:
     executor: database
   # 数据库方言：MYSQL, POSTGRESQL, ORACLE, SQL_SERVER, H2, SQLITE, STANDARD_SQL
   dialect: H2
+  # 模糊查询默认配置
+  default:
+    # 默认排序字段（用于模糊查询）
+    sort-field: id
+    # 默认排序方式：ASC（升序）或 DESC（降序）
+    # 推荐使用 ASC，确保结果从最小ID开始，更符合直觉
+    sort-direction: ASC
+    # 默认查询条数限制（用于模糊查询）
+    limit: 10
+    # 模糊意图置信度阈值（低于此值视为模糊）
+    # 0.4 以下：高度模糊，需要澄清
+    # 0.4-0.7：轻微模糊，自动填充默认值
+    # 0.7 以上：明确意图，直接使用
+    ambiguity-threshold: 0.7

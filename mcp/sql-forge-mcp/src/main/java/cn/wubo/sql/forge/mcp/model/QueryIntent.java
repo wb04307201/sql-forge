@@ -92,7 +92,8 @@ public class QueryIntent {
     }
 
     /**
-     * 是否为模糊意图
+     * 是否为模糊意图（使用默认阈值0.7）
+     * 实际阈值在NL2SQLService中配置
      */
     public boolean isAmbiguous() {
         return primaryIntent == IntentType.UNCLEAR_INTENT || confidence < 0.7;
