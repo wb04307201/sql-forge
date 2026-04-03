@@ -128,7 +128,7 @@ public class NL2SQLService {
     @Tool(name = "NL2SQL", description = "将自然语言描述的需求转换成SQL查询语句，支持复杂查询、聚合、分组、多表关联等场景")
     public String NL2SQL(@ToolParam(description = "自然语言描述的需求，例如：查询所有年龄大于30岁的用户，按姓名升序排列") String content) {
         String sessionId = UUID.randomUUID().toString();
-        return String.format("【sessionId】:%s\n%s",sessionId,nl2sqlWithContext(content,sessionId));
+        return String.format("【sessionId】:%s%n%s",sessionId,nl2sqlWithContext(content,sessionId));
     }
 
     /**
