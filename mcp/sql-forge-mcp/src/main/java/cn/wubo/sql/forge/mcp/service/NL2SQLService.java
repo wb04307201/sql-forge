@@ -18,10 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -130,17 +127,18 @@ public class NL2SQLService {
      */
     @Tool(name = "NL2SQL", description = "将自然语言描述的需求转换成SQL查询语句，支持复杂查询、聚合、分组、多表关联等场景")
     public String NL2SQL(@ToolParam(description = "自然语言描述的需求，例如：查询所有年龄大于30岁的用户，按姓名升序排列") String content) {
-        return nl2sqlWithContext(content, null);
+        String sessionId = UUID.randomUUID().toString();
+        return String.format("【sessionId】:%s\n%s",sessionId,nl2sqlWithContext(content,sessionId));
     }
 
     /**
      * 将自然语言转换为SQL（带会话上下文）
      *
      * @param content   自然语言查询描述
-     * @param sessionId 会话ID，用于多轮对话（可为空）
+     * @param sessionId 会话ID，用于多轮对话
      * @return 生成的SQL语句或澄清提示
      */
-    @Tool(name = "NL2SQLWithContext", description = "使用会话上下文将自然语言转换成SQL，支持多轮对话记忆")
+//    @Tool(name = "NL2SQLWithContext", description = "使用会话上下文将自然语言转换成SQL，支持多轮对话记忆")
     public String nl2sqlWithContext(
             @ToolParam(description = "自然语言描述的需求") String content,
             @ToolParam(description = "会话ID，用于保持对话上下文（可选）") String sessionId) {

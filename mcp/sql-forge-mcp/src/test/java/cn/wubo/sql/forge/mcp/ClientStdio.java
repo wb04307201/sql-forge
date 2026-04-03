@@ -56,8 +56,8 @@ public class ClientStdio {
 			log.info("Tool: {}", tool);
 		});
 
-		CallToolResult NL2SQLResult = client.callTool(new CallToolRequest("simple",
-				Map.of("content", "查询每种商品在所有订单里的数量合计？")));
+		CallToolResult NL2SQLResult = client.callTool(new CallToolRequest("NL2SQL",
+				Map.of("content", "查询订单里的所有商品,并按照商品统计数量")));
 
 		log.info("NL2SQLResult: {}", NL2SQLResult.content());
 
