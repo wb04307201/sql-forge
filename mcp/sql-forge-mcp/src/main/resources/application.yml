@@ -12,6 +12,7 @@ spring:
       chat:
         options:
           model: qwen3.5-plus
+          multi_model: true
           enable_thinking: false
 
 logging:

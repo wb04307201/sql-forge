@@ -1,8 +1,11 @@
 package cn.wubo.sql.forge.mcp.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.template.st.StTemplateRenderer;
 import org.springframework.ai.tool.annotation.Tool;
@@ -18,8 +21,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TestService {
 
-    private final ChatClient chatClient;
     private final RestClient restClient;
+    private final ChatModel chatModel;
 
     /**
      * 将自然语言转换为SQL（标准入口）
@@ -29,12 +32,12 @@ public class TestService {
      * @return 生成的SQL语句
      */
     @Tool(name = "simple", description = "将自然语言描述的需求转换成SQL查询语句")
-    public String simple(@ToolParam(description = "自然语言描述的需求，例如：查询所有年龄大于30岁的用户，按姓名升序排列") String content) {
+    public String simple(@ToolParam(description = "自然语言描述的需求，例如：查询所有年龄大于30岁的用户，按姓名升序排列") String content) throws JsonProcessingException {
 
         PromptTemplate promptTemplate = PromptTemplate.builder()
                 .renderer(StTemplateRenderer.builder().startDelimiterToken('{').endDelimiterToken('}').build())
                 .template("""
-                        根据 数据库元数据 部分提供的数据库模式定义，编写一个 SQL 查询来回答 QUESTION 部分的问题。
+                        根据 METADATA 部分提供的数据库定义，编写一个 SQL 查询来回答 QUESTION 部分的问题。
                         仅生成 SELECT 查询语句。如果问题会导致 INSERT、UPDATE 或 DELETE 操作，
                         或者查询会以任何方式修改 DDL，请说明该操作不被支持。
                         如果问题无法回答，请说明 DDL 不支持回答该问题。
@@ -45,16 +48,18 @@ public class TestService {
                         QUESTION
                         {question}
                         
-                        数据库元数据
+                        METADATA
                         ```json
                         {metaData}
                         ```
                         """)
                 .build();
 
-        String prompt = promptTemplate.render(Map.of("question", content,"metaData", getMetaDataFromApi()));
+        String metaDataJson = getMetaDataFromApi();
 
-        return chatClient.prompt().user(prompt).call().content();
+        String prompt = promptTemplate.render(Map.of("question", content,"metaData", metaDataJson));
+
+        return ChatClient.builder(chatModel).build().prompt().user(prompt).call().content();
     }
 
 
