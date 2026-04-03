@@ -6,10 +6,13 @@ import cn.wubo.sql.forge.mcp.model.ConversationContext.DialogueTurn;
 import cn.wubo.sql.forge.mcp.model.QueryIntent;
 import cn.wubo.sql.forge.mcp.model.SqlValidationResult;
 import cn.wubo.sql.forge.mcp.model.TableSelection;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.template.st.StTemplateRenderer;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,6 +121,7 @@ public class NL2SQLService {
     }
 
     // ==================== 核心工具方法 ====================
+
 
     /**
      * 将自然语言转换为SQL（标准入口）
