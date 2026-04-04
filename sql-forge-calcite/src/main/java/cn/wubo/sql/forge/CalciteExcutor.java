@@ -7,6 +7,7 @@ import cn.wubo.sql.forge.records.SqlScript;
 import cn.wubo.sql.forge.utils.ExecutorUtils;
 import cn.wubo.sql.forge.utils.MetaDataUtils;
 import jakarta.validation.Valid;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -47,6 +48,13 @@ public record CalciteExcutor(String model) implements IExecutor {
     public TreeNode<DatabaseInfo> getMetaDataTree() throws SQLException {
         try (Connection connection = CalciteExcutorUtils.getConnection(model)) {
             return MetaDataUtils.getMetaDataTree(connection, Collections.emptyList());
+        }
+    }
+
+    @Override
+    public DatabaseInfo getMetaDataDatabase() throws SQLException {
+        try (Connection connection = CalciteExcutorUtils.getConnection(model)) {
+            return MetaDataUtils.getDatabase(connection);
         }
     }
 

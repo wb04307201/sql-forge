@@ -73,6 +73,16 @@ public record DatabaseExecutor(DataSource dataSource, SqlForgeProperties propert
     }
 
     @Override
+    public DatabaseInfo getMetaDataDatabase() throws SQLException {
+        Connection connection = DataSourceUtils.getConnection(dataSource);
+        try {
+            return MetaDataUtils.getDatabase(connection);
+        }finally {
+            DataSourceUtils.releaseConnection(connection, dataSource);
+        }
+    }
+
+    @Override
     public List<EntireTableInfo> getMetaDataTables() throws SQLException {
         Connection connection = DataSourceUtils.getConnection(dataSource);
         try {

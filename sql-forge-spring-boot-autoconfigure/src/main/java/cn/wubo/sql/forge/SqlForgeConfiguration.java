@@ -224,6 +224,10 @@ public class SqlForgeConfiguration {
             String executorName = request.param("executorName").orElse("database");
             return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTree());
         });
+        builder.GET("sql/forge/api/database/getMetaDataDatabase", request -> {
+            String executorName = request.param("executorName").orElse("database");
+            return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataDatabase());
+        });
         builder.GET("sql/forge/api/database/metaDataTables", request -> {
             String executorName = request.param("executorName").orElse("database");
             return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTables());

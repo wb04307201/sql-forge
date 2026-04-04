@@ -24,5 +24,7 @@ public interface IExecutor {
 
     TreeNode<DatabaseInfo> getMetaDataTree() throws SQLException;
 
+    DatabaseInfo getMetaDataDatabase() throws SQLException;
+
     List<EntireTableInfo> getMetaDataTables() throws SQLException;
 }
