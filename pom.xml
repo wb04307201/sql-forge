@@ -42,7 +42,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-boot.version>3.5.9</spring-boot.version>
+        <spring-boot.version>3.5.13</spring-boot.version>
         <lombok.version>1.18.42</lombok.version>
         <jakarta.version>3.2.0</jakarta.version>
         <jsqlparser.version>5.3</jsqlparser.version>
