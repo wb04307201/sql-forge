@@ -13,6 +13,9 @@ sql:
     calcite:
       enabled: true
       configuration: classpath:model.json
+      schemata:
+        - MYSQL
+        - POSTGRESQL
     api:
       database:
         enabled: true

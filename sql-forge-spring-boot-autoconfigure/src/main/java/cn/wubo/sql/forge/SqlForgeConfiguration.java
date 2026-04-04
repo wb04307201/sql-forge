@@ -63,7 +63,7 @@ public class SqlForgeConfiguration {
             Map<String, Object> modelMap = mapper.readValue(inputStream, new TypeReference<>() {
             });
             String model = mapper.writeValueAsString(modelMap);
-            return new CalciteExcutor(model);
+            return new CalciteExcutor(model, properties);
         }
     }
 

@@ -15,7 +15,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
-public record DatabaseExecutor(DataSource dataSource, SqlForgeProperties properties) implements IExecutor {
+public record DatabaseExecutor(DataSource dataSource,
+                               SqlForgeProperties properties) implements IExecutor {
 
     @Override
     public String getExecutorName() {

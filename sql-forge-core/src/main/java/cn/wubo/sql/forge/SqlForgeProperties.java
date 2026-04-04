@@ -19,6 +19,7 @@ public class SqlForgeProperties {
     public static class CalciteProperties {
         private Boolean enabled = false;
         private String configuration;
+        private List<String> schemata = new ArrayList<>();
     }
 
     @Data
