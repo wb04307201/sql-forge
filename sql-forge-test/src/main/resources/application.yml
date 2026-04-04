@@ -15,7 +15,7 @@ sql:
       configuration: classpath:model.json
       schemata:
         - MYSQL
-        - POSTGRESQL
+        - POSTGRES
     api:
       database:
         enabled: true
