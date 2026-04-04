@@ -47,7 +47,7 @@ public record CalciteExcutor(String model,
     @Override
     public TreeNode<DatabaseInfo> getMetaDataTree() throws SQLException {
         try (Connection connection = CalciteExcutorUtils.getConnection(model)) {
-            return MetaDataUtils.getMetaDataTree(connection, Collections.emptyList());
+            return MetaDataUtils.getMetaDataTree(connection, properties.getCalcite().getSchemata());
         }
     }
 
