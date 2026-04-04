@@ -4,17 +4,14 @@
   <a href="README.md">English</a> | 中文
 </div>
 
-> **SQL工坊**不仅是一个ORM框架，更是一套完整的低代码解决方案,它提供以下功能：
-- **页面**：百度Amis低代码框架
-- **ORM框架**
-  - **JSON API**：通过JSON格式描述数据库操作，节省后端编码量
-  - **SQL模板API**：使用模板引擎动态生成SQL语句
-  - **自行实现API 1**：使用`Entity`工具操作数据库操作并实现API
-  - **自行实现API 2**：使用其他ORM框架并实现API
-- **多样化数据访问**
-  - **DatabaseExecutor**：连接项目配置的数据库
-  - **CalciteExecutor**：基于Apache Calcite的跨数据库联邦查询
-  - **自行扩展**
+> **SQL工坊**不仅是一个ORM框架，更是一套基于数据库的完整解决方案，它提供：
+> - 提供基础的数据库支持
+> - 跨数据库联邦查询
+> - 提供基于 JSON 的数据库 CRUD 操作
+> - 提供实体对象的链式操作
+> - SQL 模板引擎
+> - Amis 低代码可视化编辑和模板管理
+> - Web 控制台
 
 [![](https://jitpack.io/v/com.gitee.wb04307201/sql-forge.svg)](https://jitpack.io/#com.gitee.wb04307201/sql-forge)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)

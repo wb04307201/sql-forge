@@ -1,20 +1,17 @@
-# SQL Forge
+# SQL Forge - SQL Workshop
 
 <div align="right">
   English | <a href="README.zh-CN.md">中文</a>
 </div>
 
-> **SQL Forge** is not just an ORM framework, but a complete low-code solution that provides the following features:
-- **Pages**: Baidu Amis low-code framework
-- **ORM Framework**
-  - **JSON API**: Describes database operations through JSON format, saving backend coding effort
-  - **SQL Template API**: Dynamically generates SQL statements using template engine
-  - **Custom API Implementation 1**: Use `Entity` tool to operate database and implement API
-  - **Custom API Implementation 2**: Use other ORM frameworks and implement API
-- **Diversified Data Access**
-  - **DatabaseExecutor**: Connects to project-configured databases
-  - **CalciteExecutor**: Cross-database federated query based on Apache Calcite
-  - **Custom Extension**
+> **SQL Workshop** is not just an ORM framework, but a complete database-based solution that provides:
+> - Basic database support
+> - Cross-database federated queries
+> - JSON-based database CRUD operations
+> - Chain operations for entity objects
+> - SQL template engine
+> - Amis low-code visual editing and template management
+> - Web console
 
 [![](https://jitpack.io/v/com.gitee.wb04307201/sql-forge.svg)](https://jitpack.io/#com.gitee.wb04307201/sql-forge)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
@@ -24,7 +21,7 @@
 ![MIT](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
 
 ## Usage
-### Add Dependencies
+### Import Dependencies
 Add JitPack repository
 ```xml
 <repositories>
@@ -45,9 +42,9 @@ Add JitPack repository
 
 ## Features
 
-### SQL Executors
+### SQL Executor
 #### database - Project Database
-Directly uses data sources already configured in the Spring project
+Directly references the data source already configured in the Spring project
 ```yaml
 sql:
   forge:
@@ -67,10 +64,10 @@ sql:
         - POSTGRES
 ```
 #### Custom Extension
-Inherit [IExecutor.java](sql-forge-core/src/main/java/cn/wubo/sql/forge/IExecutor.java) to implement custom executors
+Extend [IExecutor.java](sql-forge-core/src/main/java/cn/wubo/sql/forge/IExecutor.java) to implement custom executors
 
 ### Json API Module
-Allows frontend to operate databases without writing backend code. Describes needed data structures and operations through `JSON` format, backend automatically generates corresponding `SQL` execution and returns results.
+Allows frontend to operate the database without writing backend code. Describes the required data structure and operations through `JSON` format, and the backend automatically generates corresponding `SQL` execution and returns results.
 
 - **Request Path**: `sql/forge/api/json/{method}/{tableName}?executorName={executorName}`
 - **Request Method**: `POST`
@@ -78,7 +75,7 @@ Allows frontend to operate databases without writing backend code. Describes nee
 - **Path Parameters**:
   - `{method}`: Operation method type (delete, insert, select, update)
   - `{tableName}`: Database table name
-  - `{executorName}`: Database executor name, default supports database (project database), calcite (Apache Calcite cross-database federated query), supports custom extension. If not provided, defaults to database
+  - `{executorName}`: Database executor name, defaults to database (project database), calcite (Apache Calcite cross-database federated query), supports custom extensions. If not provided, defaults to database
 
 #### delete Method
 
@@ -99,7 +96,7 @@ Allows frontend to operate databases without writing backend code. Describes nee
 ```
 
 #### Parameter Description
-- `@where`: Deletion condition array, each condition contains:
+- `@where`: Delete condition array, each condition contains:
   - column: Field name to match
   - condition: Condition type (EQ, NOT_EQ, GT, LT, GTEQ, LTEQ, LIKE, NOT_LIKE, LEFT_LIKE, RIGHT_LIKE, BETWEEN, NOT_BETWEEN, IN, NOT_IN, IS_NULL, IS_NOT_NULL)
   - value: Value to match
@@ -111,8 +108,8 @@ Allows frontend to operate databases without writing backend code. Describes nee
 ```json
 {
   "@set": {
-    "field_name1": "value1",
-    "field_name2": "value2"
+    "field1": "value1",
+    "field2": "value2"
   },
   "@with_select": {
     // Query JSON after deletion
@@ -121,7 +118,7 @@ Allows frontend to operate databases without writing backend code. Describes nee
 ```
 
 #### Parameter Description
-- `@set`: Key-value pairs of fields and values to insert, requires at least one field
+- `@set`: Key-value pairs of fields and values to insert, at least one field required
 - `@with_select`: Optional query condition for executing a query after insertion
 
 #### select Method
@@ -129,7 +126,7 @@ Allows frontend to operate databases without writing backend code. Describes nee
 #### Request Format
 ```json
 {
-  "@column": ["field_name1", "field_name2"],
+  "@column": ["field1", "field2"],
   "@where": [
     {
       "column": "field_name",
@@ -155,7 +152,7 @@ Allows frontend to operate databases without writing backend code. Describes nee
 - `@where`: Query condition array
 - `@join`: Join query condition array
 - `@order`: Sort field array
-- `@group`: Group field array
+- `@group`: Group by field array
 - `@distince`: Whether to deduplicate
 
 #### selectPage Method
@@ -163,7 +160,7 @@ Allows frontend to operate databases without writing backend code. Describes nee
 #### Request Format
 ```json
 {
-  "@column": ["field_name1", "field_name2"],
+  "@column": ["field1", "field2"],
   "@where": [
     {
       "column": "field_name",
@@ -191,7 +188,7 @@ Allows frontend to operate databases without writing backend code. Describes nee
 - `@column`: Array of fields to query, if empty queries all fields
 - `@where`: Query condition array
 - `@page` Pagination parameters
-  - pageIndex: Page number (starts from 0)
+  - pageIndex: Page number (starting from 0)
   - pageSize: Page size
 - `@join`: Join query condition array
 - `@order`: Sort field array
@@ -203,8 +200,8 @@ Allows frontend to operate databases without writing backend code. Describes nee
 ```json
 {
   "@set": {
-    "field_name1": "new_value1",
-    "field_name2": "new_value2"
+    "field1": "new_value1",
+    "field2": "new_value2"
   },
   "@where": [
     {
@@ -220,12 +217,12 @@ Allows frontend to operate databases without writing backend code. Describes nee
 ```
 
 ##### Parameter Description
-- `@set`: Key-value pairs of fields and new values to update, requires at least one field
+- `@set`: Key-value pairs of fields and new values to update, at least one field required
 - `@where`: Update condition array, specifies which records to update
 - `@with_select`: Optional query condition for executing a query after update
 
 #### Examples
-1. Select
+1. Query
 ```http request
 POST http://localhost:8080/sql/forge/api/json/select/orders o
 Content-Type: application/json
@@ -288,7 +285,7 @@ Content-Type: application/json
 }
 ```
 
-2. Select Page
+2. Paginated Query
 ```http request
 POST http://localhost:8080/sql/forge/api/json/selectPage/orders o
 Content-Type: application/json
@@ -446,7 +443,7 @@ Content-Type: application/json
 ```
 
 #### Before Method Execution Aspect
-Can implement [IBeforeRecordExecutor.java](sql-forge-record/src/main/java/cn/wubo/sql/forge/record/IBeforeRecordExecutor.java) interface to customize JSON adjustment before method execution, implementing password encryption, automatic timestamp updates, access control, logging, auditing, etc.
+You can customize JSON adjustments before method execution by implementing [IBeforeRecordExecutor.java](sql-forge-record/src/main/java/cn/wubo/sql/forge/record/IBeforeRecordExecutor.java) interface to achieve password encryption, automatic timestamp updates, access control, logging, auditing, etc.
 
 For example, implementing logging on Insert:
 ```java
@@ -470,23 +467,23 @@ public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
 Can be disabled via `sql.forge.api.json.enabled=false`
 
 ### SQL Template API Module
-Provides `SQL` template engine functionality, supporting template syntax such as conditional statements, loops, etc., dynamically generates `SQL` execution based on parameters and returns results.
-- **API Template Management**: Provides API template storage, query, deletion and other management functions
-- **Template API Execution**: Supports executing predefined API templates through template ID and parameters
+Provides `SQL` template engine functionality, supporting template syntax such as conditional judgments and loops, dynamically generates `SQL` execution based on parameters and returns results.
+- **API Template Management**: Provides management functions for API templates including storage, query, deletion, etc.
+- **Templated API Execution**: Supports executing predefined API templates through template ID and parameters
 
 #### Template Management Interfaces
 
 - `PUT /sql/forge/api/template/sql` - Save/Update SQL Template
   - id: Template ID
-  - executorName: Executor name, default supports database (project database), calcite (Apache Calcite cross-database federated query), supports custom extension
+  - executorName: Executor name, defaults to database (project database), calcite (Apache Calcite cross-database federated query), supports custom extensions
   - context: Template content
 - `GET /sql/forge/api/template/sql/{id}` - Get SQL Template by ID
-- `GET /sql/forge/api/template/sql` - Get SQL Template list
+- `GET /sql/forge/api/template/sql` - Get SQL Template List
 - `DELETE /sql/forge/api/template/{id}` - Delete SQL Template by ID
 - `POST /sql/forge/api/template/sql/{id}` - Execute SQL Template by ID
   - Template parameters Map
 
-#### Examples
+#### Example
 Template configuration:
 ```http request
 PUT http://localhost:8080/sql/forge/api/template/sql
@@ -496,7 +493,7 @@ content-type: application/json
     "id": "sql-template-database",
     "type": "templateSql",
     "executorName": "database",
-    "context": "SELECT * FROM users WHERE 1=1\r\n<if test=\"name != null && name != ''\">AND username = #{name}</if>\r\n<if test=\"ids != null && !ids.isEmpty()\"><foreach collection=\"ids\" item=\"id\" open=\"AND id IN (\" separator=\",\" close=")\">#{id}</foreach></if>\r\n<if test=\"(name == null || name == '') && (ids == null || ids.isEmpty()) \">AND 0=1</if>\r\nORDER BY username DESC"
+    "context": "SELECT * FROM users WHERE 1=1\r\n<if test=\"name != null && name != ''\">AND username = #{name}</if>\r\n<if test=\"ids != null && !ids.isEmpty()\"><foreach collection=\"ids\" item=\"id\" open=\"AND id IN (\" separator=\",\" close=\")\">#{id}</foreach></if>\r\n<if test=\"(name == null || name == '') && (ids == null || ids.isEmpty()) \">AND 0=1</if>\r\nORDER BY username DESC"
 }
 ```
 
@@ -527,21 +524,21 @@ Response:
 Can be disabled via `sql.forge.api.template.sql.enabled=false`
 
 #### Persistent Template
-Inherit [ITemplateSqlStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) to implement your own template service
+Extend [ITemplateSqlStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) to implement your own template service
 
 ### Amis Template API Module
-Uses [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) combined with **Json API** module, **Template API** module, **Calcite API** module to quickly build web pages.
+Use [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) together with **Json API** module, **Template API** module, and **Calcite API** module to quickly build web pages.
 
 #### Template Management Interfaces
 
-- `PUT /sql/forge/api/template/amis` - Save new API Template
+- `PUT /sql/forge/api/template/amis` - Save New API Template
   - id: Template ID
   - context: Template content
-- `GET /sql/forge/api/template/amis/{id}` - Get template by ID
-- `GET /sql/forge/api/template/amis` - Get template list
-- `DELETE /sql/forge/api/template/amis{id}` - Delete template by ID
+- `GET /sql/forge/api/template/amis/{id}` - Get Template by ID
+- `GET /sql/forge/api/template/amis` - Get Template List
+- `DELETE /sql/forge/api/template/amis{id}` - Delete Template by ID
 
-#### Examples
+#### Example
 Template configuration:
 ```http request
 PUT http://localhost:8080/sql/forge/amis/template
@@ -549,7 +546,7 @@ content-type: application/json
 
 {
     "id": "amis-template-users",
-    "context": "{\r\n  \"type\": \"page\",\r\n  \"body\": {\r\n    \"type\": \"crud\",\r\n    \"id\": \"crud_table\",\r\n    \"api\": {\r\n      \"method\": \"post\",\r\n      \"url\": \"/sql/forge/api/json/selectPage/USERS\",\r\n      \"data\": {\r\n        \"@column\": [\r\n          \"USERS.ID\",\r\n          \"USERS.USERNAME\",\r\n          \"sex.item_name as SEX\",\r\n          \"USERS.EMAIL\"\r\n        ],\r\n        \"@join\": [\r\n          {\r\n            \"type\": \"LEFT_OUTER_JOIN\",\r\n            \"joinTable\": \"sys_dict_items sex\",\r\n            \"on\": \"USERS.DICT_SEX = sex.item_code\"\r\n          }\r\n        ],\r\n        \"@where\": [\r\n          {\r\n            \"column\": \"USERS.USERNAME\",\r\n            \"condition\": \"LIKE\",\r\n            \"value\": \"${USERNAME | default:undefined}\"\r\n          },\r\n          {\r\n            \"column\": \"USERS.DICT_SEX\",\r\n            \"condition\": \"IN\",\r\n            \"value\": \"${SEX | default:undefined | split}\"\r\n          },\r\n          {\r\n            \"column\": \"USERS.EMAIL\",\r\n            \"condition\": \"LIKE\",\r\n            \"value\": \"${EMAIL | default:undefined}\"\r\n          },\r\n          {\r\n            \"column\": \"sex.dict_code\",\r\n            \"condition\": \"EQ\",\r\n            \"value\": \"sex\"\r\n          }\r\n        ],\r\n        \"@order\": [\r\n          \"${default(orderBy && orderDir ? (orderBy + ' ' + orderDir):'',undefined)}\"\r\n        ],\r\n        \"@page\": {\r\n          \"pageIndex\": \"${page - 1}\",\r\n          \"pageSize\": \"${perPage}\"\r\n        }\r\n      }\r\n    },\r\n    \"headerToolbar\": [\r\n      {\r\n        \"label\": \"Add\",\r\n        \"type\": \"button\",\r\n        \"icon\": \"fa fa-plus\",\r\n        \"level\": \"primary\",\r\n        \"actionType\": \"drawer\",\r\n        \"drawer\": {\r\n          \"title\": \"New Form\",\r\n          \"body\": {\r\n            \"type\": \"form\",\r\n            \"api\": {\r\n              \"method\": \"post\",\r\n              \"url\": \"/sql/forge/api/json/insert/USERS\",\r\n              \"data\": {\r\n                \"@set\": {\r\n                  \"ID\": \"${ID | default:undefined}\",\r\n                  \"USERNAME\": \"${USERNAME | default:undefined}\",\r\n                  \"DICT_SEX\": \"${DICT_SEX | default:undefined}\",\r\n                  \"EMAIL\": \"${EMAIL | default:undefined}\"\r\n                }\r\n              }\r\n            },\r\n            \"onEvent\": {\r\n              \"submitSucc\": {\r\n                \"actions\": [\r\n                  {\r\n                    \"actionType\": \"reload\",\r\n                    \"componentId\": \"crud_table\"\r\n                  }\r\n                ]\r\n              }\r\n            },\r\n            \"body\": [\r\n              {\r\n                \"type\": \"uuid\",\r\n                \"id\": \"insert-ID\",\r\n                \"name\": \"ID\"\r\n              },\r\n              {\r\n                \"type\": \"input-text\",\r\n                \"name\": \"USERNAME\",\r\n                \"label\": \"Username\",\r\n                \"maxLength\": 50,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-USERNAME\"\r\n              },\r\n              {\r\n                \"type\": \"select\",\r\n                \"name\": \"DICT_SEX\",\r\n                \"label\": \"Gender\",\r\n                \"maxLength\": 100,\r\n                \"source\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/select/sys_dict_items\",\r\n                  \"data\": {\r\n                    \"@column\": [\r\n                      \"item_code\",\r\n                      \"item_name\"\r\n                    ],\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"dict_code\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"sex\"\r\n                      }\r\n                    ]\r\n                  },\r\n                  \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n                },\r\n                \"clearable\": true,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-SEX\"\r\n              },\r\n              {\r\n                \"type\": \"input-text\",\r\n                \"name\": \"EMAIL\",\r\n                \"label\": \"User Email\",\r\n                \"maxLength\": 100,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-EMAIL\"\r\n              }\r\n            ]\r\n          }\r\n        }\r\n      },\r\n      \"bulkActions\",\r\n      {\r\n        \"type\": \"columns-toggler\",\r\n        \"draggable\": true,\r\n        \"align\": \"right\"\r\n      },\r\n      {\r\n        \"type\": \"export-excel\",\r\n        \"label\": \"Export\",\r\n        \"icon\": \"fa fa-file-excel\",\r\n        \"api\": {\r\n          \"method\": \"post\",\r\n          \"url\": \"/sql/forge/api/json/select/USERS\",\r\n          \"data\": {\r\n            \"@column\": [\r\n              \"USERS.ID\",\r\n              \"USERS.USERNAME\",\r\n              \"sex.item_name as SEX\",\r\n              \"USERS.EMAIL\"\r\n            ],\r\n            \"@join\": [\r\n              {\r\n                \"type\": \"LEFT_OUTER_JOIN\",\r\n                \"joinTable\": \"sys_dict_item sex\",\r\n                \"on\": \"USERS.DICT_SEX = sex.item_code\"\r\n              }\r\n            ],\r\n            \"@where\": [\r\n              {\r\n                \"column\": \"USERS.USERNAME\",\r\n                \"condition\": \"LIKE\",\r\n                \"value\": \"${USERNAME | default:undefined}\"\r\n              },\r\n              {\r\n                \"column\": \"USERS.DICT_SEX\",\r\n                \"condition\": \"IN\",\r\n                \"value\": \"${DICT_SEX | default:undefined | split}\"\r\n              },\r\n              {\r\n                \"column\": \"USERS.EMAIL\",\r\n                \"condition\": \"LIKE\",\r\n                \"value\": \"${EMAIL | default:undefined}\"\r\n              },\r\n              {\r\n                \"column\": \"sex.dict_code\",\r\n                \"condition\": \"EQ\",\r\n                \"value\": \"sex\"\r\n              }\r\n            ]\r\n          }\r\n        },\r\n        \"align\": \"right\"\r\n      }\r\n    ],\r\n    \"footerToolbar\": [\r\n      \"statistics\",\r\n      {\r\n        \"type\": \"pagination\",\r\n        \"layout\": \"total,perPage,pager,go\"\r\n      }\r\n    ],\r\n    \"bulkActions\": [\r\n      {\r\n        \"label\": \"Batch Delete\",\r\n        \"icon\": \"fa fa-trash\",\r\n        \"actionType\": \"ajax\",\r\n        \"api\": {\r\n          \"method\": \"post\",\r\n          \"url\": \"/sql/forge/api/json/delete/USERS\",\r\n          \"data\": {\r\n            \"@where\": [\r\n              {\r\n                \"column\": \"ID\",\r\n                \"condition\": \"IN\",\r\n                \"value\": \"${ids | split}\"\r\n              }\r\n            ]\r\n          }\r\n        },\r\n        \"confirmText\": \"Confirm batch delete?\"\r\n      }\r\n    ],\r\n    \"keepItemSelectionOnPageChange\": true,\r\n    \"labelTpl\": \"${USERNAME}\",\r\n    \"autoFillHeight\": true,\r\n    \"autoGenerateFilter\": true,\r\n    \"showIndex\": true,\r\n    \"primaryField\": \"ID\",\r\n    \"columns\": [\r\n      {\r\n        \"name\": \"ID\",\r\n        \"hidden\": true\r\n      },\r\n      {\r\n        \"name\": \"USERNAME\",\r\n        \"label\": \"Username\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"input-text\",\r\n          \"name\": \"USERNAME\",\r\n          \"label\": \"Username\",\r\n          \"maxLength\": 50,\r\n          \"placeholder\": \"Enter username\"\r\n        }\r\n      },\r\n      {\r\n        \"name\": \"SEX\",\r\n        \"label\": \"Gender\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"select\",\r\n          \"name\": \"SEX\",\r\n          \"label\": \"Gender\",\r\n          \"maxLength\": 100,\r\n          \"placeholder\": \"Enter gender\",\r\n          \"multiple\": true,\r\n          \"source\": {\r\n            \"method\": \"post\",\r\n            \"url\": \"/sql/forge/api/json/select/sys_dict_items\",\r\n            \"data\": {\r\n              \"@column\": [\r\n                \"item_code\",\r\n                \"item_name\"\r\n              ],\r\n              \"@where\": [\r\n                {\r\n                  \"column\": \"dict_code\",\r\n                  \"condition\": \"EQ\",\r\n                  \"value\": \"sex\"\r\n                }\r\n              ]\r\n            },\r\n            \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n          },\r\n          \"clearable\": true\r\n        }\r\n      },\r\n      {\r\n        \"name\": \"EMAIL\",\r\n        \"label\": \"User Email\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"input-text\",\r\n          \"name\": \"EMAIL\",\r\n          \"label\": \"User Email\",\r\n          \"maxLength\": 100,\r\n          \"placeholder\": \"Enter user email\"\r\n        }\r\n      },\r\n      {\r\n        \"type\": \"operation\",\r\n        \"label\": \"Operations\",\r\n        \"buttons\": [\r\n          {\r\n            \"label\": \"Edit\",\r\n            \"type\": \"button\",\r\n            \"icon\": \"fa fa-pen-to-square\",\r\n            \"actionType\": \"drawer\",\r\n            \"drawer\": {\r\n              \"title\": \"Edit Form\",\r\n              \"body\": {\r\n                \"type\": \"form\",\r\n                \"initApi\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/select/USERS\",\r\n                  \"data\": {\r\n                    \"@column\": [\r\n                      \"USERS.ID\",\r\n                      \"USERS.USERNAME\",\r\n                      \"USERS.SEX\",\r\n                      \"USERS.EMAIL\"\r\n                    ],\r\n                    \"@join\": [\r\n                      {\r\n                        \"type\": \"LEFT_OUTER_JOIN\",\r\n                        \"joinTable\": \"sys_dict_item sex_a814d446\",\r\n                        \"on\": \"USERS.SEX = sex_a814d446.item_code\"\r\n                      }\r\n                    ],\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"USERS.ID\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"${ID}\"\r\n                      }\r\n                    ]\r\n                  },\r\n                  \"responseData\": {\r\n                    \"&\": \"${items | first}\"\r\n                  }\r\n                },\r\n                \"api\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/update/USERS\",\r\n                  \"data\": {\r\n                    \"@set\": {\r\n                      \"ID\": \"${ID}\",\r\n                      \"USERNAME\": \"${USERNAME}\",\r\n                      \"SEX\": \"${SEX}\",\r\n                      \"EMAIL\": \"${EMAIL}\"\r\n                    },\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"USERS.ID\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"${ID}\"\r\n                      }\r\n                    ]\r\n                  }\r\n                },\r\n                \"body\": [\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"ID\",\r\n                    \"hidden\": true,\r\n                    \"id\": \"update-ID\"\r\n                  },\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"USERNAME\",\r\n                    \"label\": \"Username\",\r\n                    \"maxLength\": 50,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-USERNAME\"\r\n                  },\r\n                  {\r\n                    \"type\": \"select\",\r\n                    \"name\": \"SEX\",\r\n                    \"label\": \"Gender\",\r\n                    \"maxLength\": 100,\r\n                    \"source\": {\r\n                      \"method\": \"post\",\r\n                      \"url\": \"/sql/forge/api/json/select/sys_dict_item\",\r\n                      \"data\": {\r\n                        \"@column\": [\r\n                          \"item_code\",\r\n                          \"item_name\"\r\n                        ],\r\n                        \"@where\": [\r\n                          {\r\n                            \"column\": \"dict_code\",\r\n                            \"condition\": \"EQ\",\r\n                            \"value\": \"sex\"\r\n                          }\r\n                        ]\r\n                      },\r\n                      \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n                    },\r\n                    \"clearable\": true,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-SEX\"\r\n                  },\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"EMAIL\",\r\n                    \"label\": \"User Email\",\r\n                    \"maxLength\": 100,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-EMAIL\"\r\n                  }\r\n                ]\r\n              }\r\n            }\r\n          },\r\n          {\r\n            \"label\": \"Delete\",\r\n            \"type\": \"button\",\r\n            \"icon\": \"fa fa-minus\",\r\n            \"actionType\": \"ajax\",\r\n            \"level\": \"danger\",\r\n            \"confirmText\": \"Confirm delete?\",\r\n            \"api\": {\r\n              \"method\": \"post\",\r\n              \"url\": \"/sql/forge/api/json/delete/USERS\",\r\n              \"data\": {\r\n                \"@where\": [\r\n                  {\r\n                    \"column\": \"ID\",\r\n                    \"condition\": \"EQ\",\r\n                    \"value\": \"${ID}\"\r\n                  }\r\n                ]\r\n              }\r\n            }\r\n          }\r\n        ],\r\n        \"fixed\": \"right\"\r\n      }\r\n    ]\r\n  }\r\n}"
+    "context": "{\r\n  \"type\": \"page\",\r\n  \"body\": {\r\n    \"type\": \"crud\",\r\n    \"id\": \"crud_table\",\r\n    \"api\": {\r\n      \"method\": \"post\",\r\n      \"url\": \"/sql/forge/api/json/selectPage/USERS\",\r\n      \"data\": {\r\n        \"@column\": [\r\n          \"USERS.ID\",\r\n          \"USERS.USERNAME\",\r\n          \"sex.item_name as SEX\",\r\n          \"USERS.EMAIL\"\r\n        ],\r\n        \"@join\": [\r\n          {\r\n            \"type\": \"LEFT_OUTER_JOIN\",\r\n            \"joinTable\": \"sys_dict_items sex\",\r\n            \"on\": \"USERS.DICT_SEX = sex.item_code\"\r\n          }\r\n        ],\r\n        \"@where\": [\r\n          {\r\n            \"column\": \"USERS.USERNAME\",\r\n            \"condition\": \"LIKE\",\r\n            \"value\": \"${USERNAME | default:undefined}\"\r\n          },\r\n          {\r\n            \"column\": \"USERS.DICT_SEX\",\r\n            \"condition\": \"IN\",\r\n            \"value\": \"${SEX | default:undefined | split}\"\r\n          },\r\n          {\r\n            \"column\": \"USERS.EMAIL\",\r\n            \"condition\": \"LIKE\",\r\n            \"value\": \"${EMAIL | default:undefined}\"\r\n          },\r\n          {\r\n            \"column\": \"sex.dict_code\",\r\n            \"condition\": \"EQ\",\r\n            \"value\": \"sex\"\r\n          }\r\n        ],\r\n        \"@order\": [\r\n          \"${default(orderBy && orderDir ? (orderBy + ' ' + orderDir):'',undefined)}\"\r\n        ],\r\n        \"@page\": {\r\n          \"pageIndex\": \"${page - 1}\",\r\n          \"pageSize\": \"${perPage}\"\r\n        }\r\n      }\r\n    },\r\n    \"headerToolbar\": [\r\n      {\r\n        \"label\": \"Add\",\r\n        \"type\": \"button\",\r\n        \"icon\": \"fa fa-plus\",\r\n        \"level\": \"primary\",\r\n        \"actionType\": \"drawer\",\r\n        \"drawer\": {\r\n          \"title\": \"Add Form\",\r\n          \"body\": {\r\n            \"type\": \"form\",\r\n            \"api\": {\r\n              \"method\": \"post\",\r              \"url\": \"/sql/forge/api/json/insert/USERS\",\r\n              \"data\": {\r\n                \"@set\": {\r\n                  \"ID\": \"${ID | default:undefined}\",\r\n                  \"USERNAME\": \"${USERNAME | default:undefined}\",\r\n                  \"DICT_SEX\": \"${DICT_SEX | default:undefined}\",\r\n                  \"EMAIL\": \"${EMAIL | default:undefined}\"\r\n                }\r\n              }\r\n            },\r\n            \"onEvent\": {\r\n              \"submitSucc\": {\r\n                \"actions\": [\r\n                  {\r\n                    \"actionType\": \"reload\",\r\n                    \"componentId\": \"crud_table\"\r\n                  }\r\n                ]\r\n              }\r\n            },\r\n            \"body\": [\r\n              {\r\n                \"type\": \"uuid\",\r\n                \"id\": \"insert-ID\",\r\n                \"name\": \"ID\"\r\n              },\r\n              {\r\n                \"type\": \"input-text\",\r\n                \"name\": \"USERNAME\",\r\n                \"label\": \"Username\",\r\n                \"maxLength\": 50,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-USERNAME\"\r\n              },\r\n              {\r\n                \"type\": \"select\",\r\n                \"name\": \"DICT_SEX\",\r\n                \"label\": \"Gender\",\r\n                \"maxLength\": 100,\r\n                \"source\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/select/sys_dict_items\",\r\n                  \"data\": {\r\n                    \"@column\": [\r\n                      \"item_code\",\r\n                      \"item_name\"\r\n                    ],\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"dict_code\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"sex\"\r\n                      }\r\n                    ]\r\n                  },\r\n                  \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n                },\r\n                \"clearable\": true,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-SEX\"\r\n              },\r\n              {\r\n                \"type\": \"input-text\",\r\n                \"name\": \"EMAIL\",\r\n                \"label\": \"User Email Address\",\r\n                \"maxLength\": 100,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-EMAIL\"\r\n              }\r\n            ]\r\n          }\r\n        }\r\n      },\r\n      \"bulkActions\",\r\n      {\r\n        \"type\": \"columns-toggler\",\r\n        \"draggable\": true,\r\n        \"align\": \"right\"\r\n      },\r\n      {\r\n        \"type\": \"export-excel\",\r\n        \"label\": \"Export\",\r\n        \"icon\": \"fa fa-file-excel\",\r\n        \"api\": {\r\n          \"method\": \"post\",\r\n          \"url\": \"/sql/forge/api/json/select/USERS\",\r\n          \"data\": {\r\n            \"@column\": [\r\n              \"USERS.ID\",\r\n              \"USERS.USERNAME\",\r\n              \"sex.item_name as SEX\",\r\n              \"USERS.EMAIL\"\r\n            ],\r\n            \"@join\": [\r\n              {\r\n                \"type\": \"LEFT_OUTER_JOIN\",\r\n                \"joinTable\": \"sys_dict_item sex\",\r\n                \"on\": \"USERS.DICT_SEX = sex.item_code\"\r\n              }\r\n            ],\r\n            \"@where\": [\r\n              {\r\n                \"column\": \"USERS.USERNAME\",\r\n                \"condition\": \"LIKE\",\r\n                \"value\": \"${USERNAME | default:undefined}\"\r\n              },\r\n              {\r\n                \"column\": \"USERS.DICT_SEX\",\r\n                \"condition\": \"IN\",\r\n                \"value\": \"${DICT_SEX | default:undefined | split}\"\r\n              },\r\n              {\r\n                \"column\": \"USERS.EMAIL\",\r\n                \"condition\": \"LIKE\",\r\n                \"value\": \"${EMAIL | default:undefined}\"\r\n              },\r\n              {\r\n                \"column\": \"sex.dict_code\",\r\n                \"condition\": \"EQ\",\r\n                \"value\": \"sex\"\r\n              }\r\n            ]\r\n          }\r\n        },\r\n        \"align\": \"right\"\r\n      }\r\n    ],\r\n    \"footerToolbar\": [\r\n      \"statistics\",\r\n      {\r\n        \"type\": \"pagination\",\r\n        \"layout\": \"total,perPage,pager,go\"\r\n      }\r\n    ],\r\n    \"bulkActions\": [\r\n      {\r\n        \"label\": \"Batch Delete\",\r\n        \"icon\": \"fa fa-trash\",\r\n        \"actionType\": \"ajax\",\r\n        \"api\": {\r\n          \"method\": \"post\",\r\n          \"url\": \"/sql/forge/api/json/delete/USERS\",\r\n          \"data\": {\r\n            \"@where\": [\r\n              {\r\n                \"column\": \"ID\",\r\n                \"condition\": \"IN\",\r\n                \"value\": \"${ids | split}\"\r\n              }\r\n            ]\r\n          }\r\n        },\r\n        \"confirmText\": \"Are you sure you want to batch delete?\"\r\n      }\r\n    ],\r\n    \"keepItemSelectionOnPageChange\": true,\r\n    \"labelTpl\": \"${USERNAME}\",\r\n    \"autoFillHeight\": true,\r\n    \"autoGenerateFilter\": true,\r\n    \"showIndex\": true,\r\n    \"primaryField\": \"ID\",\r\n    \"columns\": [\r\n      {\r\n        \"name\": \"ID\",\r\n        \"hidden\": true\r\n      },\r\n      {\r\n        \"name\": \"USERNAME\",\r\n        \"label\": \"Username\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"input-text\",\r\n          \"name\": \"USERNAME\",\r\n          \"label\": \"Username\",\r\n          \"maxLength\": 50,\r\n          \"placeholder\": \"Enter username\"\r\n        }\r\n      },\r\n      {\r\n        \"name\": \"SEX\",\r\n        \"label\": \"Gender\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"select\",\r\n          \"name\": \"SEX\",\r\n          \"label\": \"Gender\",\r\n          \"maxLength\": 100,\r\n          \"placeholder\": \"Enter gender\",\r\n          \"multiple\": true,\r\n          \"source\": {\r\n            \"method\": \"post\",\r\n            \"url\": \"/sql/forge/api/json/select/sys_dict_items\",\r\n            \"data\": {\r\n              \"@column\": [\r\n                \"item_code\",\r\n                \"item_name\"\r\n              ],\r\n              \"@where\": [\r\n                {\r\n                  \"column\": \"dict_code\",\r\n                  \"condition\": \"EQ\",\r\n                  \"value\": \"sex\"\r\n                }\r\n              ]\r\n            },\r\n            \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n          },\r\n          \"clearable\": true\r\n        }\r\n      },\r\n      {\r\n        \"name\": \"EMAIL\",\r\n        \"label\": \"User Email Address\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"input-text\",\r\n          \"name\": \"EMAIL\",\r\n          \"label\": \"User Email Address\",\r\n          \"maxLength\": 100,\r\n          \"placeholder\": \"Enter user email address\"\r\n        }\r\n      },\r\n      {\r\n        \"type\": \"operation\",\r\n        \"label\": \"Operations\",\r\n        \"buttons\": [\r\n          {\r\n            \"label\": \"Edit\",\r\n            \"type\": \"button\",\r\n            \"icon\": \"fa fa-pen-to-square\",\r\n            \"actionType\": \"drawer\",\r\n            \"drawer\": {\r\n              \"title\": \"Edit Form\",\r\n              \"body\": {\r\n                \"type\": \"form\",\r\n                \"initApi\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/select/USERS\",\r\n                  \"data\": {\r\n                    \"@column\": [\r\n                      \"USERS.ID\",\r\n                      \"USERS.USERNAME\",\r\n                      \"USERS.SEX\",\r\n                      \"USERS.EMAIL\"\r\n                    ],\r\n                    \"@join\": [\r\n                      {\r\n                        \"type\": \"LEFT_OUTER_JOIN\",\r\n                        \"joinTable\": \"sys_dict_item sex_a814d446\",\r\n                        \"on\": \"USERS.SEX = sex_a814d446.item_code\"\r\n                      }\r\n                    ],\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"USERS.ID\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"${ID}\"\r\n                      }\r\n                    ]\r\n                  },\r\n                  \"responseData\": {\r\n                    \"&\": \"${items | first}\"\r\n                  }\r\n                },\r\n                \"api\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/update/USERS\",\r\n                  \"data\": {\r\n                    \"@set\": {\r\n                      \"ID\": \"${ID}\",\r\n                      \"USERNAME\": \"${USERNAME}\",\r\n                      \"SEX\": \"${SEX}\",\r\n                      \"EMAIL\": \"${EMAIL}\"\r\n                    },\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"USERS.ID\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"${ID}\"\r\n                      }\r\n                    ]\r\n                  }\r\n                },\r\n                \"body\": [\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"ID\",\r\n                    \"hidden\": true,\r\n                    \"id\": \"update-ID\"\r\n                  },\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"USERNAME\",\r\n                    \"label\": \"Username\",\r\n                    \"maxLength\": 50,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-USERNAME\"\r\n                  },\r\n                  {\r\n                    \"type\": \"select\",\r\n                    \"name\": \"SEX\",\r\n                    \"label\": \"Gender\",\r\n                    \"maxLength\": 100,\r\n                    \"source\": {\r\n                      \"method\": \"post\",\r\n                      \"url\": \"/sql/forge/api/json/select/sys_dict_item\",\r\n                      \"data\": {\r\n                        \"@column\": [\r\n                          \"item_code\",\r\n                          \"item_name\"\r\n                        ],\r\n                        \"@where\": [\r\n                          {\r\n                            \"column\": \"dict_code\",\r\n                            \"condition\": \"EQ\",\r\n                            \"value\": \"sex\"\r\n                          }\r\n                        ]\r\n                      },\r\n                      \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n                    },\r\n                    \"clearable\": true,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-SEX\"\r\n                  },\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"EMAIL\",\r\n                    \"label\": \"User Email Address\",\r\n                    \"maxLength\": 100,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-EMAIL\"\r\n                  }\r\n                ]\r\n              }\r\n            }\r\n          },\r\n          {\r\n            \"label\": \"Delete\",\r\n            \"type\": \"button\",\r\n            \"icon\": \"fa fa-minus\",\r\n            \"actionType\": \"ajax\",\r\n            \"level\": \"danger\",\r\n            \"confirmText\": \"Are you sure you want to delete?\",\r\n            \"api\": {\r\n              \"method\": \"post\",\r\n              \"url\": \"/sql/forge/api/json/delete/USERS\",\r\n              \"data\": {\r\n                \"@where\": [\r\n                  {\r\n                    \"column\": \"ID\",\r\n                    \"condition\": \"EQ\",\r\n                    \"value\": \"${ID}\"\r\n                  }\r\n                ]\r\n              }\r\n            }\r\n          }\r\n        ],\r\n        \"fixed\": \"right\"\r\n      }\r\n    ]\r\n  }\r\n}"
 }
 ```
 
@@ -560,11 +557,11 @@ Rendered page:
 Can be disabled via `sql.forge.api.template.amis.enabled=false`
 
 #### Persistent Template
-Inherit [ITemplateAmisStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) to implement your own template service
+Extend [ITemplateAmisStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) to implement your own template service
 
 ### Entity Module
-- [Entity.java](sql-forge-entity/src/main/java/cn/eubo/sql/forge/Entity.java) Provides builders for database operations on entity objects, including delete, insert, select, update, save operations, simplifying `SQL` construction process.
-- [EntityExecutor.java](sql-forge-entity/src/main/java/cn/eubo/sql/forge/EntityExecutor.java) Responsible for executing database operations of **builders**.
+- [Entity.java](sql-forge-entity/src/main/java/cn/eubo/sql/forge/Entity.java) Provides builders for database operations on entity objects, including delete, insert, query, update, save operations, simplifying the `SQL` building process.
+- [EntityExecutor.java](sql-forge-entity/src/main/java/cn/eubo/sql/forge/EntityExecutor.java) Responsible for executing database operations of the **builder**.
 
 #### Features
 - Uses chain calls
@@ -581,7 +578,7 @@ Assuming there is a user entity class [User](sql-forge-test/src/test/java/cn/wub
 private EntityService entityService;
 
 
-// Select operation
+// Query operation
 EntitySelect<User> select = Entity.select(User.class)
                 .distinct(true)
                 .columns(User::getId, User::getUsername, User::getEmail)
@@ -590,7 +587,7 @@ EntitySelect<User> select = Entity.select(User.class)
 List<User> users = entityService.run(select);
 Object key = entityService.run(insert);
 
-// Page select operation
+// Paginated query operation
 EntitySelectPage<User> select = Entity.selectPage(User.class)
         .distinct(true)
         .columns(User::getId, User::getUsername, User::getEmail)
@@ -628,7 +625,7 @@ user = entityService.run(Entity.save(user));
 int count = entityService.run(Entity.delete(user));
 ```
 
-#### Query Builder Instructions
+#### Query Builder Description
 
 ##### 1. Column Selection
 - column(SFunction<T, ?> column) - Select single column
@@ -653,19 +650,19 @@ int count = entityService.run(Entity.delete(user));
 - isNotNull(SFunction<T, ?> column) - Is NOT NULL
 
 ##### 3. Sorting
-- orderAsc(SFunction<T, ?> column) - Ascending order
-- orderDesc(SFunction<T, ?> column) - Descending order
-- orders(SFunction<T, ?>... columns) - Multiple columns sorting (default ascending)
+- orderAsc(SFunction<T, ?> column) - Ascending sort
+- orderDesc(SFunction<T, ?> column) - Descending sort
+- orders(SFunction<T, ?>... columns) - Multi-column sorting (default ascending)
 
 ##### 4. Pagination
 - page(Integer pageIndex, Integer pageSize) - Set pagination parameters
 
-##### 5. Distinct
+##### 5. Deduplication
 - distinct(Boolean distinct) - Set whether to deduplicate
 
-#### Object Save Builder Instructions
+#### Object Save Operation Builder Description
 
-Determines primary key field based on `@Id` annotation, if no primary key field exists, throws `IllegalArgumentException`
+Determines primary key field based on `@Id` annotation. If no primary key field exists, throws `IllegalArgumentException`
 - **Insert condition**: Executes insert operation when primary key value is `null`
   - `String` type primary key: Automatically generates `UUID` as primary key value
   - Other type primary keys: Uses database auto-generated primary key value
@@ -673,8 +670,8 @@ Determines primary key field based on `@Id` annotation, if no primary key field 
   - Uses primary key value as update condition
 
 ### Console
-Provides simple web interface for debugging and template management:
-- Database metadata viewing, SQL debugging (disabled by default, enable via `sql.forge.api.database.enabled=true`, only supports query by default, can allow other operations via `sql.forge.api.database.select-only=false`)
+Provides a simple web interface for debugging and template management:
+- Database metadata viewing, SQL debugging (disabled by default, enable via configuration `sql.forge.api.database.enabled=true`, only supports queries by default, allow other operations via `sql.forge.api.database.select-only=false`)
   ![img_1.png](img_1.png)
 - Json API debugging
   ![img_2.png](img_2.png)
