@@ -113,10 +113,23 @@ public class NL2SQLService {
         // 构建RestClient
         this.restClient = restClient;
 
-        // 解析方言配置
-        this.currentDialect = DialectType.fromDatabaseType(dialect);
+        // 优先从数据库元数据接口检测方言
+        DialectType detectedDialect = null;
+        if (restClient != null) {
+            detectedDialect = detectDialectFromDatabaseInfo();
+        }
+        
+        // 如果接口检测成功，使用检测到的方言；否则使用配置文件中的方言
+        if (detectedDialect != null) {
+            this.currentDialect = detectedDialect;
+            log.info("成功从数据库元数据接口检测到方言: {}, 将使用该方言生成SQL", detectedDialect.getDisplayName());
+        } else {
+            // 解析配置文件中的方言作为回退
+            this.currentDialect = DialectType.fromDatabaseType(dialect);
+            log.info("无法从接口检测方言，使用配置文件中的方言: {}", currentDialect.getDisplayName());
+        }
 
-        log.info("NL2SQLService初始化完成，默认方言: {}, 模糊阈值: {}, 默认限制: {}, 默认排序: {} {}",
+        log.info("NL2SQLService初始化完成，最终方言: {}, 模糊阈值: {}, 默认限制: {}, 默认排序: {} {}",
                 currentDialect.getDisplayName(), ambiguityThreshold, defaultLimit, defaultSortField, defaultSortDirection);
     }
 
@@ -370,6 +383,30 @@ public class NL2SQLService {
     }
 
     /**
+     * 手动刷新方言配置（从数据库元数据接口重新检测）
+     * 当数据库切换或配置变更时调用
+     */
+    @Tool(name = "RefreshDialect", description = "从数据库元数据接口重新检测并刷新SQL方言配置")
+    public String refreshDialect() {
+        if (restClient == null) {
+            return "❌ 无法刷新方言：RestClient 未配置";
+        }
+        
+        DialectType oldDialect = this.currentDialect;
+        DialectType detectedDialect = detectDialectFromDatabaseInfo();
+        
+        if (detectedDialect != null) {
+            this.currentDialect = detectedDialect;
+            String message = String.format("✓ 方言已刷新：%s → %s", 
+                    oldDialect.getDisplayName(), detectedDialect.getDisplayName());
+            log.info(message);
+            return message;
+        } else {
+            return String.format("⚠️ 无法从接口检测方言，当前方言保持不变：%s", oldDialect.getDisplayName());
+        }
+    }
+
+    /**
      * 清除会话上下文
      */
     @Tool(name = "ClearSession", description = "清除指定会话的上下文")
@@ -396,7 +433,53 @@ public class NL2SQLService {
     // ==================== 私有辅助方法 ====================
 
     /**
-     * 从API获取元数据信息
+     * 从API获取数据库元数据（优先用于确定方言）
+     */
+    private String getDatabaseInfoFromApi() {
+        try {
+            return restClient.get()
+                    .uri("/sql/forge/api/database/getMetaDataDatabase?executorName={executor}", executorName)
+                    .retrieve()
+                    .body(String.class);
+        } catch (HttpClientErrorException e) {
+            log.warn("获取数据库元数据失败，状态码: {}，将使用配置或默认方言", e.getStatusCode());
+            return null;
+        } catch (Exception e) {
+            log.warn("调用数据库元数据API失败，将使用配置或默认方言", e);
+            return null;
+        }
+    }
+
+    /**
+     * 从数据库元数据解析方言类型
+     */
+    private DialectType detectDialectFromDatabaseInfo() {
+        String dbInfoJson = getDatabaseInfoFromApi();
+        if (dbInfoJson == null || dbInfoJson.trim().isEmpty() || "[]".equals(dbInfoJson)) {
+            return null;
+        }
+
+        try {
+            // 解析JSON获取数据库类型
+            // 假设返回格式: {"databaseProductName":"MySQL","databaseVersion":"8.0.28"}
+            Map<String, Object> dbInfo = objectMapper.readValue(dbInfoJson, Map.class);
+            
+            String productName = (String) dbInfo.get("databaseProductName");
+            String version = (String) dbInfo.get("databaseVersion");
+            
+            if (productName != null && !productName.trim().isEmpty()) {
+                log.info("从数据库元数据检测到数据库类型: {} {}, 将自动配置方言", productName, version != null ? version : "");
+                return DialectType.fromProductName(productName);
+            }
+        } catch (Exception e) {
+            log.warn("解析数据库元数据失败，将使用配置或默认方言: {}", e.getMessage());
+        }
+        
+        return null;
+    }
+
+    /**
+     * 从API获取表元数据信息
      */
     private String getMetaDataFromApi() {
         try {

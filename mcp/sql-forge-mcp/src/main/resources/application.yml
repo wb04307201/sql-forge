@@ -27,7 +27,14 @@ sql-forge:
   api:
     url: http://localhost:8081
     executor: database
-  # 数据库方言：MYSQL, POSTGRESQL, ORACLE, SQL_SERVER, H2, SQLITE, STANDARD_SQL
+  # 数据库方言配置
+  # 优先级（从高到低）：
+  # 1. 数据库元数据接口自动检测：/sql/forge/api/database/getMetaDataDatabase
+  # 2. 手动刷新：调用 RefreshDialect() 工具方法
+  # 3. 配置文件（此配置）
+  # 4. 默认值：STANDARD_SQL
+  #
+  # 支持的方言：MYSQL, POSTGRESQL, ORACLE, SQL_SERVER, H2, SQLITE, STANDARD_SQL
   dialect: H2
   # 模糊查询默认配置
   default:
