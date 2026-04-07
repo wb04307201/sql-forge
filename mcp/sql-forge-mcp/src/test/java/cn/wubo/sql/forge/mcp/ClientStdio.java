@@ -59,7 +59,39 @@ public class ClientStdio {
 		CallToolResult NL2SQLResult = client.callTool(new CallToolRequest("NL2SQL",
 				Map.of("content", "查询订单里的所有商品,并按照商品统计数量")));
 
-		log.info("NL2SQLResult: {}", NL2SQLResult.content());
+		log.info("NL2SQLResult: {}", NL2SQLResult);
+
+		CallToolResult ExecuteSQLResult = client.callTool(new CallToolRequest("ExecuteSQL",
+				Map.of("sql", "SELECT * FROM orders")));
+
+		log.info("ExecuteSQLResult: {}", ExecuteSQLResult);
+
+
+		CallToolResult GenerateJsonResult = client.callTool(new CallToolRequest("GenerateJson",
+				Map.of("tableInfo", "[{\n" +
+						"  \"table\": \"PRODUCTS\",\n" +
+						"  \"desc\": \"商品表\",\n" +
+						"  \"type\": \"crud\",\n" +
+						"  \"fields\": {\n" +
+						"    \"ID\": {\"type\": \"uuid\", \"desc\": \"商品ID\"},\n" +
+						"    \"NAME\": {\"type\": \"string\", \"length\": 50, \"desc\": \"商品名称\",\"search\": true},\n" +
+						"    \"DICT_CATEGORIES\": {\"type\": \"dict\", \"length\": 100, \"desc\": \"商品类型\", \"dict_code\": \"categories\", \"search\": true},\n" +
+						"    \"PRICE\": {\"type\": \"number\", \"max\": 9999999999, \"precision\": 2, \"desc\": \"邮箱地址\", \"search\": true}\n" +
+						"  }\n" +
+						"},\n" +
+						"  {\n" +
+						"    \"table\": \"SYS_DICT_ITEMS\",\n" +
+						"    \"desc\": \"字典项表\",\n" +
+						"    \"type\": \"dict\",\n" +
+						"    \"fields\": {\n" +
+						"      \"DICT_CODE\": {\"type\": \"string\"},\n" +
+						"      \"ITEM_CODE\": {\"type\": \"string\"},\n" +
+						"      \"ITEM_NAME\": {\"type\": \"string\"}\n" +
+						"    }\n" +
+						"  }]")));
+
+		log.info("GenerateJsonResult: {}", GenerateJsonResult);
+
 
 		client.closeGracefully();
 	}
