@@ -34,6 +34,11 @@ Add JitPack repository
 
 ```xml
 <dependency>
+  <groupId>jakarta.persistence</groupId>
+  <artifactId>jakarta.persistence-api</artifactId>
+  <version>3.2.0</version>
+</dependency>
+<dependency>
     <groupId>com.gitee.wb04307201.sql-forge</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
     <version>1.5.8</version>
