@@ -4,17 +4,14 @@
   <a href="README.md">English</a> | 中文
 </div>
 
-> **SQL工坊**不仅是一个ORM框架，更是一套完整的低代码解决方案,它提供以下功能：
-- **页面**：百度Amis低代码框架
-- **ORM框架**
-  - **JSON API**：通过JSON格式描述数据库操作，节省后端编码量
-  - **SQL模板API**：使用模板引擎动态生成SQL语句
-  - **自行实现API 1**：使用`Entity`工具操作数据库操作并实现API
-  - **自行实现API 2**：使用其他ORM框架并实现API
-- **多样化数据访问**
-  - **DatabaseExecutor**：连接项目配置的数据库
-  - **CalciteExecutor**：基于Apache Calcite的跨数据库联邦查询
-  - **自行扩展**
+> **SQL工坊**不仅是一个ORM框架，更是一套基于数据库的完整解决方案，它提供：
+> - 提供基础的数据库支持
+> - 跨数据库联邦查询
+> - 提供基于 JSON 的数据库 CRUD 操作
+> - 提供实体对象的链式操作
+> - SQL 模板引擎
+> - Amis 低代码可视化编辑和模板管理
+> - Web 控制台
 
 [![](https://jitpack.io/v/com.gitee.wb04307201/sql-forge.svg)](https://jitpack.io/#com.gitee.wb04307201/sql-forge)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
@@ -39,15 +36,21 @@
 <dependency>
     <groupId>com.gitee.wb04307201.sql-forge</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.5.6</version>
+    <version>1.5.7</version>
 </dependency>
 ```
 
-## 使用
+## 功能说明
 
 ### SQL执行器
 #### database-项目数据库
 会从Spring项目已经配的数据源直接引用
+```yaml
+sql:
+  forge:
+    schemata:  #配置schema
+      - PUBLIC
+```
 #### calcite-Apache Calcite跨数据库联邦查询
 启用calcite并指定Apache Calcite数据源信息
 ```yaml
@@ -56,6 +59,9 @@ sql:
     calcite:
       enabled: true
       configuration: classpath:model.json
+      schemata: #配置schema
+        - MYSQL
+        - POSTGRES
 ```
 #### 自定义扩展
 继承[IExecutor.java](sql-forge-core/src/main/java/cn/wubo/sql/forge/IExecutor.java)实现自定义执行器
@@ -437,7 +443,7 @@ Content-Type: application/json
 ```
 
 #### 方法执行前切面
-可通过实现[IExecute.java](sql-forge-crud/src/main/java/cn/wubo/sql/forge/inter/IExecute.java)接口自定义方法执行前的json调整，实现密码加密、自动更新时间戳、权限控制、日志、审计等
+可通过实现 [IBeforeRecordExecutor.java](sql-forge-record/src/main/java/cn/wubo/sql/forge/record/IBeforeRecordExecutor.java)接口自定义方法执行前的json调整，实现密码加密、自动更新时间戳、权限控制、日志、审计等
 
 例如实现在Insert时输出日志：
 ```java
@@ -518,10 +524,10 @@ content-type: application/json
 可通过`sql.forge.api.template.sql.enabled=false`关闭
 
 #### 持久化模板
-继承[IApiTemplateStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/IApiTemplateStorage.java)实现自己的模板服务
+继承 [ITemplateSqlStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) 实现自己的模板服务
 
 ### Amis Template API 模块
-使用[Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index)配合**Json API**模块、**Template API**模块、**Calcite API**模块快速构建的Web页面。
+使用 [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) 配合**Json API**模块、**Template API**模块、**Calcite API**模块快速构建的Web页面。
 
 #### 模板管理接口
 
@@ -551,22 +557,21 @@ content-type: application/json
 可通过`sql.forge.api.template.amis.enabled=false`关闭
 
 #### 持久化模板
-继承[ITemplateAmisStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java)实现自己的模板服务
+继承 [ITemplateAmisStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) 实现自己的模板服务
 
 ### Entity 模块
-- [Entity](file://D:\developer\IdeaProjects\entity-sql\sql-forge-crud\src\main\java\cn\wubo\sql\forge\Entity.java) 提供了对实体对象进行数据库操作的构建器，包括删除、插入、查询、更新、保存等操作，简化`SQL`构建过程。
-- [EntityService](file://D:\developer\IdeaProjects\entity-sql\sql-forge-crud\src\main\java\cn\wubo\sql\forge\EntityService.java) 负责执行**构建器**的数据库操作。
+- [Entity.java](sql-forge-entity/src/main/java/cn/eubo/sql/forge/Entity.java) 提供了对实体对象进行数据库操作的构建器，包括删除、插入、查询、更新、保存等操作，简化`SQL`构建过程。
+- [EntityExecutor.java](sql-forge-entity/src/main/java/cn/eubo/sql/forge/EntityExecutor.java) 负责执行**构建器**的数据库操作。
 
 #### 特点
-- 使用链式调用，API 设计简洁
+- 使用链式调用
 - 支持类型安全的泛型操作
 - 通过构建器模式灵活配置查询条件
 - 统一的数据库操作入口
--
 
 #### 使用示例
 
-假设有一个用户实体类 [User](file://D:\developer\IdeaProjects\entity-sql\sql-forge-test\src\test\java\cn\wubo\sql\forge\User.java)：
+假设有一个用户实体类 [User](sql-forge-test/src/test/java/cn/wubo/sql/forge/User.java) ：
 
 ```java
 @Autowired

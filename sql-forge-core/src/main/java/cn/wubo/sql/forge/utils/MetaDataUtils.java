@@ -3,16 +3,20 @@ package cn.wubo.sql.forge.utils;
 import cn.wubo.sql.forge.TreeNode;
 import cn.wubo.sql.forge.records.*;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static cn.wubo.sql.forge.constant.Constant.NODE_VALUE_TEMPLATE;
 
+@Slf4j
 @UtilityClass
 public class MetaDataUtils {
 
@@ -56,6 +60,8 @@ public class MetaDataUtils {
             while (rs.next()) {
                 tables.add(new TableInfo(
                         rs.getString("TABLE_NAME"),
+                        rs.getString("TABLE_SCHEM"),
+                        rs.getString("TABLE_TYPE"),
                         rs.getString("REMARKS")
                 ));
             }
@@ -165,7 +171,7 @@ public class MetaDataUtils {
         }
     }
 
-    public TreeNode<?> getMetaData(Connection connection) throws SQLException {
+    public TreeNode<DatabaseInfo> getMetaDataTree(Connection connection, List<String> schemata) throws SQLException {
         TreeNode<DatabaseInfo> root = new TreeNode<>();
         DatabaseInfo databaseInfo = getDatabase(connection);
 
@@ -173,10 +179,9 @@ public class MetaDataUtils {
         root.setValue(databaseInfo.productName());
         root.setData(databaseInfo);
 
-        Set<String> systemSchemas = buildSystemSchemaSet(databaseInfo.productName().toUpperCase());
         List<SchemaInfo> schemas = getSchemas(connection, null, null)
                 .stream()
-                .filter(s -> !systemSchemas.contains(s.tableSchema().trim().toUpperCase()))
+                .filter(s -> schemata.isEmpty() || schemata.contains(s.tableSchema()))
                 .toList();
 
         List<String> tableTypes = new ArrayList<>();
@@ -196,7 +201,7 @@ public class MetaDataUtils {
                 tableTypeNode.setData(tableType);
 
                 List<TableInfo> tables = getTables(connection, null, schema.tableSchema(), null, new String[]{tableType});
-                if (!tables.isEmpty()){
+                if (!tables.isEmpty()) {
                     schemaNode.addChild(tableTypeNode);
                 }
                 for (TableInfo table : tables) {
@@ -233,7 +238,7 @@ public class MetaDataUtils {
                         primaryKeyNode.setData(primaryKey);
                         rootPrimaryKeyNode.addChild(primaryKeyNode);
 
-                        for (String columnName : primaryKey.columnName()){
+                        for (String columnName : primaryKey.columnName()) {
                             TreeNode<String> columnNode = new TreeNode<>();
                             columnNode.setLabel(columnName);
                             columnNode.setValue(String.format(NODE_VALUE_TEMPLATE, primaryKeyNode.getValue(), columnName));
@@ -269,7 +274,7 @@ public class MetaDataUtils {
                         indexNode.setData(index);
                         rootIndexNode.addChild(indexNode);
 
-                        for (String columnName : index.columnName()){
+                        for (String columnName : index.columnName()) {
                             TreeNode<String> columnNode = new TreeNode<>();
                             columnNode.setLabel(columnName);
                             columnNode.setValue(String.format(NODE_VALUE_TEMPLATE, indexNode.getValue(), columnName));
@@ -284,23 +289,37 @@ public class MetaDataUtils {
         return root;
     }
 
+    public List<EntireTableInfo> getMetaDataTables(Connection connection, List<String> schemata) throws SQLException {
+        List<EntireTableInfo> entireTableInfos = new ArrayList<>();
 
-    private Set<String> buildSystemSchemaSet(String dbType) {
-        Set<String> set = new HashSet<>();
-        if (dbType.contains("H2")) {
-            set.add("INFORMATION_SCHEMA");
-        } else if (dbType.contains("MYSQL")) {
-            set.addAll(Set.of("INFORMATION_SCHEMA", "MYSQL", "PERFORMANCE_SCHEMA", "SYS"));
-        } else if (dbType.contains("POSTGRESQL")) {
-            set.addAll(Set.of("PG_CATALOG", "INFORMATION_SCHEMA", "PG_TOAST"));
-        } else if (dbType.contains("ORACLE")) {
-            set.addAll(Set.of("SYS", "SYSTEM", "OUTLN", "CTXSYS", "XDB"));
-        } else if (dbType.contains("SQL SERVER") || dbType.contains("MICROSOFT")) {
-            set.addAll(Set.of("SYS", "INFORMATION_SCHEMA"));
-        } else if (dbType.contains("CALCITE")) {
-            set.addAll(Set.of("METADATA"));
+        List<SchemaInfo> schemas = getSchemas(connection, null, null)
+                .stream()
+                .filter(s -> schemata.isEmpty() || schemata.contains(s.tableSchema()))
+                .toList();
+
+        List<String> tableTypes = new ArrayList<>();
+        for (SchemaInfo schema : schemas) {
+            if (tableTypes.isEmpty())
+                tableTypes = getTableTypes(connection);
+            for (String tableType : tableTypes) {
+                List<TableInfo> tables = getTables(connection, null, schema.tableSchema(), null, new String[]{tableType});
+                for (TableInfo table : tables) {
+                    entireTableInfos.add(
+                            new EntireTableInfo(
+                                    table.tableName(),
+                                    schema.tableSchema(),
+                                    table.tableType(),
+                                    table.remarks(),
+                                    getColumns(connection, null, schema.tableSchema(), table.tableName(), null),
+                                    getPrimaryKeys(connection, null, schema.tableSchema(), table.tableName()),
+                                    getImportedKeys(connection, null, schema.tableSchema(), table.tableName()),
+                                    getIndexInfo(connection, null, schema.tableSchema(), table.tableName(), false, false)
+                            )
+                    );
+                }
+            }
         }
-        // 其他数据库按需扩展
-        return set;
+
+        return entireTableInfos;
     }
 }

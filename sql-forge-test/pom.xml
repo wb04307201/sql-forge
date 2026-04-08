@@ -12,7 +12,7 @@
     <dependencies>
         <dependency>
             <groupId>com.gitee.wb04307201</groupId>
-            <artifactId>sql-forge-spring-boot-autoconfigure</artifactId>
+            <artifactId>sql-forge-spring-boot-starter</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

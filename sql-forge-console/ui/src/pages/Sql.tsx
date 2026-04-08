@@ -15,7 +15,7 @@ export default {
     heightAuto: true,
     initiallyOpen: false,
     source: {
-      url: '/sql/forge/api/database/metaData?executorName=${executorName}',
+      url: '/sql/forge/api/database/metaDataTree?executorName=${executorName}',
       method: 'get',
       adaptor: (payload: any) => {
         return [payload];

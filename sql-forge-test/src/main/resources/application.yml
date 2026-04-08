@@ -8,12 +8,19 @@ spring:
 
 sql:
   forge:
+    schemata:
+      - PUBLIC
     calcite:
       enabled: true
       configuration: classpath:model.json
+      schemata:
+        - MYSQL
+        - POSTGRES
     api:
       database:
         enabled: true
         select-only: false
 
 
+server:
+  port: 8081

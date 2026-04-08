@@ -1,6 +1,8 @@
 package cn.wubo.sql.forge;
 
 import cn.wubo.sql.forge.map.RowMap;
+import cn.wubo.sql.forge.records.DatabaseInfo;
+import cn.wubo.sql.forge.records.EntireTableInfo;
 import cn.wubo.sql.forge.records.SqlScript;
 import cn.wubo.sql.forge.utils.ExecutorUtils;
 import cn.wubo.sql.forge.utils.MetaDataUtils;
@@ -8,9 +10,11 @@ import jakarta.validation.Valid;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 
-public record CalciteExcutor(String model) implements IExecutor {
+public record CalciteExcutor(String model,
+                             SqlForgeProperties properties) implements IExecutor {
 
     @Override
     public String getExecutorName() {
@@ -41,9 +45,23 @@ public record CalciteExcutor(String model) implements IExecutor {
     }
 
     @Override
-    public TreeNode<?> getMetaData() throws SQLException {
+    public TreeNode<DatabaseInfo> getMetaDataTree() throws SQLException {
         try (Connection connection = CalciteExcutorUtils.getConnection(model)) {
-            return MetaDataUtils.getMetaData(connection);
+            return MetaDataUtils.getMetaDataTree(connection, properties.getCalcite().getSchemata());
+        }
+    }
+
+    @Override
+    public DatabaseInfo getMetaDataDatabase() throws SQLException {
+        try (Connection connection = CalciteExcutorUtils.getConnection(model)) {
+            return MetaDataUtils.getDatabase(connection);
+        }
+    }
+
+    @Override
+    public List<EntireTableInfo> getMetaDataTables() throws SQLException {
+        try (Connection connection = CalciteExcutorUtils.getConnection(model)) {
+            return MetaDataUtils.getMetaDataTables(connection, properties.getCalcite().getSchemata());
         }
     }
 }
