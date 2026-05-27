@@ -1,0 +1,1 @@
+import{Bs as e,Ls as t,li as n,qs as r,zs as i}from"./cxd-TPozrMIt.js";import{DateControlRenderer as a}from"./InputDate-CgQxceU-.js";r();var o=function(r){e(o,r);function o(){return r!==null&&r.apply(this,arguments)||this}return o.defaultProps=t(t({},a.defaultProps),{embed:!0}),o=i([n({type:`calendar`})],o),o}(a);export{o as CalendarRenderer};
