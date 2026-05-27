@@ -1,0 +1,1 @@
+import{Bs as e,ht as t,li as n,qs as r,zs as i}from"./cxd-TPozrMIt.js";r();var a=function(t){e(r,t);function r(){return t!==null&&t.apply(this,arguments)||this}return r=i([n({type:`button-group`})],r),r}(t);export{a as ButtonGroupRenderer,t as default};
