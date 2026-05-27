@@ -4,22 +4,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.gitee.wb04307201</groupId>
+        <groupId>io.github.wb04307201</groupId>
         <artifactId>sql-forge-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
-
     <artifactId>sql-forge-calcite-autoconfigure</artifactId>
-
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+    <name>sql-forge-calcite-autoconfigure</name>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>com.gitee.wb04307201</groupId>
+            <groupId>io.github.wb04307201</groupId>
             <artifactId>sql-forge-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -34,7 +29,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.gitee.wb04307201</groupId>
+            <groupId>io.github.wb04307201</groupId>
             <artifactId>sql-forge-spring-boot-starter</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

@@ -37,21 +37,21 @@ sql-forge-web-spring-boot-starter          ← 依赖基础starter + console静�
 ```xml
 <!-- 基础数据库操作 (必须) -->
 <dependency>
-    <groupId>com.gitee.wb04307201</groupId>
+    <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
     <version>...</version>
 </dependency>
 
 <!-- Calcite 跨库联邦查询 (可选) -->
 <dependency>
-    <groupId>com.gitee.wb04307201</groupId>
+    <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
     <version>...</version>
 </dependency>
 
 <!-- Amis 模板 + Web Console (可选) -->
 <dependency>
-    <groupId>com.gitee.wb04307201</groupId>
+    <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
     <version>...</version>
 </dependency>

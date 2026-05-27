@@ -4,40 +4,47 @@
   English | <a href="README.zh-CN.md">中文</a>
 </div>
 
-> **SQL Workshop** is not just an ORM framework, but a complete database-based solution that provides:
-> - Basic database support
-> - Cross-database federated queries
-> - JSON-based database CRUD operations
-> - Chain operations for entity objects
-> - SQL template engine
-> - Amis low-code visual editing and template management
-> - Web console
+> **SQL Workshop** — a Spring Boot database framework providing JSON CRUD API, type-safe entity operations, SQL template engine, Apache Calcite cross-database federated queries, and Amis low-code visual management. Ready to use, import on demand.
 
-[![](https://jitpack.io/v/com.gitee.wb04307201/sql-forge.svg)](https://jitpack.io/#com.gitee.wb04307201/sql-forge)
+![Maven Central](https://img.shields.io/maven-central/v/io.github.wb04307201/sql-forge-spring-boot-starter?style=flat-square)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
 [![fork](https://gitee.com/wb04307201/sql-forge/badge/fork.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
 [![star](https://img.shields.io/github/stars/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)
 [![fork](https://img.shields.io/github/forks/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)  
-![MIT](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
+![Apache-2.0](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
 
-## Usage
+## Quick Start
+
 ### Import Dependencies
-Add JitPack repository
+
+Import the starters you need:
+
 ```xml
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
-</repositories>
+<!-- Core database operations (required) -->
+<dependency>
+    <groupId>io.github.wb04307201</groupId>
+    <artifactId>sql-forge-spring-boot-starter</artifactId>
+    <version>1.5.9</version>
+</dependency>
+
+<!-- Calcite cross-database federated queries (optional) -->
+<dependency>
+    <groupId>io.github.wb04307201</groupId>
+    <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
+    <version>1.5.9</version>
+</dependency>
+
+<!-- Amis templates + Web Console (optional) -->
+<dependency>
+    <groupId>io.github.wb04307201</groupId>
+    <artifactId>sql-forge-web-spring-boot-starter</artifactId>
+    <version>1.5.9</version>
+</dependency>
 ```
 
+For `@Id`, `@Table`, `@Column` annotations in the Entity module, additionally import:
+
 ```xml
-<dependency>
-    <groupId>com.gitee.wb04307201.sql-forge</groupId>
-    <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.5.8</version>
-</dependency>
 <dependency>
     <groupId>jakarta.persistence</groupId>
     <artifactId>jakarta.persistence-api</artifactId>
@@ -45,51 +52,80 @@ Add JitPack repository
 </dependency>
 ```
 
-## Features
+## Starter Overview
 
-### SQL Executor
-#### database - Project Database
-Directly references the data source already configured in the Spring project
+| Starter | Description |
+|---------|-------------|
+| **sql-forge-spring-boot-starter** | Core starter: database executor, JSON CRUD API, type-safe entity operations (Entity), SQL template engine, Record operation aspects |
+| **sql-forge-calcite-spring-boot-starter** | Apache Calcite-based cross-database federated query executor for MySQL, PostgreSQL, and more |
+| **sql-forge-web-spring-boot-starter** | Amis low-code template management API, Web Console UI, user/role/permission authentication |
+
+---
+
+## 1. sql-forge-spring-boot-starter (Core Starter)
+
+Provides core database capabilities including executor management, JSON CRUD API, Entity chain operations, SQL template engine, and Record aspect extensions.
+
+### 1.1 SQL Executor
+
+`sql-forge-spring-boot-starter` automatically registers an executor named `database`, directly using the DataSource already configured in your Spring project.
+
 ```yaml
 sql:
   forge:
     schemata:  # Configure schema
       - PUBLIC
 ```
-#### calcite - Apache Calcite Cross-Database Federated Query
-Enable calcite and specify Apache Calcite data source information
+
+#### Custom Executor
+
+Implement the [IExecutor](sql-forge-core/src/main/java/cn/wubo/sql/forge/IExecutor.java) interface and register it as a Spring Bean to extend with custom executors.
+
+```java
+@Component
+public class MyCustomExecutor implements IExecutor {
+    @Override
+    public String getExecutorName() {
+        return "myCustom";
+    }
+    // ... implement other methods
+}
+```
+
+### 1.2 Direct Database API
+
+Provides the ability to execute SQL directly (disabled by default, must be manually enabled).
+
 ```yaml
 sql:
   forge:
-    calcite:
-      enabled: true
-      configuration: classpath:model.json
-      schemata: # Configure schema
-        - MYSQL
-        - POSTGRES
+    api:
+      database:
+        enabled: true       # Enable direct database API
+        select-only: true   # true=SELECT only, false=allow all operations
 ```
-#### Custom Extension
-Extend [IExecutor.java](sql-forge-core/src/main/java/cn/wubo/sql/forge/IExecutor.java) to implement custom executors
 
-### Json API Module
-Allows frontend to operate the database without writing backend code. Describes the required data structure and operations through `JSON` format, and the backend automatically generates corresponding `SQL` execution and returns results.
+- `POST /sql/forge/api/database/execute?executorName=database` - Execute SQL
+
+### 1.3 JSON CRUD API
+
+Allows frontend to operate the database without writing backend code — describe the desired data structure and operations via `JSON`, and the backend automatically generates and executes the corresponding `SQL`.
 
 - **Request Path**: `sql/forge/api/json/{method}/{tableName}?executorName={executorName}`
 - **Request Method**: `POST`
 - **Content Type**: `application/json`
 - **Path Parameters**:
-  - `{method}`: Operation method type (delete, insert, select, update)
+  - `{method}`: Operation type (delete, insert, select, selectPage, update)
   - `{tableName}`: Database table name
-  - `{executorName}`: Database executor name, defaults to database (project database), calcite (Apache Calcite cross-database federated query), supports custom extensions. If not provided, defaults to database
+  - `{executorName}`: Executor name, defaults to `database` if not provided
 
-#### delete Method
+#### delete method
 
-#### Request Format
 ```json
 {
   "@where": [
     {
-      "column": "column_name",
+      "column": "field_name",
       "condition": "condition_type",
       "value": "value"
     }
@@ -100,16 +136,15 @@ Allows frontend to operate the database without writing backend code. Describes 
 }
 ```
 
-#### Parameter Description
-- `@where`: Delete condition array, each condition contains:
+**Parameters**
+- `@where`: Delete condition array
   - column: Field name to match
   - condition: Condition type (EQ, NOT_EQ, GT, LT, GTEQ, LTEQ, LIKE, NOT_LIKE, LEFT_LIKE, RIGHT_LIKE, BETWEEN, NOT_BETWEEN, IN, NOT_IN, IS_NULL, IS_NOT_NULL)
   - value: Value to match
-- `@with_select`: Optional query condition for executing a query after deletion
+- `@with_select`: Optional, execute a query after deletion
 
-#### insert Method
+#### insert method
 
-#### Request Format
 ```json
 {
   "@set": {
@@ -117,18 +152,17 @@ Allows frontend to operate the database without writing backend code. Describes 
     "field2": "value2"
   },
   "@with_select": {
-    // Query JSON after deletion
+    // Query JSON after insertion
   }
 }
 ```
 
-#### Parameter Description
+**Parameters**
 - `@set`: Key-value pairs of fields and values to insert, at least one field required
-- `@with_select`: Optional query condition for executing a query after insertion
+- `@with_select`: Optional, execute a query after insertion
 
-#### select Method
+#### select method
 
-#### Request Format
 ```json
 {
   "@column": ["field1", "field2"],
@@ -141,7 +175,7 @@ Allows frontend to operate the database without writing backend code. Describes 
   ],
   "@join": [
     {
-      "type": "JOIN_type",
+      "type": "JOIN type",
       "joinTable": "join_table_name",
       "on": "join_condition"
     }
@@ -152,17 +186,16 @@ Allows frontend to operate the database without writing backend code. Describes 
 }
 ```
 
-##### Parameter Description
-- `@column`: Array of fields to query, if empty queries all fields
+**Parameters**
+- `@column`: Array of fields to query, queries all fields if empty
 - `@where`: Query condition array
-- `@join`: Join query condition array
+- `@join`: Join condition array
 - `@order`: Sort field array
 - `@group`: Group by field array
 - `@distince`: Whether to deduplicate
 
-#### selectPage Method
+#### selectPage method
 
-#### Request Format
 ```json
 {
   "@column": ["field1", "field2"],
@@ -179,7 +212,7 @@ Allows frontend to operate the database without writing backend code. Describes 
   },
   "@join": [
     {
-      "type": "JOIN_type",
+      "type": "JOIN type",
       "joinTable": "join_table_name",
       "on": "join_condition"
     }
@@ -189,19 +222,16 @@ Allows frontend to operate the database without writing backend code. Describes 
 }
 ```
 
-##### Parameter Description
-- `@column`: Array of fields to query, if empty queries all fields
+**Parameters**
+- `@column`: Array of fields to query, queries all fields if empty
 - `@where`: Query condition array
-- `@page` Pagination parameters
-  - pageIndex: Page number (starting from 0)
-  - pageSize: Page size
-- `@join`: Join query condition array
+- `@page`: Pagination parameters (pageIndex starts from 0, pageSize is page size)
+- `@join`: Join condition array
 - `@order`: Sort field array
 - `@distince`: Whether to deduplicate
 
-#### update Method
+#### update method
 
-##### Request Format
 ```json
 {
   "@set": {
@@ -216,18 +246,20 @@ Allows frontend to operate the database without writing backend code. Describes 
     }
   ],
   "@with_select": {
-    // Query JSON after deletion
+    // Query JSON after update
   }
 }
 ```
 
-##### Parameter Description
-- `@set`: Key-value pairs of fields and new values to update, at least one field required
-- `@where`: Update condition array, specifies which records to update
-- `@with_select`: Optional query condition for executing a query after update
+**Parameters**
+- `@set`: Key-value pairs of fields and new values, at least one field required
+- `@where`: Update condition array
+- `@with_select`: Optional, execute a query after update
 
 #### Examples
+
 1. Query
+
 ```http request
 POST http://localhost:8080/sql/forge/api/json/select/orders o
 Content-Type: application/json
@@ -284,72 +316,28 @@ Content-Type: application/json
   ],
   "@order": [
     "o.order_date"
-  ],
-  "@group": null,
-  "@distince": false
+  ]
 }
 ```
 
 2. Paginated Query
+
+Simply add the `@page` parameter to a query JSON:
+
 ```http request
 POST http://localhost:8080/sql/forge/api/json/selectPage/orders o
 Content-Type: application/json
 
 {
-  "@column": [
-    "u.username",
-    "sex.item_name             AS sex_name",
-    "o.total_amount",
-    "p.name               AS product_name",
-    "categories.item_name AS product_categories",
-    "oi.unit_price",
-    "oi.quantity",
-    "p.price"
-  ],
-  "@where": [
-    {
-      "column": "sex.dict_code",
-      "condition": "EQ",
-      "value": "sex"
-    },
-    {
-      "column": "categories.dict_code",
-      "condition": "EQ",
-      "value": "categories"
-    }
-  ],
+  "@column": ["o.total_amount", "p.name AS product_name"],
   "@join": [
     {
       "type": "JOIN",
-      "joinTable": "users u",
-      "on": "o.user_id = u.id"
-    },
-    {
-      "type": "JOIN",
-      "joinTable": "sys_dict_items sex",
-      "on": "u.dict_sex = sex.item_code"
-    },
-    {
-      "type": "JOIN",
-      "joinTable": "order_items oi",
-      "on": "o.id = oi.order_id"
-    },
-    {
-      "type": "JOIN",
       "joinTable": "products p",
-      "on": "oi.product_id = p.id"
-    },
-    {
-      "type": "JOIN",
-      "joinTable": "sys_dict_items categories",
-      "on": "p.dict_categories = categories.item_code"
+      "on": "o.product_id = p.id"
     }
   ],
-  "@order": [
-    "o.order_date"
-  ],
-  "@group": null,
-  "@distince": false,
+  "@order": ["o.order_date"],
   "@page": {
     "pageIndex": 0,
     "pageSize": 5
@@ -358,6 +346,7 @@ Content-Type: application/json
 ```
 
 3. Insert
+
 ```http request
 POST http://localhost:8080/sql/forge/api/json/insert/users
 Content-Type: application/json
@@ -369,23 +358,19 @@ Content-Type: application/json
     "email": "wb04307201@gitee.com"
   },
   "@with_select": {
-    "@column": null,
     "@where": [
       {
         "column": "id",
         "condition": "EQ",
         "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
       }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
+    ]
   }
 }
 ```
 
 4. Update
+
 ```http request
 POST http://localhost:8080/sql/forge/api/json/update/users
 Content-Type: application/json
@@ -402,22 +387,19 @@ Content-Type: application/json
     }
   ],
   "@with_select": {
-    "@column": null,
     "@where": [
       {
         "column": "id",
         "condition": "EQ",
         "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
       }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
+    ]
   }
 }
 ```
+
 5. Delete
+
 ```http request
 POST http://localhost:8080/sql/forge/api/json/delete/users
 Content-Type: application/json
@@ -431,26 +413,23 @@ Content-Type: application/json
     }
   ],
   "@with_select": {
-    "@column": null,
     "@where": [
       {
         "column": "id",
         "condition": "EQ",
         "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
       }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
+    ]
   }
 }
 ```
 
-#### Before Method Execution Aspect
-You can customize JSON adjustments before method execution by implementing [IBeforeRecordExecutor.java](sql-forge-record/src/main/java/cn/wubo/sql/forge/record/IBeforeRecordExecutor.java) interface to achieve password encryption, automatic timestamp updates, access control, logging, auditing, etc.
+#### Pre-execution Aspects
 
-For example, implementing logging on Insert:
+Customize JSON adjustments before method execution by implementing the [IBeforeRecordExecutor](sql-forge-record/src/main/java/cn/wubo/sql/forge/record/IBeforeRecordExecutor.java) interface — for password encryption, auto-timestamps, access control, logging, auditing, etc.
+
+For example, logging on Insert:
+
 ```java
 @Slf4j
 @Component
@@ -469,27 +448,28 @@ public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
 ```
 
 #### Configuration
-Can be disabled via `sql.forge.api.json.enabled=false`
 
-### SQL Template API Module
-Provides `SQL` template engine functionality, supporting template syntax such as conditional judgments and loops, dynamically generates `SQL` execution based on parameters and returns results.
-- **API Template Management**: Provides management functions for API templates including storage, query, deletion, etc.
-- **Templated API Execution**: Supports executing predefined API templates through template ID and parameters
+Can be disabled via `sql.forge.api.json.enabled=false`.
 
-#### Template Management Interfaces
+### 1.4 SQL Template Engine
 
-- `PUT /sql/forge/api/template/sql` - Save/Update SQL Template
+Provides SQL template functionality supporting conditionals (`<if>`), loops (`<foreach>`), and variable binding (`#{var}`), dynamically generating and executing SQL based on parameters.
+
+#### Template Management Endpoints
+
+- `PUT /sql/forge/api/template/sql` - Save/Update SQL template
   - id: Template ID
-  - executorName: Executor name, defaults to database (project database), calcite (Apache Calcite cross-database federated query), supports custom extensions
+  - executorName: Executor name, defaults to `database`
   - context: Template content
-- `GET /sql/forge/api/template/sql/{id}` - Get SQL Template by ID
-- `GET /sql/forge/api/template/sql` - Get SQL Template List
-- `DELETE /sql/forge/api/template/{id}` - Delete SQL Template by ID
-- `POST /sql/forge/api/template/sql/{id}` - Execute SQL Template by ID
-  - Template parameters Map
+- `GET /sql/forge/api/template/sql/{id}` - Get SQL template by ID
+- `GET /sql/forge/api/template/sql` - Get SQL template list
+- `DELETE /sql/forge/api/template/sql/{id}` - Delete SQL template by ID
+- `POST /sql/forge/api/template/sql/{id}` - Execute SQL template by ID (Body is a parameter Map)
 
 #### Example
+
 Template configuration:
+
 ```http request
 PUT http://localhost:8080/sql/forge/api/template/sql
 content-type: application/json
@@ -503,17 +483,19 @@ content-type: application/json
 ```
 
 Execute template:
+
 ```http request
-POST http://localhost:8080/sql/forge/api/template/sql-template-database
+POST http://localhost:8080/sql/forge/api/template/sql/sql-template-database
 content-type: application/json
 
 {
-"name":"alice",
-"ids":null
+  "name": "alice",
+  "ids": null
 }
 ```
 
 Response:
+
 ```json
 [
   {
@@ -525,63 +507,55 @@ Response:
 ]
 ```
 
-#### Configuration
-Can be disabled via `sql.forge.api.template.sql.enabled=false`
+#### Persistent Templates
 
-#### Persistent Template
-Extend [ITemplateSqlStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) to implement your own template service
-
-### Amis Template API Module
-Use [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) together with **Json API** module, **Template API** module, and **Calcite API** module to quickly build web pages.
-
-#### Template Management Interfaces
-
-- `PUT /sql/forge/api/template/amis` - Save New API Template
-  - id: Template ID
-  - context: Template content
-- `GET /sql/forge/api/template/amis/{id}` - Get Template by ID
-- `GET /sql/forge/api/template/amis` - Get Template List
-- `DELETE /sql/forge/api/template/amis{id}` - Delete Template by ID
-
-#### Example
-Template configuration:
-```http request
-PUT http://localhost:8080/sql/forge/amis/template
-content-type: application/json
-
-{
-    "id": "amis-template-users",
-    "context": "{\r\n  \"type\": \"page\",\r\n  \"body\": {\r\n    \"type\": \"crud\",\r\n    \"id\": \"crud_table\",\r\n    \"api\": {\r\n      \"method\": \"post\",\r\n      \"url\": \"/sql/forge/api/json/selectPage/USERS\",\r\n      \"data\": {\r\n        \"@column\": [\r\n          \"USERS.ID\",\r\n          \"USERS.USERNAME\",\r\n          \"sex.item_name as SEX\",\r\n          \"USERS.EMAIL\"\r\n        ],\r\n        \"@join\": [\r\n          {\r\n            \"type\": \"LEFT_OUTER_JOIN\",\r\n            \"joinTable\": \"sys_dict_items sex\",\r\n            \"on\": \"USERS.DICT_SEX = sex.item_code\"\r\n          }\r\n        ],\r\n        \"@where\": [\r\n          {\r\n            \"column\": \"USERS.USERNAME\",\r\n            \"condition\": \"LIKE\",\r\n            \"value\": \"${USERNAME | default:undefined}\"\r\n          },\r\n          {\r\n            \"column\": \"USERS.DICT_SEX\",\r\n            \"condition\": \"IN\",\r\n            \"value\": \"${SEX | default:undefined | split}\"\r\n          },\r\n          {\r\n            \"column\": \"USERS.EMAIL\",\r\n            \"condition\": \"LIKE\",\r\n            \"value\": \"${EMAIL | default:undefined}\"\r\n          },\r\n          {\r\n            \"column\": \"sex.dict_code\",\r\n            \"condition\": \"EQ\",\r\n            \"value\": \"sex\"\r\n          }\r\n        ],\r\n        \"@order\": [\r\n          \"${default(orderBy && orderDir ? (orderBy + ' ' + orderDir):'',undefined)}\"\r\n        ],\r\n        \"@page\": {\r\n          \"pageIndex\": \"${page - 1}\",\r\n          \"pageSize\": \"${perPage}\"\r\n        }\r\n      }\r\n    },\r\n    \"headerToolbar\": [\r\n      {\r\n        \"label\": \"Add\",\r\n        \"type\": \"button\",\r\n        \"icon\": \"fa fa-plus\",\r\n        \"level\": \"primary\",\r\n        \"actionType\": \"drawer\",\r\n        \"drawer\": {\r\n          \"title\": \"Add Form\",\r\n          \"body\": {\r\n            \"type\": \"form\",\r\n            \"api\": {\r\n              \"method\": \"post\",\r              \"url\": \"/sql/forge/api/json/insert/USERS\",\r\n              \"data\": {\r\n                \"@set\": {\r\n                  \"ID\": \"${ID | default:undefined}\",\r\n                  \"USERNAME\": \"${USERNAME | default:undefined}\",\r\n                  \"DICT_SEX\": \"${DICT_SEX | default:undefined}\",\r\n                  \"EMAIL\": \"${EMAIL | default:undefined}\"\r\n                }\r\n              }\r\n            },\r\n            \"onEvent\": {\r\n              \"submitSucc\": {\r\n                \"actions\": [\r\n                  {\r\n                    \"actionType\": \"reload\",\r\n                    \"componentId\": \"crud_table\"\r\n                  }\r\n                ]\r\n              }\r\n            },\r\n            \"body\": [\r\n              {\r\n                \"type\": \"uuid\",\r\n                \"id\": \"insert-ID\",\r\n                \"name\": \"ID\"\r\n              },\r\n              {\r\n                \"type\": \"input-text\",\r\n                \"name\": \"USERNAME\",\r\n                \"label\": \"Username\",\r\n                \"maxLength\": 50,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-USERNAME\"\r\n              },\r\n              {\r\n                \"type\": \"select\",\r\n                \"name\": \"DICT_SEX\",\r\n                \"label\": \"Gender\",\r\n                \"maxLength\": 100,\r\n                \"source\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/select/sys_dict_items\",\r\n                  \"data\": {\r\n                    \"@column\": [\r\n                      \"item_code\",\r\n                      \"item_name\"\r\n                    ],\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"dict_code\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"sex\"\r\n                      }\r\n                    ]\r\n                  },\r\n                  \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n                },\r\n                \"clearable\": true,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-SEX\"\r\n              },\r\n              {\r\n                \"type\": \"input-text\",\r\n                \"name\": \"EMAIL\",\r\n                \"label\": \"User Email Address\",\r\n                \"maxLength\": 100,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-EMAIL\"\r\n              }\r\n            ]\r\n          }\r\n        }\r\n      },\r\n      \"bulkActions\",\r\n      {\r\n        \"type\": \"columns-toggler\",\r\n        \"draggable\": true,\r\n        \"align\": \"right\"\r\n      },\r\n      {\r\n        \"type\": \"export-excel\",\r\n        \"label\": \"Export\",\r\n        \"icon\": \"fa fa-file-excel\",\r\n        \"api\": {\r\n          \"method\": \"post\",\r\n          \"url\": \"/sql/forge/api/json/select/USERS\",\r\n          \"data\": {\r\n            \"@column\": [\r\n              \"USERS.ID\",\r\n              \"USERS.USERNAME\",\r\n              \"sex.item_name as SEX\",\r\n              \"USERS.EMAIL\"\r\n            ],\r\n            \"@join\": [\r\n              {\r\n                \"type\": \"LEFT_OUTER_JOIN\",\r\n                \"joinTable\": \"sys_dict_item sex\",\r\n                \"on\": \"USERS.DICT_SEX = sex.item_code\"\r\n              }\r\n            ],\r\n            \"@where\": [\r\n              {\r\n                \"column\": \"USERS.USERNAME\",\r\n                \"condition\": \"LIKE\",\r\n                \"value\": \"${USERNAME | default:undefined}\"\r\n              },\r\n              {\r\n                \"column\": \"USERS.DICT_SEX\",\r\n                \"condition\": \"IN\",\r\n                \"value\": \"${DICT_SEX | default:undefined | split}\"\r\n              },\r\n              {\r\n                \"column\": \"USERS.EMAIL\",\r\n                \"condition\": \"LIKE\",\r\n                \"value\": \"${EMAIL | default:undefined}\"\r\n              },\r\n              {\r\n                \"column\": \"sex.dict_code\",\r\n                \"condition\": \"EQ\",\r\n                \"value\": \"sex\"\r\n              }\r\n            ]\r\n          }\r\n        },\r\n        \"align\": \"right\"\r\n      }\r\n    ],\r\n    \"footerToolbar\": [\r\n      \"statistics\",\r\n      {\r\n        \"type\": \"pagination\",\r\n        \"layout\": \"total,perPage,pager,go\"\r\n      }\r\n    ],\r\n    \"bulkActions\": [\r\n      {\r\n        \"label\": \"Batch Delete\",\r\n        \"icon\": \"fa fa-trash\",\r\n        \"actionType\": \"ajax\",\r\n        \"api\": {\r\n          \"method\": \"post\",\r\n          \"url\": \"/sql/forge/api/json/delete/USERS\",\r\n          \"data\": {\r\n            \"@where\": [\r\n              {\r\n                \"column\": \"ID\",\r\n                \"condition\": \"IN\",\r\n                \"value\": \"${ids | split}\"\r\n              }\r\n            ]\r\n          }\r\n        },\r\n        \"confirmText\": \"Are you sure you want to batch delete?\"\r\n      }\r\n    ],\r\n    \"keepItemSelectionOnPageChange\": true,\r\n    \"labelTpl\": \"${USERNAME}\",\r\n    \"autoFillHeight\": true,\r\n    \"autoGenerateFilter\": true,\r\n    \"showIndex\": true,\r\n    \"primaryField\": \"ID\",\r\n    \"columns\": [\r\n      {\r\n        \"name\": \"ID\",\r\n        \"hidden\": true\r\n      },\r\n      {\r\n        \"name\": \"USERNAME\",\r\n        \"label\": \"Username\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"input-text\",\r\n          \"name\": \"USERNAME\",\r\n          \"label\": \"Username\",\r\n          \"maxLength\": 50,\r\n          \"placeholder\": \"Enter username\"\r\n        }\r\n      },\r\n      {\r\n        \"name\": \"SEX\",\r\n        \"label\": \"Gender\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"select\",\r\n          \"name\": \"SEX\",\r\n          \"label\": \"Gender\",\r\n          \"maxLength\": 100,\r\n          \"placeholder\": \"Enter gender\",\r\n          \"multiple\": true,\r\n          \"source\": {\r\n            \"method\": \"post\",\r\n            \"url\": \"/sql/forge/api/json/select/sys_dict_items\",\r\n            \"data\": {\r\n              \"@column\": [\r\n                \"item_code\",\r\n                \"item_name\"\r\n              ],\r\n              \"@where\": [\r\n                {\r\n                  \"column\": \"dict_code\",\r\n                  \"condition\": \"EQ\",\r\n                  \"value\": \"sex\"\r\n                }\r\n              ]\r\n            },\r\n            \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n          },\r\n          \"clearable\": true\r\n        }\r\n      },\r\n      {\r\n        \"name\": \"EMAIL\",\r\n        \"label\": \"User Email Address\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"input-text\",\r\n          \"name\": \"EMAIL\",\r\n          \"label\": \"User Email Address\",\r\n          \"maxLength\": 100,\r\n          \"placeholder\": \"Enter user email address\"\r\n        }\r\n      },\r\n      {\r\n        \"type\": \"operation\",\r\n        \"label\": \"Operations\",\r\n        \"buttons\": [\r\n          {\r\n            \"label\": \"Edit\",\r\n            \"type\": \"button\",\r\n            \"icon\": \"fa fa-pen-to-square\",\r\n            \"actionType\": \"drawer\",\r\n            \"drawer\": {\r\n              \"title\": \"Edit Form\",\r\n              \"body\": {\r\n                \"type\": \"form\",\r\n                \"initApi\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/select/USERS\",\r\n                  \"data\": {\r\n                    \"@column\": [\r\n                      \"USERS.ID\",\r\n                      \"USERS.USERNAME\",\r\n                      \"USERS.SEX\",\r\n                      \"USERS.EMAIL\"\r\n                    ],\r\n                    \"@join\": [\r\n                      {\r\n                        \"type\": \"LEFT_OUTER_JOIN\",\r\n                        \"joinTable\": \"sys_dict_item sex_a814d446\",\r\n                        \"on\": \"USERS.SEX = sex_a814d446.item_code\"\r\n                      }\r\n                    ],\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"USERS.ID\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"${ID}\"\r\n                      }\r\n                    ]\r\n                  },\r\n                  \"responseData\": {\r\n                    \"&\": \"${items | first}\"\r\n                  }\r\n                },\r\n                \"api\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/update/USERS\",\r\n                  \"data\": {\r\n                    \"@set\": {\r\n                      \"ID\": \"${ID}\",\r\n                      \"USERNAME\": \"${USERNAME}\",\r\n                      \"SEX\": \"${SEX}\",\r\n                      \"EMAIL\": \"${EMAIL}\"\r\n                    },\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"USERS.ID\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"${ID}\"\r\n                      }\r\n                    ]\r\n                  }\r\n                },\r\n                \"body\": [\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"ID\",\r\n                    \"hidden\": true,\r\n                    \"id\": \"update-ID\"\r\n                  },\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"USERNAME\",\r\n                    \"label\": \"Username\",\r\n                    \"maxLength\": 50,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-USERNAME\"\r\n                  },\r\n                  {\r\n                    \"type\": \"select\",\r\n                    \"name\": \"SEX\",\r\n                    \"label\": \"Gender\",\r\n                    \"maxLength\": 100,\r\n                    \"source\": {\r\n                      \"method\": \"post\",\r\n                      \"url\": \"/sql/forge/api/json/select/sys_dict_item\",\r\n                      \"data\": {\r\n                        \"@column\": [\r\n                          \"item_code\",\r\n                          \"item_name\"\r\n                        ],\r\n                        \"@where\": [\r\n                          {\r\n                            \"column\": \"dict_code\",\r\n                            \"condition\": \"EQ\",\r\n                            \"value\": \"sex\"\r\n                          }\r\n                        ]\r\n                      },\r\n                      \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n                    },\r\n                    \"clearable\": true,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-SEX\"\r\n                  },\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"EMAIL\",\r\n                    \"label\": \"User Email Address\",\r\n                    \"maxLength\": 100,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-EMAIL\"\r\n                  }\r\n                ]\r\n              }\r\n            }\r\n          },\r\n          {\r\n            \"label\": \"Delete\",\r\n            \"type\": \"button\",\r\n            \"icon\": \"fa fa-minus\",\r\n            \"actionType\": \"ajax\",\r\n            \"level\": \"danger\",\r\n            \"confirmText\": \"Are you sure you want to delete?\",\r\n            \"api\": {\r\n              \"method\": \"post\",\r\n              \"url\": \"/sql/forge/api/json/delete/USERS\",\r\n              \"data\": {\r\n                \"@where\": [\r\n                  {\r\n                    \"column\": \"ID\",\r\n                    \"condition\": \"EQ\",\r\n                    \"value\": \"${ID}\"\r\n                  }\r\n                ]\r\n              }\r\n            }\r\n          }\r\n        ],\r\n        \"fixed\": \"right\"\r\n      }\r\n    ]\r\n  }\r\n}"
-}
-```
-
-Rendered page:
-![img.png](img.png)
+Uses in-memory storage by default. Implement [ITemplateSqlStorage](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) for custom persistence.
 
 #### Configuration
-Can be disabled via `sql.forge.api.template.amis.enabled=false`
 
-#### Persistent Template
-Extend [ITemplateAmisStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) to implement your own template service
+Can be disabled via `sql.forge.api.template.sql.enabled=false`.
 
-### Entity Module
-- [Entity.java](sql-forge-entity/src/main/java/cn/eubo/sql/forge/Entity.java) Provides builders for database operations on entity objects, including delete, insert, query, update, save operations, simplifying the `SQL` building process.
-- [EntityExecutor.java](sql-forge-entity/src/main/java/cn/eubo/sql/forge/EntityExecutor.java) Responsible for executing database operations of the **builder**.
+### 1.5 Entity Module
+
+Provides type-safe entity operation builders with compile-time safe field references via Lambda expressions, supporting chain calls.
+
+- [Entity](sql-forge-entity/src/main/java/cn/eubo/sql/forge/Entity.java) — Static utility class providing `select/insert/update/delete/save/selectPage` entry points
+- [EntityExecutor](sql-forge-entity/src/main/java/cn/eubo/sql/forge/EntityExecutor.java) — Executes builder database operations
 
 #### Features
-- Uses chain calls
-- Supports type-safe generic operations
-- Flexibly configures query conditions through builder pattern
+
+- Chain calls for concise code
+- Lambda expressions for compile-time field reference checking
+- Builder pattern for flexible query condition configuration
 - Unified database operation entry point
 
 #### Usage Examples
 
-Assuming there is a user entity class [User](sql-forge-test/src/test/java/cn/wubo/sql/forge/User.java):
+Define a user entity class:
+
+```java
+@Data
+@Table(name = "users")
+public class User {
+    @Id
+    private String id;
+
+    @Column(name = "username")
+    private String username;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "dict_sex")
+    private String dictSex;
+}
+```
+
+Database operations using Entity:
 
 ```java
 @Autowired
-private EntityService entityService;
-
+private EntityExecutor entityExecutor;
 
 // Query operation
 EntitySelect<User> select = Entity.select(User.class)
@@ -589,101 +563,273 @@ EntitySelect<User> select = Entity.select(User.class)
                 .columns(User::getId, User::getUsername, User::getEmail)
                 .orders(User::getUsername)
                 .in(User::getUsername, "alice", "bob");
-List<User> users = entityService.run(select);
-Object key = entityService.run(insert);
+List<User> users = entityExecutor.run(select);
 
 // Paginated query operation
-EntitySelectPage<User> select = Entity.selectPage(User.class)
-        .distinct(true)
+EntitySelectPage<User> selectPage = Entity.selectPage(User.class)
         .columns(User::getId, User::getUsername, User::getEmail)
         .orders(User::getUsername)
-        .in(User::getUsername, "alice", "bob")
-        .page(0, 1);
-SelectPageResult<User> users = entityService.run(select);
+        .page(0, 10);
+SelectPageResult<User> result = entityExecutor.run(selectPage);
 
-// Insert operation  
-EntityInsert<User> insert = Entity.insert(User.class).set(User::getId, id)
+// Insert operation
+EntityInsert<User> insert = Entity.insert(User.class)
+        .set(User::getId, UUID.randomUUID().toString())
         .set(User::getUsername, "wb04307201")
         .set(User::getEmail, "wb04307201@gitee.com");
-int count = entityService.run(update);
+entityExecutor.run(insert);
 
 // Update operation
 EntityUpdate<User> update = Entity.update(User.class)
         .set(User::getEmail, "wb04307201@github.com")
         .eq(User::getId, id);
-int count = entityService.run(update);
+int count = entityExecutor.run(update);
 
 // Delete operation
 EntityDelete<User> delete = Entity.delete(User.class)
         .eq(User::getId, id);
-count = entityService.run(delete);
+count = entityExecutor.run(delete);
 
-// Object save operation (insert or update)
+// Object save (auto-detects insert or update)
 User user = new User();
 user.setUsername("wb04307201");
 user.setEmail("wb04307201@gitee.com");
-user = entityService.run(Entity.save(user));
-user.setEmail("wb04307201@github.com");
-user = entityService.run(Entity.save(user));
+user = entityExecutor.run(Entity.save(user));  // id is null, performs insert
 
-// Object delete operation
-int count = entityService.run(Entity.delete(user));
+user.setEmail("wb04307201@github.com");
+user = entityExecutor.run(Entity.save(user));  // id is not null, performs update
+
+// Object delete
+count = entityExecutor.run(Entity.delete(user));
 ```
 
-#### Query Builder Description
+#### Query Builder Reference
 
-##### 1. Column Selection
-- column(SFunction<T, ?> column) - Select single column
-- columns(SFunction<T, ?>... columns) - Select multiple columns
+**1. Column Selection**
+- `column(SFunction<T, ?> column)` - Select single column
+- `columns(SFunction<T, ?>... columns)` - Select multiple columns
 
-##### 2. Query Conditions
-- eq(SFunction<T, ?> column, Object value) - Equals
-- neq(SFunction<T, ?> column, Object value) - Not equals
-- gt(SFunction<T, ?> column, Object value) - Greater than
-- lt(SFunction<T, ?> column, Object value) - Less than
-- gteq(SFunction<T, ?> column, Object value) - Greater than or equals
-- lteq(SFunction<T, ?> column, Object value) - Less than or equals
-- like(SFunction<T, ?> column, Object value) - Like
-- notLike(SFunction<T, ?> column, Object value) - Not like
-- leftLike(SFunction<T, ?> column, Object value) - Left like
-- rightLike(SFunction<T, ?> column, Object value) - Right like
-- between(SFunction<T, ?> column, Object value1, Object value2) - Between
-- notBetween(SFunction<T, ?> column, Object value1, Object value2) - Not between
-- in(SFunction<T, ?> column, Object... value) - In
-- notIn(SFunction<T, ?> column, Object... value) - Not in
-- isNull(SFunction<T, ?> column) - Is NULL
-- isNotNull(SFunction<T, ?> column) - Is NOT NULL
+**2. Query Conditions**
+- `eq(SFunction<T, ?> column, Object value)` - Equals
+- `neq(SFunction<T, ?> column, Object value)` - Not equals
+- `gt(SFunction<T, ?> column, Object value)` - Greater than
+- `lt(SFunction<T, ?> column, Object value)` - Less than
+- `gteq(SFunction<T, ?> column, Object value)` - Greater than or equals
+- `lteq(SFunction<T, ?> column, Object value)` - Less than or equals
+- `like(SFunction<T, ?> column, Object value)` - Like
+- `notLike(SFunction<T, ?> column, Object value)` - Not like (NOT LIKE)
+- `leftLike(SFunction<T, ?> column, Object value)` - Left like
+- `rightLike(SFunction<T, ?> column, Object value)` - Right like
+- `between(SFunction<T, ?> column, Object value1, Object value2)` - Between
+- `notBetween(SFunction<T, ?> column, Object value1, Object value2)` - Not between
+- `in(SFunction<T, ?> column, Object... value)` - In
+- `notIn(SFunction<T, ?> column, Object... value)` - Not in
+- `isNull(SFunction<T, ?> column)` - Is NULL
+- `isNotNull(SFunction<T, ?> column)` - Is NOT NULL
 
-##### 3. Sorting
-- orderAsc(SFunction<T, ?> column) - Ascending sort
-- orderDesc(SFunction<T, ?> column) - Descending sort
-- orders(SFunction<T, ?>... columns) - Multi-column sorting (default ascending)
+**3. Sorting**
+- `orderAsc(SFunction<T, ?> column)` - Ascending sort
+- `orderDesc(SFunction<T, ?> column)` - Descending sort
+- `orders(SFunction<T, ?>... columns)` - Multi-column sorting (default ascending)
 
-##### 4. Pagination
-- page(Integer pageIndex, Integer pageSize) - Set pagination parameters
+**4. Pagination**
+- `page(Integer pageIndex, Integer pageSize)` - Set pagination parameters
 
-##### 5. Deduplication
-- distinct(Boolean distinct) - Set whether to deduplicate
+**5. Deduplication**
+- `distinct(Boolean distinct)` - Set whether to deduplicate
 
-#### Object Save Operation Builder Description
+#### Object Save Description
 
-Determines primary key field based on `@Id` annotation. If no primary key field exists, throws `IllegalArgumentException`
-- **Insert condition**: Executes insert operation when primary key value is `null`
+Determines primary key field based on `@Id` annotation. Throws `IllegalArgumentException` if no primary key field exists.
+
+- **Insert condition**: Executes insert when primary key value is `null`
   - `String` type primary key: Automatically generates `UUID` as primary key value
   - Other type primary keys: Uses database auto-generated primary key value
-- **Update condition**: Executes update operation when primary key value is not `null`
+- **Update condition**: Executes update when primary key value is not `null`
   - Uses primary key value as update condition
 
-### Console
-Provides a simple web interface for debugging and template management:
-- Database metadata viewing, SQL debugging (disabled by default, enable via configuration `sql.forge.api.database.enabled=true`, only supports queries by default, allow other operations via `sql.forge.api.database.select-only=false`)
-  ![img_1.png](img_1.png)
-- Json API debugging
-  ![img_2.png](img_2.png)
-- SQL Template API template maintenance, debugging
-  ![img_3.png](img_3.png)
-- Amis Template API template maintenance, debugging
-  ![img_4.png](img_4.png)
+> **Note**: To insert a new record with a pre-set primary key value, use `Entity.insert()` instead of `Entity.save()`, because `save()` performs an update when the primary key is not `null`.
+
+---
+
+## 2. sql-forge-calcite-spring-boot-starter (Cross-Database Federated Queries)
+
+Based on [Apache Calcite](https://calcite.apache.org/), enables cross-database federated queries — join data from MySQL, PostgreSQL, and other databases in a single SQL statement.
+
+> Depends on the core starter (`sql-forge-spring-boot-starter`), which is automatically included.
+
+### Configuration
+
+```yaml
+sql:
+  forge:
+    calcite:
+      enabled: true                          # Enable Calcite
+      configuration: classpath:model.json    # Calcite model configuration file path
+      schemata:                              # Configure schema
+        - MYSQL
+        - POSTGRES
+```
+
+`model.json` describes the Calcite data source connection information. Refer to the [Apache Calcite documentation](https://calcite.apache.org/docs/model.html).
+
+### Usage
+
+Once enabled, a `calcite` executor is automatically registered. Use `executorName=calcite` in any API:
+
+```http request
+POST http://localhost:8080/sql/forge/api/json/select/orders?executorName=calcite
+Content-Type: application/json
+
+{
+  "@column": ["o.id", "u.username", "p.name"],
+  "@join": [
+    {
+      "type": "JOIN",
+      "joinTable": "MYSQL_DB.users u",
+      "on": "o.user_id = u.id"
+    },
+    {
+      "type": "JOIN",
+      "joinTable": "POSTGRES_DB.products p",
+      "on": "o.product_id = p.id"
+    }
+  ]
+}
+```
+
+### Configuration
+
+Disabled by default. Enable via `sql.forge.calcite.enabled=true`.
+
+---
+
+## 3. sql-forge-web-spring-boot-starter (Amis + Console)
+
+Provides Amis low-code template management, Web Console UI, and user/role/permission authentication.
+
+> Depends on the core starter (`sql-forge-spring-boot-starter`), which is automatically included.
+
+### 3.1 Amis Template API
+
+Use [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) together with JSON API and SQL Template API to rapidly build web pages.
+
+#### Template Management Endpoints
+
+- `PUT /sql/forge/api/template/amis` - Save/Update Amis template
+  - id: Template ID
+  - name: Template name
+  - description: Template description
+  - context: Amis JSON Schema content
+- `GET /sql/forge/api/template/amis/{id}` - Get template by ID
+- `GET /sql/forge/api/template/amis` - Get template list
+- `DELETE /sql/forge/api/template/amis/{id}` - Delete template by ID
+
+#### Example
+
+```http request
+PUT http://localhost:8080/sql/forge/api/template/amis
+content-type: application/json
+
+{
+    "id": "amis-template-users",
+    "name": "User Management",
+    "context": "{ \"type\": \"page\", \"body\": { \"type\": \"crud\", ... } }"
+}
+```
+
+Rendered page:
+
+![img.png](img.png)
+
+#### Persistent Templates
+
+Uses in-memory storage by default. Implement [ITemplateAmisStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) for custom persistence.
 
 #### Configuration
-Can be disabled via `sql.forge.console.enabled=false`
+
+Can be disabled via `sql.forge.api.template.amis.enabled=false`.
+
+### 3.2 Web Console
+
+Provides a visual web interface at: `/sql/forge/web`
+
+- Database metadata viewing and SQL debugging (requires `sql.forge.api.database.enabled=true`)
+  ![img_1.png](img_1.png)
+- JSON API debugging
+  ![img_2.png](img_2.png)
+- SQL template management and debugging
+  ![img_3.png](img_3.png)
+- Amis template management and debugging
+  ![img_4.png](img_4.png)
+
+### 3.3 User & Permission Authentication
+
+Built-in user management, role management, and session authentication. Uses in-memory storage by default, extensible to database persistence.
+
+#### Authentication Endpoints
+
+- `POST /sql/forge/api/auth/login` - User login
+- `POST /sql/forge/api/auth/logout` - User logout
+- `GET /sql/forge/api/auth/status` - Get current login status
+- `GET /sql/forge/api/auth/user` - Get current user info
+
+#### User Management Endpoints (admin required)
+
+- `GET /sql/forge/api/user` - Get user list
+- `PUT /sql/forge/api/user` - Save/Update user
+- `DELETE /sql/forge/api/user/{id}` - Delete user
+
+#### Role Management Endpoints
+
+- `GET /sql/forge/api/role` - Get role list
+- `PUT /sql/forge/api/role` - Save/Update role (admin required)
+- `DELETE /sql/forge/api/role/{id}` - Delete role (admin required)
+- `GET /sql/forge/api/role-template?role={roleId}` - Get template IDs associated with a role
+- `PUT /sql/forge/api/role-template` - Set role-template associations (admin required)
+- `GET /sql/forge/api/user-role?userId={userId}` - Get role IDs for a user (admin required)
+- `PUT /sql/forge/api/user-role` - Set user-role associations (admin required)
+
+#### Extending Persistent Storage
+
+All storage uses in-memory implementations by default. Replace with database persistence by implementing the following interfaces:
+
+| Interface | Description |
+|-----------|-------------|
+| [IUserStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IUserStorage.java) | User storage |
+| [IUserRoleStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IUserRoleStorage.java) | User-role association storage |
+| [IRoleStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IRoleStorage.java) | Role storage |
+| [IRoleTemplateStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IRoleTemplateStorage.java) | Role-template association storage |
+
+Simply implement the interface and register as a Spring Bean to automatically replace the default implementation (`@ConditionalOnMissingBean`).
+
+#### Configuration
+
+Can be disabled via `sql.forge.console.enabled=false`.
+
+---
+
+## Full Configuration Reference
+
+```yaml
+sql:
+  forge:
+    schemata:                      # Configure schema names
+      - PUBLIC
+    calcite:
+      enabled: true                # Enable Calcite cross-database federated queries
+      configuration: classpath:model.json
+    api:
+      database:
+        enabled: true              # Enable direct database API
+        select-only: true          # true=SELECT only
+      json:
+        enabled: true              # Enable JSON CRUD API (default true)
+      template:
+        sql:
+          enabled: true            # Enable SQL template API (default true)
+        amis:
+          enabled: true            # Enable Amis template API (default true)
+    console:
+      enabled: true                # Enable Web Console (default true)
+```
