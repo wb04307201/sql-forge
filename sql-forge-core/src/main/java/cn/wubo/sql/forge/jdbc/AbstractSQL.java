@@ -12,6 +12,14 @@ import static cn.wubo.sql.forge.enums.LimitingRowsStrategy.ISO;
 import static cn.wubo.sql.forge.enums.LimitingRowsStrategy.OFFSET_LIMIT;
 import static cn.wubo.sql.forge.enums.StatementType.*;
 
+/**
+ * 流式 SQL 构建器抽象基类，支持链式调用构建 SELECT、INSERT、UPDATE、DELETE 语句。
+ * <p>
+ * 灵感来源于 MyBatis SQL Builder，通过泛型 CRTP 模式保证子类链式调用返回正确类型。
+ * </p>
+ *
+ * @param <T> 具体子类类型，用于链式调用返回值
+ */
 public abstract class AbstractSQL<T> {
 
     private final SQLStatement sql = new SQLStatement();

@@ -5,6 +5,9 @@ import cn.wubo.sql.forge.records.SqlScript;
 import java.sql.SQLException;
 import java.util.Map;
 
+/**
+ * SQL 模板执行器，根据模板 ID 加载模板、解析参数并通过执行器执行 SQL。
+ */
 public record TemplateSqlExcutor(
         ITemplateSqlStorage templateStorage,
         ExecutorService executorService

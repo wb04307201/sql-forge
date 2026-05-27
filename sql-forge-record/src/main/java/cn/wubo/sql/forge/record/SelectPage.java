@@ -9,6 +9,16 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
+/**
+ * 分页查询操作记录，在 {@link Select} 基础上增加分页参数。
+ *
+ * @param columns  查询列列表（JSON 属性 {@code @column}）
+ * @param wheres   WHERE 条件列表（JSON 属性 {@code @where}）
+ * @param page     分页参数（JSON 属性 {@code @page}）
+ * @param joins    JOIN 列表（JSON 属性 {@code @join}）
+ * @param orders   ORDER BY 列列表（JSON 属性 {@code @order}）
+ * @param distinct 是否去重（JSON 属性 {@code @distince}）
+ */
 public record SelectPage(
         @JsonProperty("@column")
         List<String> columns,

@@ -14,8 +14,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 按主键删除实体，根据实体的 @Id 注解字段值构建 WHERE 条件。
+ *
+ * @param <T> 实体类型
+ */
 public class EntityDeleteByKey<T> extends AbstractEntity<T, Integer, EntityDeleteByKey<T>> {
 
+    /**
+     * 构造方法。
+     *
+     * @param entityClass 实体类对象
+     */
     public EntityDeleteByKey(Class<T> entityClass) {
         super(entityClass);
     }

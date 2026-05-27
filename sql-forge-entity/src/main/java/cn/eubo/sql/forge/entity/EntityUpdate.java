@@ -15,8 +15,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 类型安全的 UPDATE 构建器，通过 Lambda 表达式指定更新字段和条件。
+ *
+ * @param <T> 实体类型
+ */
 public class EntityUpdate<T> extends AbstractUpdate<T, Integer, EntityUpdate<T>> {
 
+    /**
+     * 构造方法。
+     *
+     * @param entityClass 实体类对象
+     */
     public EntityUpdate(Class<T> entityClass) {
         super(entityClass);
     }

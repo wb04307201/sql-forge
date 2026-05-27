@@ -10,6 +10,9 @@ import org.springframework.web.servlet.function.ServerResponse;
 
 import java.util.Map;
 
+/**
+ * 认证过滤器，拦截需要登录的 API 请求，对白名单路径（登录、静态资源）放行。
+ */
 @RequiredArgsConstructor
 public class AuthFilter implements HandlerFilterFunction<ServerResponse, ServerResponse> {
 

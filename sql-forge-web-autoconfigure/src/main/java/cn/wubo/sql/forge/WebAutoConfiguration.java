@@ -16,6 +16,9 @@ import static org.springframework.web.servlet.function.RequestPredicates.accept;
 import static org.springframework.web.servlet.function.RouterFunctions.route;
 import org.springframework.http.MediaType;
 
+/**
+ * Web 控制台自动配置类，注册 Amis 模板 API、认证鉴权、用户角色管理、Console UI 路由等 Bean。所有存储接口均提供 @ConditionalOnMissingBean 默认内存实现。
+ */
 @AutoConfiguration
 @EnableConfigurationProperties(SqlForgeProperties.class)
 public class WebAutoConfiguration {

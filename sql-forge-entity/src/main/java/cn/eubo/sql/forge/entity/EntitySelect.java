@@ -17,8 +17,18 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 类型安全的 SELECT 构建器，通过 Lambda 表达式指定查询列和条件。
+ *
+ * @param <T> 实体类型
+ */
 public class EntitySelect<T> extends AbstractSelect<T, List<T>, EntitySelect<T>> {
 
+    /**
+     * 构造方法。
+     *
+     * @param entityClass 实体类对象
+     */
     public EntitySelect(Class<T> entityClass) {
         super(entityClass);
     }

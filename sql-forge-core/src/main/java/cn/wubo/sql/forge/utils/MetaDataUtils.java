@@ -16,10 +16,16 @@ import java.util.stream.Collectors;
 
 import static cn.wubo.sql.forge.constant.Constant.NODE_VALUE_TEMPLATE;
 
+/**
+ * 数据库元数据工具类，通过 JDBC {@link DatabaseMetaData} 查询 Schema、表、列、主键、外键、索引等元数据信息。
+ */
 @Slf4j
 @UtilityClass
 public class MetaDataUtils {
 
+    /**
+     * 获取当前数据库产品和版本信息。
+     */
     public DatabaseInfo getDatabase(Connection connection) throws SQLException {
         DatabaseMetaData databaseMetaData = connection.getMetaData();
         return new DatabaseInfo(
@@ -28,6 +34,9 @@ public class MetaDataUtils {
         );
     }
 
+    /**
+     * 获取指定 catalog 下的 Schema 列表。
+     */
     public List<SchemaInfo> getSchemas(Connection connection, String catalog, String schemaPattern) throws SQLException {
         DatabaseMetaData databaseMetaData = connection.getMetaData();
         try (ResultSet rs = databaseMetaData.getSchemas(catalog, schemaPattern)) {
@@ -41,6 +50,9 @@ public class MetaDataUtils {
         }
     }
 
+    /**
+     * 获取数据库支持的表类型列表（如 TABLE、VIEW）。
+     */
     public List<String> getTableTypes(Connection connection) throws SQLException {
         DatabaseMetaData databaseMetaData = connection.getMetaData();
         try (ResultSet rs = databaseMetaData.getTableTypes()) {
@@ -52,6 +64,9 @@ public class MetaDataUtils {
         }
     }
 
+    /**
+     * 获取符合条件的表基本信息列表。
+     */
     public List<TableInfo> getTables(Connection connection, String catalog, String schemaPattern,
                                      String tableNamePattern, String[] types) throws SQLException {
         DatabaseMetaData databaseMetaData = connection.getMetaData();
@@ -69,6 +84,9 @@ public class MetaDataUtils {
         }
     }
 
+    /**
+     * 获取指定表的列信息列表。
+     */
     public List<ColumnInfo> getColumns(Connection connection, String catalog, String schemaPattern,
 
                                        String tableNamePattern, String columnNamePattern) throws SQLException {
@@ -94,6 +112,9 @@ public class MetaDataUtils {
         }
     }
 
+    /**
+     * 获取指定表的主键信息列表，支持复合主键合并。
+     */
     public List<PrimaryKeyInfo> getPrimaryKeys(Connection connection, String catalog, String schema, String table) throws SQLException {
         DatabaseMetaData databaseMetaData = connection.getMetaData();
         try (ResultSet rs = databaseMetaData.getPrimaryKeys(catalog, schema, table)) {
@@ -121,6 +142,9 @@ public class MetaDataUtils {
         }
     }
 
+    /**
+     * 获取指定表的外键（导入键）信息列表。
+     */
     public List<ForeignKeyInfo> getImportedKeys(Connection connection, String catalog, String schema, String table) throws SQLException {
         DatabaseMetaData databaseMetaData = connection.getMetaData();
         try (ResultSet rs = databaseMetaData.getImportedKeys(catalog, schema, table)) {
@@ -139,6 +163,9 @@ public class MetaDataUtils {
         }
     }
 
+    /**
+     * 获取指定表的索引信息列表，支持复合索引列合并。
+     */
     public List<IndexInfo> getIndexInfo(Connection connection, String catalog, String schema, String table,
                                         boolean unique, boolean approximate) throws SQLException {
         DatabaseMetaData databaseMetaData = connection.getMetaData();
@@ -171,6 +198,13 @@ public class MetaDataUtils {
         }
     }
 
+    /**
+     * 构建完整的数据库元数据树（数据库 → Schema → 表类型 → 表 → 列/主键/外键/索引）。
+     *
+     * @param connection 数据库连接
+     * @param schemata   需要过滤的 Schema 名称列表，为空则包含所有
+     * @return 元数据树根节点
+     */
     public TreeNode<DatabaseInfo> getMetaDataTree(Connection connection, List<String> schemata) throws SQLException {
         TreeNode<DatabaseInfo> root = new TreeNode<>();
         DatabaseInfo databaseInfo = getDatabase(connection);
@@ -289,6 +323,9 @@ public class MetaDataUtils {
         return root;
     }
 
+    /**
+     * 获取所有表的基本信息列表（表名、Schema、类型、备注）。
+     */
     public List<EntireTable> getMetaDataTables(Connection connection, List<String> schemata) throws SQLException {
         List<EntireTable> entireTables = new ArrayList<>();
 
@@ -319,6 +356,9 @@ public class MetaDataUtils {
         return entireTables;
     }
 
+    /**
+     * 获取指定表的完整元数据信息（列、主键、外键、索引）。
+     */
     public List<EntireTableInfo> getMetaDataTableInfos(Connection connection, String catalog, String schemaPattern, String tableNamePattern, String tableType, List<String> schemata) throws SQLException {
         List<EntireTableInfo> entireTableInfos = new ArrayList<>();
 

@@ -7,9 +7,18 @@ import lombok.experimental.UtilityClass;
 
 import java.lang.reflect.Field;
 
+/**
+ * 反射工具类，从实体类的 JPA 注解（@Table、@Column、@Id、@Lob、@Transient）中提取表结构信息。
+ */
 @UtilityClass
 public class ReflectionUtils {
 
+    /**
+     * 从实体类中提取表结构信息（表名、列信息、主键等）。
+     *
+     * @param entityClass 实体类
+     * @return 表结构信息
+     */
     public TableStructureInfo extractTableInfo(Class<?> entityClass) {
         TableStructureInfo info = new TableStructureInfo();
 

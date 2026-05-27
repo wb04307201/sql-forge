@@ -13,10 +13,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+/**
+ * Apache Calcite 跨库联邦查询自动配置，当 sql.forge.calcite.enabled=true 时注册 CalciteExcutor Bean。
+ */
 @AutoConfiguration
 @EnableConfigurationProperties(SqlForgeProperties.class)
 public class CalciteAutoConfiguration {
 
+    /**
+     * 创建 Calcite 跨库联邦查询执行器 Bean。
+     * 根据配置的模型 JSON 文件路径加载 Calcite 模型，并初始化 CalciteExcutor 实例。
+     *
+     * @param resourceLoader Spring 资源加载器，用于读取模型配置文件
+     * @param properties     SQL Forge 配置属性
+     * @return Calcite 执行器实例
+     * @throws IOException 模型配置文件不存在或读取失败时抛出
+     */
     @Bean
     @ConditionalOnProperty(name = "sql.forge.calcite.enabled", havingValue = "true")
     public IExecutor calciteExcutor(ResourceLoader resourceLoader, SqlForgeProperties properties) throws IOException {

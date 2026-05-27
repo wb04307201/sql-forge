@@ -24,6 +24,9 @@ import java.util.Map;
 import static org.springframework.web.servlet.function.RequestPredicates.accept;
 import static org.springframework.web.servlet.function.RouterFunctions.route;
 
+/**
+ * SQL Forge 核心自动配置类，注册数据库执行器、Record 执行器、Entity 执行器、模板引擎等基础 Bean，并按配置开关暴露 JSON CRUD、模板 SQL、数据库直连等 API 端点。
+ */
 @EnableCaching
 @AutoConfiguration
 @EnableConfigurationProperties({SqlForgeProperties.class})

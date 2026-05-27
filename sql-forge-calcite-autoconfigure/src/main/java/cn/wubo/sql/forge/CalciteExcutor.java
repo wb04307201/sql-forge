@@ -13,6 +13,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * 基于 Apache Calcite 的跨库联邦查询执行器，仅支持查询操作（executeQuery），不支持插入和更新。执行器名称为 "calcite"。
+ */
 public record CalciteExcutor(String model,
                              SqlForgeProperties properties) implements IExecutor {
 
