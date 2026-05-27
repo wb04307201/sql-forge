@@ -8,14 +8,33 @@ import java.util.regex.*;
 import static cn.wubo.sql.forge.constant.Constant.QUESTION_MARK;
 import static org.springframework.core.log.LogFormatUtils.formatValue;
 
+/**
+ * SQL 模板引擎，支持 XML 风格的 &lt;if&gt;、&lt;foreach&gt; 标签和 #{var} 参数替换，基于 MVEL 表达式求值。
+ */
 public class TemplateSqlEngine {
     private static final Pattern TAG_PATTERN = Pattern.compile("<(\\w+)\\s+([^>]*)>(.*?)</\\1>", Pattern.DOTALL);
     private static final Pattern PARAM_PATTERN = Pattern.compile("#\\{([^}]*)\\}");
 
+    /**
+     * 使用默认占位符模式（{@link GenerationSqlMode#WITH_PLACEHOLDERS}）处理模板。
+     *
+     * @param template SQL 模板字符串，支持 &lt;if&gt;、&lt;foreach&gt; 标签和 #{var} 参数
+     * @param input    模板变量映射
+     * @return 解析后的 SQL 脚本，包含 SQL 语句和参数绑定
+     */
     public SqlScript process(String template, Map<String, Object> input) {
         return process(template, input, GenerationSqlMode.WITH_PLACEHOLDERS);
     }
 
+    /**
+     * 使用指定模式处理模板。
+     *
+     * @param template SQL 模板字符串，支持 &lt;if&gt;、&lt;foreach&gt; 标签和 #{var} 参数
+     * @param input    模板变量映射
+     * @param mode     SQL 生成模式：{@link GenerationSqlMode#WITH_PLACEHOLDERS} 使用 ? 占位符，
+     *                 {@link GenerationSqlMode#WITH_VALUES} 内联字面值
+     * @return 解析后的 SQL 脚本，包含 SQL 语句和参数绑定
+     */
     public SqlScript process(String template, Map<String, Object> input, GenerationSqlMode mode) {
         Context context = new Context(input,mode);
         processTemplate(template, context);

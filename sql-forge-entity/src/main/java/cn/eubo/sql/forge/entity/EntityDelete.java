@@ -12,8 +12,18 @@ import cn.wubo.sql.forge.record.base.Where;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 类型安全的 DELETE 构建器，通过 Lambda 表达式指定删除条件。
+ *
+ * @param <T> 实体类型
+ */
 public class EntityDelete<T> extends AbstractDelete<T, Integer, EntityDelete<T>> {
 
+    /**
+     * 构造方法。
+     *
+     * @param entityClass 实体类对象
+     */
     public EntityDelete(Class<T> entityClass) {
         super(entityClass);
     }

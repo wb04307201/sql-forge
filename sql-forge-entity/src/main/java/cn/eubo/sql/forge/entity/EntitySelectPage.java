@@ -18,8 +18,18 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 类型安全的分页查询构建器，在 EntitySelect 基础上增加分页参数。
+ *
+ * @param <T> 实体类型
+ */
 public class EntitySelectPage<T> extends AbstractSelectPage<T, SelectPageResult<T>, EntitySelectPage<T>> {
 
+    /**
+     * 构造方法。
+     *
+     * @param entityClass 实体类对象
+     */
     public EntitySelectPage(Class<T> entityClass) {
         super(entityClass);
     }

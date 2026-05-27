@@ -5,6 +5,9 @@ import lombok.experimental.UtilityClass;
 import java.sql.*;
 import java.util.Properties;
 
+/**
+ * Calcite 连接工具类，根据 Calcite 模型 JSON 创建 JDBC 连接。
+ */
 @UtilityClass
 public class CalciteExcutorUtils {
 

@@ -9,6 +9,16 @@ import java.util.stream.Collectors;
 
 import static cn.wubo.sql.forge.constant.Constant.*;
 
+/**
+ * WHERE 条件记录，描述单个查询条件（列名 + 比较类型 + 值）。
+ * <p>
+ * 支持 16 种条件类型（EQ、LIKE、BETWEEN、IN 等），自动处理参数化占位符和 null 值跳过。
+ * </p>
+ *
+ * @param column    列名
+ * @param condition 条件比较类型
+ * @param value     条件值
+ */
 public record Where(
         @NotBlank
         String column,

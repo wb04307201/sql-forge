@@ -16,6 +16,15 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * 基于 Spring {@link DataSource} 的默认数据库执行器，执行器名称为 "database"。
+ * <p>
+ * 通过 {@link DataSourceUtils} 管理连接获取与释放，支持 Spring 事务绑定。
+ * </p>
+ *
+ * @param dataSource Spring 数据源
+ * @param properties SQL Forge 配置属性
+ */
 public record DatabaseExecutor(DataSource dataSource,
                                SqlForgeProperties properties) implements IExecutor {
 

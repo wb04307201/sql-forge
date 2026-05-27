@@ -13,8 +13,18 @@ import cn.wubo.sql.forge.enums.ConditionType;
 import java.lang.reflect.Field;
 import java.util.*;
 
+/**
+ * 实体保存（Insert 或 Update），根据主键是否已赋值自动选择插入或更新。
+ *
+ * @param <T> 实体类型
+ */
 public class EntitySave<T> extends AbstractEntity<T, T, EntitySave<T>> {
 
+    /**
+     * 构造方法。
+     *
+     * @param entityClass 实体类对象
+     */
     public EntitySave(Class<T> entityClass) {
         super(entityClass);
     }

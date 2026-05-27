@@ -10,9 +10,19 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ResultSet 工具类，将 {@link java.sql.ResultSet} 转换为 {@link RowMap} 列表。
+ */
 @UtilityClass
 public class ResultSetUtils {
 
+    /**
+     * 将 ResultSet 转换为 RowMap 列表。
+     *
+     * @param rs 查询结果集
+     * @return 行映射列表
+     * @throws SQLException SQL 异常
+     */
     public List<RowMap> resultSetToList(@NonNull ResultSet rs) throws SQLException {
         List<RowMap> list = new ArrayList<>();
         ResultSetMetaData metaData = rs.getMetaData();

@@ -18,6 +18,20 @@ import java.util.Map;
 
 import static cn.wubo.sql.forge.constant.Constant.QUESTION_MARK;
 
+/**
+ * 基于 JSON Record 的 CRUD 执行器，将 {@link Delete}、{@link Insert}、{@link Select}、{@link SelectPage}、{@link Update}
+ * 等操作记录转换为参数化 SQL 并委托给 {@link ExecutorService} 执行。
+ * <p>
+ * 支持通过 {@link IBeforeRecordExecutor} 钩子在执行前对操作进行拦截和增强。
+ * </p>
+ *
+ * @param executorService    执行器服务
+ * @param deleteExecutes     删除操作前置拦截器列表
+ * @param insertExecutes     插入操作前置拦截器列表
+ * @param selectExecutes     查询操作前置拦截器列表
+ * @param selectPageExecutes 分页查询前置拦截器列表
+ * @param updateExecutes     更新操作前置拦截器列表
+ */
 public record RecordExecutor(ExecutorService executorService,
                              List<IBeforeRecordExecutor<Delete>> deleteExecutes,
                              List<IBeforeRecordExecutor<Insert>> insertExecutes,

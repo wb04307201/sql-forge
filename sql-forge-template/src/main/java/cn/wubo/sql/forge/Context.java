@@ -5,6 +5,9 @@ import lombok.Getter;
 
 import java.util.*;
 
+/**
+ * 模板执行上下文，管理变量作用域栈、参数绑定和 SQL 构建过程。
+ */
 public class Context {
     @Getter
     private final GenerationSqlMode mode;

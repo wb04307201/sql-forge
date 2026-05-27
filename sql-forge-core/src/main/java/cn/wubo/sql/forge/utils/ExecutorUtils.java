@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * SQL 执行工具类，封装 JDBC {@link PreparedStatement} 的参数绑定与各类 SQL 执行操作。
+ */
 @UtilityClass
 public class ExecutorUtils {
 
@@ -35,6 +38,14 @@ public class ExecutorUtils {
     }
 
 
+    /**
+     * 执行查询 SQL，返回结果集。
+     *
+     * @param connection 数据库连接
+     * @param sqlScript  SQL 脚本
+     * @return 查询结果列表
+     * @throws SQLException SQL 执行异常
+     */
     public List<RowMap> executeQuery(@NonNull Connection connection, @NonNull SqlScript sqlScript) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlScript.sql())) {
             buildPrepareStatement(preparedStatement, sqlScript.params());
@@ -45,6 +56,14 @@ public class ExecutorUtils {
         }
     }
 
+    /**
+     * 执行插入 SQL，返回自增主键。
+     *
+     * @param connection 数据库连接
+     * @param sqlScript  SQL 脚本
+     * @return 包含生成主键的行映射
+     * @throws SQLException SQL 执行异常
+     */
     public RowMap executeInsert(@NonNull Connection connection, @NonNull SqlScript sqlScript) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlScript.sql(), Statement.RETURN_GENERATED_KEYS)) {
             buildPrepareStatement(preparedStatement, sqlScript.params());
@@ -64,6 +83,14 @@ public class ExecutorUtils {
         }
     }
 
+    /**
+     * 执行更新/删除 SQL，返回受影响行数。
+     *
+     * @param connection 数据库连接
+     * @param sqlScript  SQL 脚本
+     * @return 受影响行数
+     * @throws SQLException SQL 执行异常
+     */
     public int executeUpdate(@NonNull Connection connection, @NonNull SqlScript sqlScript) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlScript.sql())) {
             buildPrepareStatement(preparedStatement, sqlScript.params());
@@ -71,6 +98,14 @@ public class ExecutorUtils {
         }
     }
 
+    /**
+     * 执行更新 SQL（大数据量），返回受影响行数（long 类型）。
+     *
+     * @param connection 数据库连接
+     * @param sqlScript  SQL 脚本
+     * @return 受影响行数
+     * @throws SQLException SQL 执行异常
+     */
     public long executeLargeUpdate(@NonNull Connection connection, @NonNull SqlScript sqlScript) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlScript.sql())) {
             buildPrepareStatement(preparedStatement, sqlScript.params());
@@ -81,6 +116,15 @@ public class ExecutorUtils {
         }
     }
 
+    /**
+     * 批量执行插入 SQL，返回所有自增主键。
+     *
+     * @param connection 数据库连接
+     * @param sql        SQL 语句
+     * @param paramsList 每行的参数映射列表
+     * @return 每行生成的主键列表
+     * @throws SQLException SQL 执行异常
+     */
     public List<RowMap> executeBatchInsert(@NonNull Connection connection, @NonNull String sql, List<ParamMap> paramsList) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             for (ParamMap params : paramsList) {
@@ -107,6 +151,15 @@ public class ExecutorUtils {
         }
     }
 
+    /**
+     * 批量执行 SQL，返回每条语句的受影响行数数组。
+     *
+     * @param connection 数据库连接
+     * @param sql        SQL 语句
+     * @param paramsList 每条语句的参数映射列表
+     * @return 每条语句的受影响行数数组
+     * @throws SQLException SQL 执行异常
+     */
     public int[] executeBatch(@NonNull Connection connection, @NonNull String sql, @NonNull List<ParamMap> paramsList) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
             for (ParamMap params : paramsList) {
@@ -118,6 +171,14 @@ public class ExecutorUtils {
         }
     }
 
+    /**
+     * 通用执行方法，根据 SQL 类型自动判断返回查询结果或更新行数。
+     *
+     * @param connection 数据库连接
+     * @param sqlScript  SQL 脚本
+     * @return 查询时为 {@code List<RowMap>}，更新时为受影响行数 {@code Integer}
+     * @throws SQLException SQL 执行异常
+     */
     public Object execute(@NonNull Connection connection, @NonNull SqlScript sqlScript) throws SQLException {
         try (PreparedStatement preparedStatement = connection.prepareStatement(sqlScript.sql())) {
             buildPrepareStatement(preparedStatement, sqlScript.params());
@@ -132,6 +193,14 @@ public class ExecutorUtils {
         }
     }
 
+    /**
+     * 逐条执行多条 SQL 脚本，返回每条的执行结果。
+     *
+     * @param connection 数据库连接
+     * @param sqlScripts SQL 脚本列表
+     * @return 每条 SQL 的执行结果列表
+     * @throws SQLException SQL 执行异常
+     */
     public List<Object> executeByLine(@NonNull Connection connection, @NonNull List<SqlScript> sqlScripts) throws SQLException {
         List<Object> list = new ArrayList<>();
         for (SqlScript sqlScript : sqlScripts) {
