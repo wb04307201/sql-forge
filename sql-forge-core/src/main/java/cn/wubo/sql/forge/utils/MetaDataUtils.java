@@ -289,8 +289,8 @@ public class MetaDataUtils {
         return root;
     }
 
-    public List<EntireTableInfo> getMetaDataTables(Connection connection, List<String> schemata) throws SQLException {
-        List<EntireTableInfo> entireTableInfos = new ArrayList<>();
+    public List<EntireTable> getMetaDataTables(Connection connection, List<String> schemata) throws SQLException {
+        List<EntireTable> entireTables = new ArrayList<>();
 
         List<SchemaInfo> schemas = getSchemas(connection, null, null)
                 .stream()
@@ -304,20 +304,39 @@ public class MetaDataUtils {
             for (String tableType : tableTypes) {
                 List<TableInfo> tables = getTables(connection, null, schema.tableSchema(), null, new String[]{tableType});
                 for (TableInfo table : tables) {
-                    entireTableInfos.add(
-                            new EntireTableInfo(
+                    entireTables.add(
+                            new EntireTable(
                                     table.tableName(),
                                     schema.tableSchema(),
                                     table.tableType(),
-                                    table.remarks(),
-                                    getColumns(connection, null, schema.tableSchema(), table.tableName(), null),
-                                    getPrimaryKeys(connection, null, schema.tableSchema(), table.tableName()),
-                                    getImportedKeys(connection, null, schema.tableSchema(), table.tableName()),
-                                    getIndexInfo(connection, null, schema.tableSchema(), table.tableName(), false, false)
+                                    table.remarks()
                             )
                     );
                 }
             }
+        }
+
+        return entireTables;
+    }
+
+    public List<EntireTableInfo> getMetaDataTableInfos(Connection connection, String catalog, String schemaPattern, String tableNamePattern, String tableType, List<String> schemata) throws SQLException {
+        List<EntireTableInfo> entireTableInfos = new ArrayList<>();
+
+        List<TableInfo> tables = getTables(connection, catalog, schemaPattern, tableNamePattern, new String[]{tableType});
+
+        for (TableInfo table : tables) {
+            entireTableInfos.add(
+                    new EntireTableInfo(
+                            table.tableName(),
+                            table.tableSchema(),
+                            table.tableType(),
+                            table.remarks(),
+                            getColumns(connection, catalog, table.tableSchema(), table.tableName(), null),
+                            getPrimaryKeys(connection, catalog, table.tableSchema(), table.tableName()),
+                            getImportedKeys(connection, catalog, table.tableSchema(), table.tableName()),
+                            getIndexInfo(connection, catalog, table.tableSchema(), table.tableName(), false, false)
+                    )
+            );
         }
 
         return entireTableInfos;

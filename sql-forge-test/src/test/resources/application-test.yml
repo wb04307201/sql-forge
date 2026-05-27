@@ -5,6 +5,20 @@ spring:
     username: sa
   flyway:
     locations: classpath:testdb/migration
+  web:
+    resources:
+      add-mappings: false
+
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
+
+logging:
+  level:
+    cn.wubo.sql.forge: DEBUG
+    org.springframework.web: DEBUG
 
 sql:
   forge:

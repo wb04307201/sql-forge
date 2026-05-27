@@ -3,6 +3,7 @@ package cn.wubo.sql.forge;
 import cn.wubo.sql.forge.enums.DatasourceType;
 import cn.wubo.sql.forge.map.RowMap;
 import cn.wubo.sql.forge.records.DatabaseInfo;
+import cn.wubo.sql.forge.records.EntireTable;
 import cn.wubo.sql.forge.records.EntireTableInfo;
 import cn.wubo.sql.forge.records.SqlScript;
 import jakarta.validation.Valid;
@@ -26,5 +27,9 @@ public interface IExecutor {
 
     DatabaseInfo getMetaDataDatabase() throws SQLException;
 
-    List<EntireTableInfo> getMetaDataTables() throws SQLException;
+    List<String> getTableTypes() throws SQLException;
+
+    List<EntireTable> getMetaDataTables() throws SQLException;
+
+    List<EntireTableInfo> getMetaDataTableInfos(String catalog, String schemaPattern, String tableNamePattern, String tableType) throws SQLException;
 }

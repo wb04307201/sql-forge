@@ -28,13 +28,16 @@
 
     <modules>
         <module>sql-forge-core</module>
-        <module>sql-forge-calcite</module>
+        <module>sql-forge-calcite-autoconfigure</module>
         <module>sql-forge-record</module>
         <module>sql-forge-entity</module>
         <module>sql-forge-template</module>
-        <module>sql-forge-console</module>
+        <module>sql-forge-web</module>
         <module>sql-forge-spring-boot-autoconfigure</module>
         <module>sql-forge-spring-boot-starter</module>
+        <module>sql-forge-calcite-spring-boot-starter</module>
+        <module>sql-forge-web-autoconfigure</module>
+        <module>sql-forge-web-spring-boot-starter</module>
         <module>sql-forge-test</module>
     </modules>
 
@@ -42,14 +45,34 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-boot.version>3.5.13</spring-boot.version>
-        <lombok.version>1.18.42</lombok.version>
+        <spring-boot.version>3.5.14</spring-boot.version>
+        <lombok.version>1.18.46</lombok.version>
         <jakarta.version>3.2.0</jakarta.version>
         <jsqlparser.version>5.3</jsqlparser.version>
-        <enjoy.version>5.2.5</enjoy.version>
         <mvel2.version>2.5.2.Final</mvel2.version>
         <calcite.version>1.41.0</calcite.version>
     </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.15.0</version>
+                    <configuration>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <dependencyManagement>
         <dependencies>

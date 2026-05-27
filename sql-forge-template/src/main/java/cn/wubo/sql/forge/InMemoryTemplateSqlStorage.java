@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class TemplateSqlStorage implements ITemplateSqlStorage<TemplateSql> {
+public class InMemoryTemplateSqlStorage implements ITemplateSqlStorage<TemplateSql> {
 
     private static final List<TemplateSql> templates = new ArrayList<>();
 
@@ -51,11 +51,15 @@ public class TemplateSqlStorage implements ITemplateSqlStorage<TemplateSql> {
     public List<TemplateSql> list(TemplateSql template) {
         Stream<TemplateSql> templateStream = templates.stream();
         if (StringUtils.hasText(template.getId()))
-            templateStream.filter(item -> item.getId().contains(template.getId()));
+            templateStream = templateStream.filter(item -> item.getId().contains(template.getId()));
+        if (StringUtils.hasText(template.getName()))
+            templateStream = templateStream.filter(item -> item.getName().contains(template.getName()));
+        if (StringUtils.hasText(template.getDescription()))
+            templateStream = templateStream.filter(item -> item.getDescription().contains(template.getDescription()));
         if (StringUtils.hasText(template.getExecutorName()))
-            templateStream.filter(item -> item.getExecutorName().equals(template.getExecutorName()));
+            templateStream = templateStream.filter(item -> item.getExecutorName().equals(template.getExecutorName()));
         if (StringUtils.hasText(template.getContext()))
-            templateStream.filter(item -> item.getContext().contains(template.getContext()));
+            templateStream = templateStream.filter(item -> item.getContext().contains(template.getContext()));
 
         return templateStream.toList();
     }
