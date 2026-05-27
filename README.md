@@ -1,10 +1,10 @@
-# SQL Forge - SQL Workshop
+# SQL Forge
 
 <div align="right">
   English | <a href="README.zh-CN.md">中文</a>
 </div>
 
-> **SQL Workshop** — a Spring Boot database framework providing JSON CRUD API, type-safe entity operations, SQL template engine, Apache Calcite cross-database federated queries, and Amis low-code visual management. Ready to use, import on demand.
+> **SQL Forge** — a Spring Boot database framework providing JSON CRUD API, type-safe entity operations, SQL template engine, Apache Calcite cross-database federated queries, and Amis low-code visual management. Ready to use, import on demand.
 
 ![Maven Central](https://img.shields.io/maven-central/v/io.github.wb04307201/sql-forge-spring-boot-starter?style=flat-square)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
