@@ -2,6 +2,7 @@ package cn.wubo.sql.forge;
 
 import cn.wubo.sql.forge.map.ParamMap;
 import cn.wubo.sql.forge.map.RowMap;
+import cn.wubo.sql.forge.records.EntireTable;
 import cn.wubo.sql.forge.records.EntireTableInfo;
 import cn.wubo.sql.forge.records.SqlScript;
 import lombok.extern.slf4j.Slf4j;
@@ -40,8 +41,8 @@ public class ExecutorServiceDatabaseTest {
 
     @Test
     void testMetaDataTables() throws SQLException {
-        List<EntireTableInfo> entireTableInfos = executorService.getExecutor().getMetaDataTables();
-        log.info("entireTableInfos: {}", entireTableInfos);
+        List<EntireTable> entireTables = executorService.getExecutor().getMetaDataTables();
+        log.info("entireTables: {}", entireTables);
     }
 
     @Test

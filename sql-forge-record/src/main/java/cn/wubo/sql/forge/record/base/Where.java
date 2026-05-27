@@ -18,7 +18,7 @@ public record Where(
 
     public String create(ParamMap params) {
         if (condition == null) {
-            if (value != null) {
+            if (value != null && !"".equals(value)) {
                 params.put(value);
                 return column + ConditionType.EQ.getValue() + QUESTION_MARK;
             }
@@ -26,6 +26,14 @@ public record Where(
         }
 
         if (value == null && condition != ConditionType.IS_NULL && condition != ConditionType.IS_NOT_NULL) {
+            return null;
+        }
+
+        if (value instanceof String str && str.isEmpty() && condition != ConditionType.IS_NULL && condition != ConditionType.IS_NOT_NULL) {
+            return null;
+        }
+
+        if (value instanceof List<?> list && list.isEmpty() && (condition == ConditionType.IN || condition == ConditionType.NOT_IN)) {
             return null;
         }
 

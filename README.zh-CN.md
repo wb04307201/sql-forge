@@ -4,40 +4,47 @@
   <a href="README.md">English</a> | 中文
 </div>
 
-> **SQL工坊**不仅是一个ORM框架，更是一套基于数据库的完整解决方案，它提供：
-> - 提供基础的数据库支持
-> - 跨数据库联邦查询
-> - 提供基于 JSON 的数据库 CRUD 操作
-> - 提供实体对象的链式操作
-> - SQL 模板引擎
-> - Amis 低代码可视化编辑和模板管理
-> - Web 控制台
+> **SQL工坊** — 一套基于 Spring Boot 的数据库操作框架，提供 JSON CRUD API、类型安全的实体操作、SQL 模板引擎、Apache Calcite 跨库联邦查询以及 Amis 低代码可视化管理，开箱即用、按需引入。
 
-[![](https://jitpack.io/v/com.gitee.wb04307201/sql-forge.svg)](https://jitpack.io/#com.gitee.wb04307201/sql-forge)
+![Maven Central](https://img.shields.io/maven-central/v/io.github.wb04307201/sql-forge-spring-boot-starter?style=flat-square)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
 [![fork](https://gitee.com/wb04307201/sql-forge/badge/fork.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
 [![star](https://img.shields.io/github/stars/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)
 [![fork](https://img.shields.io/github/forks/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)  
-![MIT](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
+![Apache-2.0](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
 
-## 使用
+## 快速开始
+
 ### 引入依赖
-增加 JitPack 仓库
+
+根据需求引入对应 Starter：
+
 ```xml
-<repositories>
-    <repository>
-        <id>jitpack.io</id>
-        <url>https://jitpack.io</url>
-    </repository>
-</repositories>
+<!-- 基础数据库操作（必选） -->
+<dependency>
+    <groupId>io.github.wb04307201</groupId>
+    <artifactId>sql-forge-spring-boot-starter</artifactId>
+    <version>1.5.9</version>
+</dependency>
+
+<!-- Calcite 跨库联邦查询（可选） -->
+<dependency>
+    <groupId>io.github.wb04307201</groupId>
+    <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
+    <version>1.5.9</version>
+</dependency>
+
+<!-- Amis 模板 + Web Console（可选） -->
+<dependency>
+    <groupId>io.github.wb04307201</groupId>
+    <artifactId>sql-forge-web-spring-boot-starter</artifactId>
+    <version>1.5.9</version>
+</dependency>
 ```
 
+使用 Entity 模块的 `@Id`、`@Table`、`@Column` 等注解时需额外引入：
+
 ```xml
-<dependency>
-    <groupId>com.gitee.wb04307201.sql-forge</groupId>
-    <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.5.8</version>
-</dependency>
 <dependency>
     <groupId>jakarta.persistence</groupId>
     <artifactId>jakarta.persistence-api</artifactId>
@@ -45,46 +52,75 @@
 </dependency>
 ```
 
-## 功能说明
+## Starter 一览
 
-### SQL执行器
-#### database-项目数据库
-会从Spring项目已经配的数据源直接引用
+| Starter | 说明 |
+|---------|------|
+| **sql-forge-spring-boot-starter** | 基础 Starter：数据库执行器、JSON CRUD API、类型安全实体操作（Entity）、SQL 模板引擎、Record 操作切面 |
+| **sql-forge-calcite-spring-boot-starter** | 基于 Apache Calcite 的跨数据库联邦查询执行器，可同时查询 MySQL、PostgreSQL 等多种数据源 |
+| **sql-forge-web-spring-boot-starter** | Amis 低代码模板管理 API、Web Console 可视化界面、用户/角色/权限认证体系 |
+
+---
+
+## 1. sql-forge-spring-boot-starter（基础 Starter）
+
+提供数据库操作的核心能力，包括数据库执行器管理、JSON CRUD API、Entity 链式操作、SQL 模板引擎和 Record 切面扩展。
+
+### 1.1 SQL 执行器
+
+`sql-forge-spring-boot-starter` 自动注册一个名为 `database` 的执行器，直接使用 Spring 项目中已配置的数据源。
+
 ```yaml
 sql:
   forge:
-    schemata:  #配置schema
+    schemata:  # 配置 schema
       - PUBLIC
 ```
-#### calcite-Apache Calcite跨数据库联邦查询
-启用calcite并指定Apache Calcite数据源信息
+
+#### 自定义执行器
+
+实现 [IExecutor](sql-forge-core/src/main/java/cn/wubo/sql/forge/IExecutor.java) 接口并注册为 Spring Bean 即可扩展自定义执行器。
+
+```java
+@Component
+public class MyCustomExecutor implements IExecutor {
+    @Override
+    public String getExecutorName() {
+        return "myCustom";
+    }
+    // ... 实现其他方法
+}
+```
+
+### 1.2 数据库直连 API
+
+提供直接执行 SQL 的能力（默认关闭，需手动开启）。
+
 ```yaml
 sql:
   forge:
-    calcite:
-      enabled: true
-      configuration: classpath:model.json
-      schemata: #配置schema
-        - MYSQL
-        - POSTGRES
+    api:
+      database:
+        enabled: true       # 开启数据库直连 API
+        select-only: true   # true=仅允许 SELECT，false=允许所有操作
 ```
-#### 自定义扩展
-继承[IExecutor.java](sql-forge-core/src/main/java/cn/wubo/sql/forge/IExecutor.java)实现自定义执行器
 
-### Json API 模块
-让前端无需编写后端代码即可操作数据库，通过`JSON`格式描述自己需要的数据结构和操作，后端自动生成对应的`SQL`执行并返回结果。
+- `POST /sql/forge/api/database/execute?executorName=database` - 执行 SQL
+
+### 1.3 JSON CRUD API
+
+让前端无需编写后端代码即可操作数据库 — 通过 `JSON` 格式描述需要的数据结构和操作，后端自动生成对应的 `SQL` 执行并返回结果。
 
 - **请求路径**: `sql/forge/api/json/{method}/{tableName}?executorName={executorName}`
 - **请求方法**: `POST`
 - **内容类型**: `application/json`
 - **路径参数**:
-  - `{method}`: 操作方法类型(delete、insert、select、update)
+  - `{method}`: 操作方法类型（delete、insert、select、selectPage、update）
   - `{tableName}`: 数据库表名称
-  - `{executorName}`: 数据库执行器名称,默认支持database(项目数据库),calcite(Apache Calcite跨数据库联邦查询)，支持自行扩展，如不传，默认使用database
+  - `{executorName}`: 执行器名称，不传则默认使用 `database`
 
 #### delete 方法
 
-#### 请求格式
 ```json
 {
   "@where": [
@@ -95,21 +131,20 @@ sql:
     }
   ],
   "@with_select": {
-    // 删除后后查询json
+    // 删除后查询 JSON
   }
 }
 ```
 
-#### 参数说明
-- `@where`: 删除条件数组，每个条件包含：
+**参数说明**
+- `@where`: 删除条件数组
   - column: 要匹配的字段名
   - condition: 条件类型（EQ、NOT_EQ、GT、LT、GTEQ、LTEQ、LIKE、NOT_LIKE、LEFT_LIKE、RIGHT_LIKE、BETWEEN、NOT_BETWEEN、IN、NOT_IN、IS_NULL、IS_NOT_NULL）
   - value: 匹配的值
-- `@with_select`: 可选的查询条件，用于在删除后执行一个查询
+- `@with_select`: 可选，删除后执行一个查询
 
 #### insert 方法
 
-#### 请求格式
 ```json
 {
   "@set": {
@@ -117,18 +152,17 @@ sql:
     "字段名2": "值2"
   },
   "@with_select": {
-    // 删除后后查询json
+    // 插入后查询 JSON
   }
 }
 ```
 
-#### 参数说明
-- `@set`: 要插入的字段和值的键值对，至少需要一个字段
-- `@with_select`: 可选的查询条件，用于插入后执行一个查询
+**参数说明**
+- `@set`: 要插入的字段和值的键值对，至少一个字段
+- `@with_select`: 可选，插入后执行一个查询
 
 #### select 方法
 
-#### 请求格式
 ```json
 {
   "@column": ["字段名1", "字段名2"],
@@ -152,7 +186,7 @@ sql:
 }
 ```
 
-##### 参数说明
+**参数说明**
 - `@column`: 要查询的字段数组，为空则查询所有字段
 - `@where`: 查询条件数组
 - `@join`: 关联查询条件数组
@@ -162,7 +196,6 @@ sql:
 
 #### selectPage 方法
 
-#### 请求格式
 ```json
 {
   "@column": ["字段名1", "字段名2"],
@@ -189,19 +222,16 @@ sql:
 }
 ```
 
-##### 参数说明
+**参数说明**
 - `@column`: 要查询的字段数组，为空则查询所有字段
 - `@where`: 查询条件数组
-- `@page`分页参数
-  - pageIndex: 页码（从0开始）
-  - pageSize: 每页大小
+- `@page`: 分页参数（pageIndex 页码从 0 开始，pageSize 每页大小）
 - `@join`: 关联查询条件数组
 - `@order`: 排序字段数组
 - `@distince`: 是否去重
 
 #### update 方法
 
-##### 请求格式
 ```json
 {
   "@set": {
@@ -216,18 +246,20 @@ sql:
     }
   ],
   "@with_select": {
-    // 删除后后查询json
+    // 更新后查询 JSON
   }
 }
 ```
 
-##### 参数说明
-- `@set`: 要更新的字段和新值的键值对，至少需要一个字段
-- `@where`: 更新条件数组，指定要更新哪些记录
-- `@with_select`: 可选的查询条件，用于更新后执行一个查询
+**参数说明**
+- `@set`: 要更新的字段和新值的键值对，至少一个字段
+- `@where`: 更新条件数组
+- `@with_select`: 可选，更新后执行一个查询
 
 #### 示例
+
 1. 查询
+
 ```http request
 POST http://localhost:8080/sql/forge/api/json/select/orders o
 Content-Type: application/json
@@ -284,72 +316,28 @@ Content-Type: application/json
   ],
   "@order": [
     "o.order_date"
-  ],
-  "@group": null,
-  "@distince": false
+  ]
 }
 ```
 
 2. 分页查询
+
+在查询 JSON 基础上增加 `@page` 参数即可：
+
 ```http request
 POST http://localhost:8080/sql/forge/api/json/selectPage/orders o
 Content-Type: application/json
 
 {
-  "@column": [
-    "u.username",
-    "sex.item_name             AS sex_name",
-    "o.total_amount",
-    "p.name               AS product_name",
-    "categories.item_name AS product_categories",
-    "oi.unit_price",
-    "oi.quantity",
-    "p.price"
-  ],
-  "@where": [
-    {
-      "column": "sex.dict_code",
-      "condition": "EQ",
-      "value": "sex"
-    },
-    {
-      "column": "categories.dict_code",
-      "condition": "EQ",
-      "value": "categories"
-    }
-  ],
+  "@column": ["o.total_amount", "p.name AS product_name"],
   "@join": [
     {
       "type": "JOIN",
-      "joinTable": "users u",
-      "on": "o.user_id = u.id"
-    },
-    {
-      "type": "JOIN",
-      "joinTable": "sys_dict_items sex",
-      "on": "u.dict_sex = sex.item_code"
-    },
-    {
-      "type": "JOIN",
-      "joinTable": "order_items oi",
-      "on": "o.id = oi.order_id"
-    },
-    {
-      "type": "JOIN",
       "joinTable": "products p",
-      "on": "oi.product_id = p.id"
-    },
-    {
-      "type": "JOIN",
-      "joinTable": "sys_dict_items categories",
-      "on": "p.dict_categories = categories.item_code"
+      "on": "o.product_id = p.id"
     }
   ],
-  "@order": [
-    "o.order_date"
-  ],
-  "@group": null,
-  "@distince": false,
+  "@order": ["o.order_date"],
   "@page": {
     "pageIndex": 0,
     "pageSize": 5
@@ -358,6 +346,7 @@ Content-Type: application/json
 ```
 
 3. 插入
+
 ```http request
 POST http://localhost:8080/sql/forge/api/json/insert/users
 Content-Type: application/json
@@ -369,23 +358,19 @@ Content-Type: application/json
     "email": "wb04307201@gitee.com"
   },
   "@with_select": {
-    "@column": null,
     "@where": [
       {
         "column": "id",
         "condition": "EQ",
         "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
       }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
+    ]
   }
 }
 ```
 
 4. 更新
+
 ```http request
 POST http://localhost:8080/sql/forge/api/json/update/users
 Content-Type: application/json
@@ -402,22 +387,19 @@ Content-Type: application/json
     }
   ],
   "@with_select": {
-    "@column": null,
     "@where": [
       {
         "column": "id",
         "condition": "EQ",
         "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
       }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
+    ]
   }
 }
 ```
+
 5. 删除
+
 ```http request
 POST http://localhost:8080/sql/forge/api/json/delete/users
 Content-Type: application/json
@@ -431,26 +413,23 @@ Content-Type: application/json
     }
   ],
   "@with_select": {
-    "@column": null,
     "@where": [
       {
         "column": "id",
         "condition": "EQ",
         "value": "26a05ba3-913d-4085-a505-36d40021c8d1"
       }
-    ],
-    "@join": null,
-    "@order": null,
-    "@group": null,
-    "@distince": false
+    ]
   }
 }
 ```
 
 #### 方法执行前切面
-可通过实现 [IBeforeRecordExecutor.java](sql-forge-record/src/main/java/cn/wubo/sql/forge/record/IBeforeRecordExecutor.java)接口自定义方法执行前的json调整，实现密码加密、自动更新时间戳、权限控制、日志、审计等
 
-例如实现在Insert时输出日志：
+通过实现 [IBeforeRecordExecutor](sql-forge-record/src/main/java/cn/wubo/sql/forge/record/IBeforeRecordExecutor.java) 接口自定义方法执行前的 JSON 调整，实现密码加密、自动更新时间戳、权限控制、日志、审计等。
+
+例如实现在 Insert 时输出日志：
+
 ```java
 @Slf4j
 @Component
@@ -469,27 +448,28 @@ public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
 ```
 
 #### 配置
-可通过`sql.forge.api.json.enabled=false`关闭
 
-### SQL Template API 模块
-提供`SQL`模板引擎功能，支持条件判断、循环等模板语法，根据参数动态生成`SQL`执行并返回结果。
-- **API 模板管理**：提供 API 模板的存储、查询、删除等管理功能
-- **模板化 API 执行**：支持通过模板 ID 和参数来执行预定义的 API 模板
+可通过 `sql.forge.api.json.enabled=false` 关闭 JSON API。
+
+### 1.4 SQL 模板引擎
+
+提供 SQL 模板功能，支持条件判断（`<if>`）、循环（`<foreach>`）、变量绑定（`#{var}`）等模板语法，根据参数动态生成 SQL 执行并返回结果。
 
 #### 模板管理接口
 
 - `PUT /sql/forge/api/template/sql` - 保存/更新 SQL 模板
   - id: 模板 ID
-  - executorName: 执行器名称，默认支持database(项目数据库),calcite(Apache Calcite跨数据库联邦查询)，支持自行扩展
+  - executorName: 执行器名称，默认 `database`
   - context: 模板内容
 - `GET /sql/forge/api/template/sql/{id}` - 根据 ID 获取 SQL 模板
 - `GET /sql/forge/api/template/sql` - 获取 SQL 模板列表
-- `DELETE /sql/forge/api/template/{id}` - 删除指定 ID 的 SQL 模板
-- `POST /sql/forge/api/template/sql/{id}` - 执行指定 ID 的 SQL 模板
-  - 模板参数 Map
+- `DELETE /sql/forge/api/template/sql/{id}` - 删除指定 ID 的 SQL 模板
+- `POST /sql/forge/api/template/sql/{id}` - 执行指定 ID 的 SQL 模板（Body 为模板参数 Map）
 
 #### 示例
+
 模板配置：
+
 ```http request
 PUT http://localhost:8080/sql/forge/api/template/sql
 content-type: application/json
@@ -503,17 +483,19 @@ content-type: application/json
 ```
 
 执行模板：
+
 ```http request
-POST http://localhost:8080/sql/forge/api/template/sql-template-database
+POST http://localhost:8080/sql/forge/api/template/sql/sql-template-database
 content-type: application/json
 
 {
-"name":"alice",
-"ids":null
+  "name": "alice",
+  "ids": null
 }
 ```
 
 响应：
+
 ```json
 [
   {
@@ -525,63 +507,55 @@ content-type: application/json
 ]
 ```
 
-#### 配置
-可通过`sql.forge.api.template.sql.enabled=false`关闭
-
 #### 持久化模板
-继承 [ITemplateSqlStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) 实现自己的模板服务
 
-### Amis Template API 模块
-使用 [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) 配合**Json API**模块、**Template API**模块、**Calcite API**模块快速构建的Web页面。
-
-#### 模板管理接口
-
-- `PUT /sql/forge/api/template/amis` - 保存新的 API 模板
-  - id: 模板 ID
-  - context: 模板内容
-- `GET /sql/forge/api/template/amis/{id}` - 根据 ID 获取模板
-- `GET /sql/forge/api/template/amis` - 获取模板列表
-- `DELETE /sql/forge/api/template/amis{id}` - 删除指定 ID 的模板
-
-#### 示例
-模板配置：
-```http request
-PUT http://localhost:8080/sql/forge/amis/template
-content-type: application/json
-
-{
-    "id": "amis-template-users",
-    "context": "{\r\n  \"type\": \"page\",\r\n  \"body\": {\r\n    \"type\": \"crud\",\r\n    \"id\": \"crud_table\",\r\n    \"api\": {\r\n      \"method\": \"post\",\r\n      \"url\": \"/sql/forge/api/json/selectPage/USERS\",\r\n      \"data\": {\r\n        \"@column\": [\r\n          \"USERS.ID\",\r\n          \"USERS.USERNAME\",\r\n          \"sex.item_name as SEX\",\r\n          \"USERS.EMAIL\"\r\n        ],\r\n        \"@join\": [\r\n          {\r\n            \"type\": \"LEFT_OUTER_JOIN\",\r\n            \"joinTable\": \"sys_dict_items sex\",\r\n            \"on\": \"USERS.DICT_SEX = sex.item_code\"\r\n          }\r\n        ],\r\n        \"@where\": [\r\n          {\r\n            \"column\": \"USERS.USERNAME\",\r\n            \"condition\": \"LIKE\",\r\n            \"value\": \"${USERNAME | default:undefined}\"\r\n          },\r\n          {\r\n            \"column\": \"USERS.DICT_SEX\",\r\n            \"condition\": \"IN\",\r\n            \"value\": \"${SEX | default:undefined | split}\"\r\n          },\r\n          {\r\n            \"column\": \"USERS.EMAIL\",\r\n            \"condition\": \"LIKE\",\r\n            \"value\": \"${EMAIL | default:undefined}\"\r\n          },\r\n          {\r\n            \"column\": \"sex.dict_code\",\r\n            \"condition\": \"EQ\",\r\n            \"value\": \"sex\"\r\n          }\r\n        ],\r\n        \"@order\": [\r\n          \"${default(orderBy && orderDir ? (orderBy + ' ' + orderDir):'',undefined)}\"\r\n        ],\r\n        \"@page\": {\r\n          \"pageIndex\": \"${page - 1}\",\r\n          \"pageSize\": \"${perPage}\"\r\n        }\r\n      }\r\n    },\r\n    \"headerToolbar\": [\r\n      {\r\n        \"label\": \"新增\",\r\n        \"type\": \"button\",\r\n        \"icon\": \"fa fa-plus\",\r\n        \"level\": \"primary\",\r\n        \"actionType\": \"drawer\",\r\n        \"drawer\": {\r\n          \"title\": \"新增表单\",\r\n          \"body\": {\r\n            \"type\": \"form\",\r\n            \"api\": {\r\n              \"method\": \"post\",\r\n              \"url\": \"/sql/forge/api/json/insert/USERS\",\r\n              \"data\": {\r\n                \"@set\": {\r\n                  \"ID\": \"${ID | default:undefined}\",\r\n                  \"USERNAME\": \"${USERNAME | default:undefined}\",\r\n                  \"DICT_SEX\": \"${DICT_SEX | default:undefined}\",\r\n                  \"EMAIL\": \"${EMAIL | default:undefined}\"\r\n                }\r\n              }\r\n            },\r\n            \"onEvent\": {\r\n              \"submitSucc\": {\r\n                \"actions\": [\r\n                  {\r\n                    \"actionType\": \"reload\",\r\n                    \"componentId\": \"crud_table\"\r\n                  }\r\n                ]\r\n              }\r\n            },\r\n            \"body\": [\r\n              {\r\n                \"type\": \"uuid\",\r\n                \"id\": \"insert-ID\",\r\n                \"name\": \"ID\"\r\n              },\r\n              {\r\n                \"type\": \"input-text\",\r\n                \"name\": \"USERNAME\",\r\n                \"label\": \"用户名\",\r\n                \"maxLength\": 50,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-USERNAME\"\r\n              },\r\n              {\r\n                \"type\": \"select\",\r\n                \"name\": \"DICT_SEX\",\r\n                \"label\": \"性别\",\r\n                \"maxLength\": 100,\r\n                \"source\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/select/sys_dict_items\",\r\n                  \"data\": {\r\n                    \"@column\": [\r\n                      \"item_code\",\r\n                      \"item_name\"\r\n                    ],\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"dict_code\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"sex\"\r\n                      }\r\n                    ]\r\n                  },\r\n                  \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n                },\r\n                \"clearable\": true,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-SEX\"\r\n              },\r\n              {\r\n                \"type\": \"input-text\",\r\n                \"name\": \"EMAIL\",\r\n                \"label\": \"用户邮箱地址\",\r\n                \"maxLength\": 100,\r\n                \"disabled\": false,\r\n                \"id\": \"insert-EMAIL\"\r\n              }\r\n            ]\r\n          }\r\n        }\r\n      },\r\n      \"bulkActions\",\r\n      {\r\n        \"type\": \"columns-toggler\",\r\n        \"draggable\": true,\r\n        \"align\": \"right\"\r\n      },\r\n      {\r\n        \"type\": \"export-excel\",\r\n        \"label\": \"导出\",\r\n        \"icon\": \"fa fa-file-excel\",\r\n        \"api\": {\r\n          \"method\": \"post\",\r\n          \"url\": \"/sql/forge/api/json/select/USERS\",\r\n          \"data\": {\r\n            \"@column\": [\r\n              \"USERS.ID\",\r\n              \"USERS.USERNAME\",\r\n              \"sex.item_name as SEX\",\r\n              \"USERS.EMAIL\"\r\n            ],\r\n            \"@join\": [\r\n              {\r\n                \"type\": \"LEFT_OUTER_JOIN\",\r\n                \"joinTable\": \"sys_dict_item sex\",\r\n                \"on\": \"USERS.DICT_SEX = sex.item_code\"\r\n              }\r\n            ],\r\n            \"@where\": [\r\n              {\r\n                \"column\": \"USERS.USERNAME\",\r\n                \"condition\": \"LIKE\",\r\n                \"value\": \"${USERNAME | default:undefined}\"\r\n              },\r\n              {\r\n                \"column\": \"USERS.DICT_SEX\",\r\n                \"condition\": \"IN\",\r\n                \"value\": \"${DICT_SEX | default:undefined | split}\"\r\n              },\r\n              {\r\n                \"column\": \"USERS.EMAIL\",\r\n                \"condition\": \"LIKE\",\r\n                \"value\": \"${EMAIL | default:undefined}\"\r\n              },\r\n              {\r\n                \"column\": \"sex.dict_code\",\r\n                \"condition\": \"EQ\",\r\n                \"value\": \"sex\"\r\n              }\r\n            ]\r\n          }\r\n        },\r\n        \"align\": \"right\"\r\n      }\r\n    ],\r\n    \"footerToolbar\": [\r\n      \"statistics\",\r\n      {\r\n        \"type\": \"pagination\",\r\n        \"layout\": \"total,perPage,pager,go\"\r\n      }\r\n    ],\r\n    \"bulkActions\": [\r\n      {\r\n        \"label\": \"批量删除\",\r\n        \"icon\": \"fa fa-trash\",\r\n        \"actionType\": \"ajax\",\r\n        \"api\": {\r\n          \"method\": \"post\",\r\n          \"url\": \"/sql/forge/api/json/delete/USERS\",\r\n          \"data\": {\r\n            \"@where\": [\r\n              {\r\n                \"column\": \"ID\",\r\n                \"condition\": \"IN\",\r\n                \"value\": \"${ids | split}\"\r\n              }\r\n            ]\r\n          }\r\n        },\r\n        \"confirmText\": \"确定要批量删除?\"\r\n      }\r\n    ],\r\n    \"keepItemSelectionOnPageChange\": true,\r\n    \"labelTpl\": \"${USERNAME}\",\r\n    \"autoFillHeight\": true,\r\n    \"autoGenerateFilter\": true,\r\n    \"showIndex\": true,\r\n    \"primaryField\": \"ID\",\r\n    \"columns\": [\r\n      {\r\n        \"name\": \"ID\",\r\n        \"hidden\": true\r\n      },\r\n      {\r\n        \"name\": \"USERNAME\",\r\n        \"label\": \"用户名\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"input-text\",\r\n          \"name\": \"USERNAME\",\r\n          \"label\": \"用户名\",\r\n          \"maxLength\": 50,\r\n          \"placeholder\": \"输入用户名\"\r\n        }\r\n      },\r\n      {\r\n        \"name\": \"SEX\",\r\n        \"label\": \"性别\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"select\",\r\n          \"name\": \"SEX\",\r\n          \"label\": \"性别\",\r\n          \"maxLength\": 100,\r\n          \"placeholder\": \"输入性别\",\r\n          \"multiple\": true,\r\n          \"source\": {\r\n            \"method\": \"post\",\r\n            \"url\": \"/sql/forge/api/json/select/sys_dict_items\",\r\n            \"data\": {\r\n              \"@column\": [\r\n                \"item_code\",\r\n                \"item_name\"\r\n              ],\r\n              \"@where\": [\r\n                {\r\n                  \"column\": \"dict_code\",\r\n                  \"condition\": \"EQ\",\r\n                  \"value\": \"sex\"\r\n                }\r\n              ]\r\n            },\r\n            \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n          },\r\n          \"clearable\": true\r\n        }\r\n      },\r\n      {\r\n        \"name\": \"EMAIL\",\r\n        \"label\": \"用户邮箱地址\",\r\n        \"sortable\": true,\r\n        \"searchable\": {\r\n          \"type\": \"input-text\",\r\n          \"name\": \"EMAIL\",\r\n          \"label\": \"用户邮箱地址\",\r\n          \"maxLength\": 100,\r\n          \"placeholder\": \"输入用户邮箱地址\"\r\n        }\r\n      },\r\n      {\r\n        \"type\": \"operation\",\r\n        \"label\": \"操作\",\r\n        \"buttons\": [\r\n          {\r\n            \"label\": \"修改\",\r\n            \"type\": \"button\",\r\n            \"icon\": \"fa fa-pen-to-square\",\r\n            \"actionType\": \"drawer\",\r\n            \"drawer\": {\r\n              \"title\": \"新增表单\",\r\n              \"body\": {\r\n                \"type\": \"form\",\r\n                \"initApi\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/select/USERS\",\r\n                  \"data\": {\r\n                    \"@column\": [\r\n                      \"USERS.ID\",\r\n                      \"USERS.USERNAME\",\r\n                      \"USERS.SEX\",\r\n                      \"USERS.EMAIL\"\r\n                    ],\r\n                    \"@join\": [\r\n                      {\r\n                        \"type\": \"LEFT_OUTER_JOIN\",\r\n                        \"joinTable\": \"sys_dict_item sex_a814d446\",\r\n                        \"on\": \"USERS.SEX = sex_a814d446.item_code\"\r\n                      }\r\n                    ],\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"USERS.ID\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"${ID}\"\r\n                      }\r\n                    ]\r\n                  },\r\n                  \"responseData\": {\r\n                    \"&\": \"${items | first}\"\r\n                  }\r\n                },\r\n                \"api\": {\r\n                  \"method\": \"post\",\r\n                  \"url\": \"/sql/forge/api/json/update/USERS\",\r\n                  \"data\": {\r\n                    \"@set\": {\r\n                      \"ID\": \"${ID}\",\r\n                      \"USERNAME\": \"${USERNAME}\",\r\n                      \"SEX\": \"${SEX}\",\r\n                      \"EMAIL\": \"${EMAIL}\"\r\n                    },\r\n                    \"@where\": [\r\n                      {\r\n                        \"column\": \"USERS.ID\",\r\n                        \"condition\": \"EQ\",\r\n                        \"value\": \"${ID}\"\r\n                      }\r\n                    ]\r\n                  }\r\n                },\r\n                \"body\": [\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"ID\",\r\n                    \"hidden\": true,\r\n                    \"id\": \"update-ID\"\r\n                  },\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"USERNAME\",\r\n                    \"label\": \"用户名\",\r\n                    \"maxLength\": 50,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-USERNAME\"\r\n                  },\r\n                  {\r\n                    \"type\": \"select\",\r\n                    \"name\": \"SEX\",\r\n                    \"label\": \"性别\",\r\n                    \"maxLength\": 100,\r\n                    \"source\": {\r\n                      \"method\": \"post\",\r\n                      \"url\": \"/sql/forge/api/json/select/sys_dict_item\",\r\n                      \"data\": {\r\n                        \"@column\": [\r\n                          \"item_code\",\r\n                          \"item_name\"\r\n                        ],\r\n                        \"@where\": [\r\n                          {\r\n                            \"column\": \"dict_code\",\r\n                            \"condition\": \"EQ\",\r\n                            \"value\": \"sex\"\r\n                          }\r\n                        ]\r\n                      },\r\n                      \"adaptor\": \"return {\\n  options: payload.map(item => ({\\n    value: item.item_code || item.ITEM_CODE,\\n    label: item.item_name ||  item.ITEM_NAME\\n  }))\\n};\"\r\n                    },\r\n                    \"clearable\": true,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-SEX\"\r\n                  },\r\n                  {\r\n                    \"type\": \"input-text\",\r\n                    \"name\": \"EMAIL\",\r\n                    \"label\": \"用户邮箱地址\",\r\n                    \"maxLength\": 100,\r\n                    \"disabled\": false,\r\n                    \"id\": \"update-EMAIL\"\r\n                  }\r\n                ]\r\n              }\r\n            }\r\n          },\r\n          {\r\n            \"label\": \"删除\",\r\n            \"type\": \"button\",\r\n            \"icon\": \"fa fa-minus\",\r\n            \"actionType\": \"ajax\",\r\n            \"level\": \"danger\",\r\n            \"confirmText\": \"确认要删除？\",\r\n            \"api\": {\r\n              \"method\": \"post\",\r\n              \"url\": \"/sql/forge/api/json/delete/USERS\",\r\n              \"data\": {\r\n                \"@where\": [\r\n                  {\r\n                    \"column\": \"ID\",\r\n                    \"condition\": \"EQ\",\r\n                    \"value\": \"${ID}\"\r\n                  }\r\n                ]\r\n              }\r\n            }\r\n          }\r\n        ],\r\n        \"fixed\": \"right\"\r\n      }\r\n    ]\r\n  }\r\n}"
-}
-```
-
-渲染后页面：
-![img.png](img.png)
+默认使用内存存储。继承 [ITemplateSqlStorage](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) 实现自定义持久化。
 
 #### 配置
-可通过`sql.forge.api.template.amis.enabled=false`关闭
 
-#### 持久化模板
-继承 [ITemplateAmisStorage.java](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) 实现自己的模板服务
+可通过 `sql.forge.api.template.sql.enabled=false` 关闭。
 
-### Entity 模块
-- [Entity.java](sql-forge-entity/src/main/java/cn/eubo/sql/forge/Entity.java) 提供了对实体对象进行数据库操作的构建器，包括删除、插入、查询、更新、保存等操作，简化`SQL`构建过程。
-- [EntityExecutor.java](sql-forge-entity/src/main/java/cn/eubo/sql/forge/EntityExecutor.java) 负责执行**构建器**的数据库操作。
+### 1.5 Entity 模块
+
+提供类型安全的实体操作构建器，通过 Lambda 引用实现编译期安全的字段引用，支持链式调用。
+
+- [Entity](sql-forge-entity/src/main/java/cn/eubo/sql/forge/Entity.java) — 静态工具类，提供 `select/insert/update/delete/save/selectPage` 等入口
+- [EntityExecutor](sql-forge-entity/src/main/java/cn/eubo/sql/forge/EntityExecutor.java) — 负责执行构建器的数据库操作
 
 #### 特点
-- 使用链式调用
-- 支持类型安全的泛型操作
-- 通过构建器模式灵活配置查询条件
+
+- 链式调用，代码简洁
+- 通过 Lambda 表达式引用字段，编译期检查
+- 构建器模式灵活配置查询条件
 - 统一的数据库操作入口
 
 #### 使用示例
 
-假设有一个用户实体类 [User](sql-forge-test/src/test/java/cn/wubo/sql/forge/User.java) ：
+定义一个用户实体类：
+
+```java
+@Data
+@Table(name = "users")
+public class User {
+    @Id
+    private String id;
+
+    @Column(name = "username")
+    private String username;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "dict_sex")
+    private String dictSex;
+}
+```
+
+使用 Entity 进行数据库操作：
 
 ```java
 @Autowired
-private EntityService entityService;
-
+private EntityExecutor entityExecutor;
 
 // 查询操作
 EntitySelect<User> select = Entity.select(User.class)
@@ -589,101 +563,273 @@ EntitySelect<User> select = Entity.select(User.class)
                 .columns(User::getId, User::getUsername, User::getEmail)
                 .orders(User::getUsername)
                 .in(User::getUsername, "alice", "bob");
-List<User> users = entityService.run(select);
-Object key = entityService.run(insert);
+List<User> users = entityExecutor.run(select);
 
 // 分页查询操作
-EntitySelectPage<User> select = Entity.selectPage(User.class)
-        .distinct(true)
+EntitySelectPage<User> selectPage = Entity.selectPage(User.class)
         .columns(User::getId, User::getUsername, User::getEmail)
         .orders(User::getUsername)
-        .in(User::getUsername, "alice", "bob")
-        .page(0, 1);
-SelectPageResult<User> users = entityService.run(select);
+        .page(0, 10);
+SelectPageResult<User> result = entityExecutor.run(selectPage);
 
-// 插入操作  
-EntityInsert<User> insert = Entity.insert(User.class).set(User::getId, id)
+// 插入操作
+EntityInsert<User> insert = Entity.insert(User.class)
+        .set(User::getId, UUID.randomUUID().toString())
         .set(User::getUsername, "wb04307201")
         .set(User::getEmail, "wb04307201@gitee.com");
-int count = entityService.run(update);
+entityExecutor.run(insert);
 
 // 更新操作
 EntityUpdate<User> update = Entity.update(User.class)
         .set(User::getEmail, "wb04307201@github.com")
         .eq(User::getId, id);
-int count = entityService.run(update);
+int count = entityExecutor.run(update);
 
 // 删除操作
 EntityDelete<User> delete = Entity.delete(User.class)
         .eq(User::getId, id);
-count = entityService.run(delete);
+count = entityExecutor.run(delete);
 
-// 对象保存操作（插入或更新）
+// 对象保存（自动判断插入或更新）
 User user = new User();
 user.setUsername("wb04307201");
 user.setEmail("wb04307201@gitee.com");
-user = entityService.run(Entity.save(user));
-user.setEmail("wb04307201@github.com");
-user = entityService.run(Entity.save(user));
+user = entityExecutor.run(Entity.save(user));  // id 为 null，执行插入
 
-// 对象删除操作
-int count = entityService.run(Entity.delete(user));
+user.setEmail("wb04307201@github.com");
+user = entityExecutor.run(Entity.save(user));  // id 不为 null，执行更新
+
+// 对象删除
+count = entityExecutor.run(Entity.delete(user));
 ```
 
-#### 查询构造说明
+#### 查询构建器说明
 
-##### 1. 列选择
-- column(SFunction<T, ?> column) - 选择单个列
-- columns(SFunction<T, ?>... columns) - 选择多个列
+**1. 列选择**
+- `column(SFunction<T, ?> column)` - 选择单个列
+- `columns(SFunction<T, ?>... columns)` - 选择多个列
 
-##### 2. 查询条件
-- eq(SFunction<T, ?> column, Object value) - 等于
-- neq(SFunction<T, ?> column, Object value) - 不等于
-- gt(SFunction<T, ?> column, Object value) - 大于
-- lt(SFunction<T, ?> column, Object value) - 小于
-- gteq(SFunction<T, ?> column, Object value) - 大于等于
-- lteq(SFunction<T, ?> column, Object value) - 小于等于
-- like(SFunction<T, ?> column, Object value) - 模糊匹配
-- notLike(SFunction<T, ?> column, Object value) - 不模糊匹配
-- leftLike(SFunction<T, ?> column, Object value) - 左模糊匹配
-- rightLike(SFunction<T, ?> column, Object value) - 右模糊匹配
-- between(SFunction<T, ?> column, Object value1, Object value2) - 在范围内
-- notBetween(SFunction<T, ?> column, Object value1, Object value2) - 不在范围内
-- in(SFunction<T, ?> column, Object... value) - 在集合中
-- notIn(SFunction<T, ?> column, Object... value) - 不在集合中
-- isNull(SFunction<T, ?> column) - 为 NULL
-- isNotNull(SFunction<T, ?> column) - 不为 NULL
+**2. 查询条件**
+- `eq(SFunction<T, ?> column, Object value)` - 等于
+- `neq(SFunction<T, ?> column, Object value)` - 不等于
+- `gt(SFunction<T, ?> column, Object value)` - 大于
+- `lt(SFunction<T, ?> column, Object value)` - 小于
+- `gteq(SFunction<T, ?> column, Object value)` - 大于等于
+- `lteq(SFunction<T, ?> column, Object value)` - 小于等于
+- `like(SFunction<T, ?> column, Object value)` - 模糊匹配
+- `notLike(SFunction<T, ?> column, Object value)` - 不匹配（NOT LIKE）
+- `leftLike(SFunction<T, ?> column, Object value)` - 左模糊匹配
+- `rightLike(SFunction<T, ?> column, Object value)` - 右模糊匹配
+- `between(SFunction<T, ?> column, Object value1, Object value2)` - 在范围内
+- `notBetween(SFunction<T, ?> column, Object value1, Object value2)` - 不在范围内
+- `in(SFunction<T, ?> column, Object... value)` - 在集合中
+- `notIn(SFunction<T, ?> column, Object... value)` - 不在集合中
+- `isNull(SFunction<T, ?> column)` - 为 NULL
+- `isNotNull(SFunction<T, ?> column)` - 不为 NULL
 
-##### 3. 排序
-- orderAsc(SFunction<T, ?> column) - 升序排序
-- orderDesc(SFunction<T, ?> column) - 降序排序
-- orders(SFunction<T, ?>... columns) - 多列排序（默认升序）
+**3. 排序**
+- `orderAsc(SFunction<T, ?> column)` - 升序排序
+- `orderDesc(SFunction<T, ?> column)` - 降序排序
+- `orders(SFunction<T, ?>... columns)` - 多列排序（默认升序）
 
-##### 4. 分页
-- page(Integer pageIndex, Integer pageSize) - 设置分页参数
+**4. 分页**
+- `page(Integer pageIndex, Integer pageSize)` - 设置分页参数
 
-##### 5. 去重
-- distinct(Boolean distinct) - 设置是否去重
+**5. 去重**
+- `distinct(Boolean distinct)` - 设置是否去重
 
-#### 对象保存操作构造说明
+#### 对象保存（save）说明
 
-根据`@Id`注解判断主键字段，如果没有主键字段，抛出 `IllegalArgumentException`
+根据 `@Id` 注解判断主键字段，如果没有主键字段则抛出 `IllegalArgumentException`。
+
 - **插入条件**: 当主键值为 `null` 时执行插入操作
   - `String` 类型主键：自动生成 `UUID` 作为主键值
   - 其他类型主键：使用数据库自动生成的主键值
 - **更新条件**: 当主键值不为 `null` 时执行更新操作
   - 使用主键值作为更新条件
 
-### 控制台
-提供简单的Web界面用于调试和模板管理：
-- 数据库元数据查看，sql调试（默认关闭，通过配置`sql.forge.api.database.enabled=true`开启,默认仅支持查询，可通过`sql.forge.api.database.select-only=false`允许其它操作）
-  ![img_1.png](img_1.png)
-- Json API调试
-  ![img_2.png](img_2.png)
-- SQL Template API模板维护，调试
-  ![img_3.png](img_3.png)
-- Amis Template API模板维护，调试
-  ![img_4.png](img_4.png)
+> **注意**: 如果需要插入一条预先设置了主键值的新记录，请使用 `Entity.insert()` 而非 `Entity.save()`，因为 `save()` 在主键不为 `null` 时会执行更新操作。
+
+---
+
+## 2. sql-forge-calcite-spring-boot-starter（跨库联邦查询）
+
+基于 [Apache Calcite](https://calcite.apache.org/) 实现跨数据库联邦查询，可以在一条 SQL 中联合查询来自 MySQL、PostgreSQL 等不同数据库的数据。
+
+> 依赖基础 Starter（`sql-forge-spring-boot-starter`），会自动引入。
+
+### 启用配置
+
+```yaml
+sql:
+  forge:
+    calcite:
+      enabled: true                          # 启用 Calcite
+      configuration: classpath:model.json    # Calcite 模型配置文件路径
+      schemata:                              # 配置 schema
+        - MYSQL
+        - POSTGRES
+```
+
+`model.json` 用于描述 Calcite 的数据源连接信息，参考 [Apache Calcite 文档](https://calcite.apache.org/docs/model.html)。
+
+### 使用方式
+
+启用后会自动注册一个名为 `calcite` 的执行器，在所有 API 中通过 `executorName=calcite` 参数即可使用：
+
+```http request
+POST http://localhost:8080/sql/forge/api/json/select/orders?executorName=calcite
+Content-Type: application/json
+
+{
+  "@column": ["o.id", "u.username", "p.name"],
+  "@join": [
+    {
+      "type": "JOIN",
+      "joinTable": "MYSQL_DB.users u",
+      "on": "o.user_id = u.id"
+    },
+    {
+      "type": "JOIN",
+      "joinTable": "POSTGRES_DB.products p",
+      "on": "o.product_id = p.id"
+    }
+  ]
+}
+```
+
+### 配置
+
+通过 `sql.forge.calcite.enabled=false` 关闭（默认关闭）。
+
+---
+
+## 3. sql-forge-web-spring-boot-starter（Amis + 控制台）
+
+提供 Amis 低代码模板管理、Web Console 可视化界面和用户/角色/权限认证体系。
+
+> 依赖基础 Starter（`sql-forge-spring-boot-starter`），会自动引入。
+
+### 3.1 Amis 模板 API
+
+使用 [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) 配合 JSON API、SQL 模板 API 快速构建 Web 页面。
+
+#### 模板管理接口
+
+- `PUT /sql/forge/api/template/amis` - 保存/更新 Amis 模板
+  - id: 模板 ID
+  - name: 模板名称
+  - description: 模板描述
+  - context: Amis JSON Schema 内容
+- `GET /sql/forge/api/template/amis/{id}` - 根据 ID 获取模板
+- `GET /sql/forge/api/template/amis` - 获取模板列表
+- `DELETE /sql/forge/api/template/amis/{id}` - 删除指定 ID 的模板
+
+#### 示例
+
+```http request
+PUT http://localhost:8080/sql/forge/api/template/amis
+content-type: application/json
+
+{
+    "id": "amis-template-users",
+    "name": "用户管理",
+    "context": "{ \"type\": \"page\", \"body\": { \"type\": \"crud\", ... } }"
+}
+```
+
+渲染后页面：
+
+![img.png](img.png)
+
+#### 持久化模板
+
+默认使用内存存储。继承 [ITemplateAmisStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) 实现自定义持久化。
 
 #### 配置
-可通过`sql.forge.console.enabled=false`关闭
+
+可通过 `sql.forge.api.template.amis.enabled=false` 关闭。
+
+### 3.2 Web Console
+
+提供可视化 Web 界面，访问地址：`/sql/forge/web`
+
+- 数据库元数据查看、SQL 调试（需开启 `sql.forge.api.database.enabled=true`）
+  ![img_1.png](img_1.png)
+- JSON API 调试
+  ![img_2.png](img_2.png)
+- SQL 模板管理、调试
+  ![img_3.png](img_3.png)
+- Amis 模板管理、调试
+  ![img_4.png](img_4.png)
+
+### 3.3 用户与权限认证
+
+内置用户管理、角色管理、会话认证体系，默认使用内存存储，可扩展为数据库持久化。
+
+#### 认证接口
+
+- `POST /sql/forge/api/auth/login` - 用户登录
+- `POST /sql/forge/api/auth/logout` - 用户登出
+- `GET /sql/forge/api/auth/status` - 获取当前登录状态
+- `GET /sql/forge/api/auth/user` - 获取当前用户信息
+
+#### 用户管理接口（需管理员权限）
+
+- `GET /sql/forge/api/user` - 获取用户列表
+- `PUT /sql/forge/api/user` - 保存/更新用户
+- `DELETE /sql/forge/api/user/{id}` - 删除用户
+
+#### 角色管理接口
+
+- `GET /sql/forge/api/role` - 获取角色列表
+- `PUT /sql/forge/api/role` - 保存/更新角色（需管理员权限）
+- `DELETE /sql/forge/api/role/{id}` - 删除角色（需管理员权限）
+- `GET /sql/forge/api/role-template?role={roleId}` - 获取角色关联的模板 ID 列表
+- `PUT /sql/forge/api/role-template` - 设置角色关联的模板（需管理员权限）
+- `GET /sql/forge/api/user-role?userId={userId}` - 获取用户的角色 ID 列表（需管理员权限）
+- `PUT /sql/forge/api/user-role` - 设置用户的角色（需管理员权限）
+
+#### 扩展持久化存储
+
+所有存储均默认使用内存实现，可通过实现以下接口替换为数据库持久化：
+
+| 接口 | 说明 |
+|------|------|
+| [IUserStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IUserStorage.java) | 用户存储 |
+| [IUserRoleStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IUserRoleStorage.java) | 用户-角色关联存储 |
+| [IRoleStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IRoleStorage.java) | 角色存储 |
+| [IRoleTemplateStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IRoleTemplateStorage.java) | 角色-模板关联存储 |
+
+只需实现接口并注册为 Spring Bean 即可自动替换默认实现（`@ConditionalOnMissingBean`）。
+
+#### 配置
+
+可通过 `sql.forge.console.enabled=false` 关闭 Web Console 和认证相关 API。
+
+---
+
+## 完整配置参考
+
+```yaml
+sql:
+  forge:
+    schemata:                      # 配置 schema 名称
+      - PUBLIC
+    calcite:
+      enabled: true                # 启用 Calcite 跨库联邦查询
+      configuration: classpath:model.json
+    api:
+      database:
+        enabled: true              # 启用数据库直连 API
+        select-only: true          # true=仅允许 SELECT
+      json:
+        enabled: true              # 启用 JSON CRUD API（默认 true）
+      template:
+        sql:
+          enabled: true            # 启用 SQL 模板 API（默认 true）
+        amis:
+          enabled: true            # 启用 Amis 模板 API（默认 true）
+    console:
+      enabled: true                # 启用 Web Console（默认 true）
+```

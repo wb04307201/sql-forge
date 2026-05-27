@@ -97,8 +97,14 @@ public class TemplateSqlEngine {
         String testExpr = extractAttribute(attrs, "test");
         if (testExpr == null) throw new IllegalArgumentException("Missing 'test' attribute in <if>");
 
-        // 评估表达式
-        boolean condition = (Boolean) MVEL.eval(testExpr, context.getCurrentScope());
+        // 评估表达式，未定义变量视为 false
+        boolean condition = false;
+        try {
+            condition = (Boolean) MVEL.eval(testExpr, context.getCurrentScope());
+        } catch (Exception e) {
+            // 变量未定义时 MVEL 会抛异常，此时视为 false
+            condition = false;
+        }
         if (condition) {
             processTemplate(body, context); // 递归处理子模板
         }

@@ -59,7 +59,7 @@ SELECT * FROM users WHERE 1=1
         assertEquals(Boolean.TRUE, responsePut.getBody());
 
         ResponseEntity<List> responseExecute = restTemplate.postForEntity(
-                baseUrl + "/sql/forge/api/template/sql/execute/ApiTemplateDatabaseTest",
+                baseUrl + "/sql/forge/api/template/sql/ApiTemplateDatabaseTest",
                 Map.of("name", "alice", "ids", List.of(
                         "550e8400-e29b-41d4-a716-446655440000",
                         "550e8400-e29b-41d4-a716-446655440001",

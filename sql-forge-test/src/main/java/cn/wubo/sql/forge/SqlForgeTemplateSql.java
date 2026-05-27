@@ -12,6 +12,12 @@ public class SqlForgeTemplateSql {
     @Id
     private String id;
 
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
     @Column(name = "executor_name")
     private String executorName;
 

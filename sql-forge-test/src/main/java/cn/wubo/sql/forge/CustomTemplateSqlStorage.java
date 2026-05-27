@@ -23,11 +23,15 @@ public class CustomTemplateSqlStorage implements ITemplateSqlStorage<TemplateSql
             List list = entityExecutor.run("database", Entity.select(SqlForgeTemplateSql.class).eq(SqlForgeTemplateSql::getId, template.getId()));
             if (list.isEmpty()) {
                 entityExecutor.run("database", Entity.insert(SqlForgeTemplateSql.class)
+                        .set(SqlForgeTemplateSql::getName, template.getName())
+                        .set(SqlForgeTemplateSql::getDescription, template.getDescription())
                         .set(SqlForgeTemplateSql::getExecutorName, template.getExecutorName())
                         .set(SqlForgeTemplateSql::getContext, template.getContext())
                         .set(SqlForgeTemplateSql::getId, template.getId()));
             } else {
                 entityExecutor.run("database", Entity.update(SqlForgeTemplateSql.class)
+                        .set(SqlForgeTemplateSql::getName, template.getName())
+                        .set(SqlForgeTemplateSql::getDescription, template.getDescription())
                         .set(SqlForgeTemplateSql::getExecutorName, template.getExecutorName())
                         .set(SqlForgeTemplateSql::getContext, template.getContext())
                         .eq(SqlForgeTemplateSql::getId, template.getId()));
@@ -48,6 +52,8 @@ public class CustomTemplateSqlStorage implements ITemplateSqlStorage<TemplateSql
                 SqlForgeTemplateSql sqlForgeTemplate = list.get(0);
                 TemplateSql template = new TemplateSql();
                 template.setId(sqlForgeTemplate.getId());
+                template.setName(sqlForgeTemplate.getName());
+                template.setDescription(sqlForgeTemplate.getDescription());
                 template.setExecutorName(sqlForgeTemplate.getExecutorName());
                 template.setContext(sqlForgeTemplate.getContext());
                 return template;
@@ -73,6 +79,10 @@ public class CustomTemplateSqlStorage implements ITemplateSqlStorage<TemplateSql
             EntitySelect<SqlForgeTemplateSql> select = Entity.select(SqlForgeTemplateSql.class);
             if (StringUtils.hasText(template.getId()))
                 select.like(SqlForgeTemplateSql::getId, template.getId());
+            if (StringUtils.hasText(template.getName()))
+                select.like(SqlForgeTemplateSql::getName, template.getName());
+            if (StringUtils.hasText(template.getDescription()))
+                select.like(SqlForgeTemplateSql::getDescription, template.getDescription());
             if (StringUtils.hasText(template.getExecutorName()))
                 select.eq(SqlForgeTemplateSql::getExecutorName, template.getExecutorName());
             if (StringUtils.hasText(template.getContext()))
@@ -83,6 +93,8 @@ public class CustomTemplateSqlStorage implements ITemplateSqlStorage<TemplateSql
                     .map(sqlForgeTemplate -> {
                         TemplateSql temp = new TemplateSql();
                         temp.setId(sqlForgeTemplate.getId());
+                        temp.setName(sqlForgeTemplate.getName());
+                        temp.setDescription(sqlForgeTemplate.getDescription());
                         temp.setExecutorName(sqlForgeTemplate.getExecutorName());
                         temp.setContext(sqlForgeTemplate.getContext());
                         return temp;

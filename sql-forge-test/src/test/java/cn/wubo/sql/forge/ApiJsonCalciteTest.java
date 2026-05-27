@@ -10,6 +10,7 @@ import cn.wubo.sql.forge.record.base.Where;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -25,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
+@ExtendWith(CalciteCondition.class)
 public class ApiJsonCalciteTest {
 
     @Autowired

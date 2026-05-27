@@ -23,10 +23,14 @@ public class CustomTemplateAmisStorage implements ITemplateAmisStorage<TemplateA
             List list = entityExecutor.run("database", Entity.select(SqlForgeTemplateAmis.class).eq(SqlForgeTemplateAmis::getId, template.getId()));
             if (list.isEmpty()) {
                 entityExecutor.run("database", Entity.insert(SqlForgeTemplateAmis.class)
+                        .set(SqlForgeTemplateAmis::getName, template.getName())
+                        .set(SqlForgeTemplateAmis::getDescription, template.getDescription())
                         .set(SqlForgeTemplateAmis::getContext, template.getContext())
                         .set(SqlForgeTemplateAmis::getId, template.getId()));
             } else {
                 entityExecutor.run("database", Entity.update(SqlForgeTemplateAmis.class)
+                        .set(SqlForgeTemplateAmis::getName, template.getName())
+                        .set(SqlForgeTemplateAmis::getDescription, template.getDescription())
                         .set(SqlForgeTemplateAmis::getContext, template.getContext())
                         .eq(SqlForgeTemplateAmis::getId, template.getId()));
             }
@@ -46,6 +50,8 @@ public class CustomTemplateAmisStorage implements ITemplateAmisStorage<TemplateA
                 SqlForgeTemplateAmis sqlForgeTemplate = list.get(0);
                 TemplateAmis template = new TemplateAmis();
                 template.setId(sqlForgeTemplate.getId());
+                template.setName(sqlForgeTemplate.getName());
+                template.setDescription(sqlForgeTemplate.getDescription());
                 template.setContext(sqlForgeTemplate.getContext());
                 return template;
             }
@@ -70,6 +76,10 @@ public class CustomTemplateAmisStorage implements ITemplateAmisStorage<TemplateA
             EntitySelect<SqlForgeTemplateAmis> select = Entity.select(SqlForgeTemplateAmis.class);
             if (StringUtils.hasText(template.getId()))
                 select.like(SqlForgeTemplateAmis::getId, template.getId());
+            if (StringUtils.hasText(template.getName()))
+                select.like(SqlForgeTemplateAmis::getName, template.getName());
+            if (StringUtils.hasText(template.getDescription()))
+                select.like(SqlForgeTemplateAmis::getDescription, template.getDescription());
             if (StringUtils.hasText(template.getContext()))
                 select.like(SqlForgeTemplateAmis::getContext, template.getContext());
 
@@ -78,6 +88,8 @@ public class CustomTemplateAmisStorage implements ITemplateAmisStorage<TemplateA
                     .map(sqlForgeTemplate -> {
                         TemplateAmis temp = new TemplateAmis();
                         temp.setId(sqlForgeTemplate.getId());
+                        temp.setName(sqlForgeTemplate.getName());
+                        temp.setDescription(sqlForgeTemplate.getDescription());
                         temp.setContext(sqlForgeTemplate.getContext());
                         return temp;
                     }).toList();

@@ -4,37 +4,47 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.gitee.wb04307201</groupId>
+    <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-parent</artifactId>
     <version>1.0-SNAPSHOT</version>
-
     <packaging>pom</packaging>
-    <url>
-        https://gitee.com/wb04307201/sql-forge
-    </url>
+    <name>sql-forge-parent</name>
+    <description>一套基于 Spring Boot 的数据库操作框架，提供 JSON CRUD API、类型安全的实体操作、SQL 模板引擎、Apache Calcite 跨库联邦查询以及 Amis 低代码可视化管理，开箱即用、按需引入。</description>
+    <url>https://github.com/wb04307201/sql-forge</url>
+
+    <developers>
+        <developer>
+            <id>wb04307201</id>
+            <name>wubo</name>
+            <email>wubo_aaa@163.com</email>
+        </developer>
+    </developers>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
             <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
-    <developers>
-        <developer>
-            <name>wubo</name>
-            <email>wubo_aaa@163.com</email>
-            <url>https://gitee.com/wb04307201</url>
-        </developer>
-    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/wb04307201/sql-forge.git</connection>
+        <developerConnection>scm:git:git@github.com:wb04307201/sql-forge.git</developerConnection>
+        <url>https://github.com/wb04307201/sql-forge</url>
+    </scm>
 
     <modules>
         <module>sql-forge-core</module>
-        <module>sql-forge-calcite</module>
+        <module>sql-forge-calcite-autoconfigure</module>
         <module>sql-forge-record</module>
         <module>sql-forge-entity</module>
         <module>sql-forge-template</module>
-        <module>sql-forge-console</module>
+        <module>sql-forge-web</module>
         <module>sql-forge-spring-boot-autoconfigure</module>
         <module>sql-forge-spring-boot-starter</module>
+        <module>sql-forge-calcite-spring-boot-starter</module>
+        <module>sql-forge-web-autoconfigure</module>
+        <module>sql-forge-web-spring-boot-starter</module>
         <module>sql-forge-test</module>
     </modules>
 
@@ -42,14 +52,34 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spring-boot.version>3.5.13</spring-boot.version>
-        <lombok.version>1.18.42</lombok.version>
+        <spring-boot.version>3.5.14</spring-boot.version>
+        <lombok.version>1.18.46</lombok.version>
         <jakarta.version>3.2.0</jakarta.version>
         <jsqlparser.version>5.3</jsqlparser.version>
-        <enjoy.version>5.2.5</enjoy.version>
         <mvel2.version>2.5.2.Final</mvel2.version>
         <calcite.version>1.41.0</calcite.version>
     </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.15.0</version>
+                    <configuration>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <dependencyManagement>
         <dependencies>

@@ -1,6 +1,7 @@
 package cn.wubo.sql.forge;
 
 import cn.wubo.sql.forge.record.base.Join;
+import cn.wubo.sql.forge.record.base.Page;
 import cn.wubo.sql.forge.record.base.Where;
 import cn.wubo.sql.forge.enums.ConditionType;
 import cn.wubo.sql.forge.jdbc.SQL;
@@ -133,8 +134,9 @@ public record RecordExecutor(ExecutorService executorService,
         // 处理GROUP BY子句
         if (select.groups() != null && !select.groups().isEmpty()) sql.GROUP_BY(select.groups().toArray(String[]::new));
 
-        // 处理ORDER BY子句
-        if (select.orders() != null && !select.orders().isEmpty()) sql.ORDER_BY(select.orders().toArray(String[]::new));
+        // 处理ORDER BY子句，过滤掉空值和未求值的模板表达式
+        List<String> orders = sanitizeOrders(select.orders());
+        if (!orders.isEmpty()) sql.ORDER_BY(orders.toArray(String[]::new));
 
         return executor.executeQuery(new SqlScript(sql.toString(), params));
     }
@@ -163,12 +165,17 @@ public record RecordExecutor(ExecutorService executorService,
 
         applyWheres(sql, select.wheres(), params);
 
-        // 处理ORDER BY子句
-        if (select.orders() != null && !select.orders().isEmpty()) sql.ORDER_BY(select.orders().toArray(String[]::new));
+        // 处理ORDER BY子句，过滤掉空值和未求值的模板表达式
+        List<String> orders = sanitizeOrders(select.orders());
+        if (!orders.isEmpty()) sql.ORDER_BY(orders.toArray(String[]::new));
 
         // 处理分页参数
-        params.put(select.page().pageSize());
-        params.put((long) select.page().pageIndex() * select.page().pageSize());
+        Page page = select.page();
+        if (page == null) {
+            page = new Page(0, 10);
+        }
+        params.put(page.pageSize());
+        params.put((long) page.pageIndex() * page.pageSize());
         sql.LIMIT(QUESTION_MARK).OFFSET(QUESTION_MARK);
 
         List<RowMap> countList = select(executorName, tableName, select.selectCount());
@@ -231,6 +238,19 @@ public record RecordExecutor(ExecutorService executorService,
 
             }
         }
+    }
+
+    /**
+     * 过滤排序字段列表，移除空值和未求值的模板表达式（如 Amis 的 ${...} 表达式）
+     *
+     * @param orders 原始排序字段列表
+     * @return 过滤后的排序字段列表
+     */
+    private List<String> sanitizeOrders(List<String> orders) {
+        if (orders == null || orders.isEmpty()) return List.of();
+        return orders.stream()
+                .filter(o -> o != null && !o.isBlank() && !o.contains("${"))
+                .toList();
     }
 
     private void applyWheres(SQL sql, List<Where> wheres, ParamMap params) {

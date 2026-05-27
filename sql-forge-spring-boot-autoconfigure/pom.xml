@@ -3,31 +3,23 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.gitee.wb04307201</groupId>
+        <groupId>io.github.wb04307201</groupId>
         <artifactId>sql-forge-parent</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <artifactId>sql-forge-spring-boot-autoconfigure</artifactId>
+    <name>sql-forge-spring-boot-autoconfigure</name>
     <packaging>jar</packaging>
+
     <dependencies>
         <dependency>
-            <groupId>com.gitee.wb04307201</groupId>
+            <groupId>io.github.wb04307201</groupId>
             <artifactId>sql-forge-entity</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.gitee.wb04307201</groupId>
+            <groupId>io.github.wb04307201</groupId>
             <artifactId>sql-forge-template</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.gitee.wb04307201</groupId>
-            <artifactId>sql-forge-calcite</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.gitee.wb04307201</groupId>
-            <artifactId>sql-forge-console</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
