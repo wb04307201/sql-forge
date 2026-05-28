@@ -12,12 +12,10 @@ public class SessionManager {
     private static final String SESSION_USER = "sql-forge-user";
     private final IUserStorage userStorage;
     private final IUserRoleStorage userRoleStorage;
-    private final IRoleStorage roleStorage;
 
-    public SessionManager(IUserStorage userStorage, IUserRoleStorage userRoleStorage, IRoleStorage roleStorage) {
+    public SessionManager(IUserStorage userStorage, IUserRoleStorage userRoleStorage) {
         this.userStorage = userStorage;
         this.userRoleStorage = userRoleStorage;
-        this.roleStorage = roleStorage;
     }
 
     /**

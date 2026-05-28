@@ -150,5 +150,31 @@ public class SqlForgeConfiguration {
         return builder.build();
     }
 
+    @Bean("sqlForgeApiDatabaseConsoleRouter")
+    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true")
+    public RouterFunction<ServerResponse> sqlForgeApiDatabaseConsoleRouter(ExecutorService executorService) {
+        return route()
+                .GET("sql/forge/api/database/metaDataDatabase", request -> {
+                    String executorName = request.param("executorName").orElse("database");
+                    return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataDatabase());
+                })
+                .GET("sql/forge/api/database/tableTypes", request -> {
+                    String executorName = request.param("executorName").orElse("database");
+                    return ServerResponse.ok().body(executorService.getExecutor(executorName).getTableTypes());
+                })
+                .GET("sql/forge/api/database/metaDataTables", request -> {
+                    String executorName = request.param("executorName").orElse("database");
+                    return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTables());
+                })
+                .GET("sql/forge/api/database/metaDataTableInfo", request -> {
+                    String executorName = request.param("executorName").orElse("database");
+                    String catalog = request.param("catalog").orElse(null);
+                    String schema = request.param("schema").orElse(null);
+                    String tableType = request.param("tableType").orElse(null);
+                    String tableName = request.param("tableName").orElseThrow(() -> new IllegalArgumentException("tableName is required"));
+                    return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTableInfos(catalog, schema, tableName, tableType));
+                })
+                .build();
+    }
 
 }

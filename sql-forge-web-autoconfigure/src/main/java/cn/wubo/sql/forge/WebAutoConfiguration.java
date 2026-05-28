@@ -5,16 +5,19 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.MediaType;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.springframework.web.servlet.function.RequestPredicates.accept;
 import static org.springframework.web.servlet.function.RouterFunctions.route;
-import org.springframework.http.MediaType;
 
 /**
  * Web 控制台自动配置类，注册 Amis 模板 API、认证鉴权、用户角色管理、Console UI 路由等 Bean。所有存储接口均提供 @ConditionalOnMissingBean 默认内存实现。
@@ -50,8 +53,8 @@ public class WebAutoConfiguration {
     }
 
     @Bean
-    public SessionManager sessionManager(IUserStorage userStorage, IUserRoleStorage userRoleStorage, IRoleStorage roleStorage) {
-        return new SessionManager(userStorage, userRoleStorage, roleStorage);
+    public SessionManager sessionManager(IUserStorage userStorage, IUserRoleStorage userRoleStorage) {
+        return new SessionManager(userStorage, userRoleStorage);
     }
 
     @Bean
@@ -324,21 +327,12 @@ public class WebAutoConfiguration {
     // ========== 控制台 & Home 路由 ==========
 
     @Bean("sqlForgeApiDatabaseConsoleRouter")
-    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true")
     @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
     public RouterFunction<ServerResponse> sqlForgeApiDatabaseConsoleRouter(ExecutorService executorService, AuthFilter authFilter) {
         return route()
             .GET("sql/forge/api/database/metaDataTree", request -> {
                 String executorName = request.param("executorName").orElse("database");
                 return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTree());
-            })
-            .GET("sql/forge/api/database/getMetaDataDatabase", request -> {
-                String executorName = request.param("executorName").orElse("database");
-                return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataDatabase());
-            })
-            .GET("sql/forge/api/database/metaDataTables", request -> {
-                String executorName = request.param("executorName").orElse("database");
-                return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTables());
             })
             .filter(authFilter)
             .build();
