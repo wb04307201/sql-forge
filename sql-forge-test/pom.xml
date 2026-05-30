@@ -65,11 +65,6 @@
             <artifactId>postgresql</artifactId>
             <version>42.7.8</version>
         </dependency>
-        <dependency>
-            <groupId>de.mkammerer</groupId>
-            <artifactId>argon2-jvm</artifactId>
-            <version>2.12</version>
-        </dependency>
     </dependencies>
 
     <build>
