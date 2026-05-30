@@ -38,7 +38,7 @@ public class ExecutorServiceDatabaseTest {
 
     @Test
     void testMetaDataTables() throws SQLException {
-        List<MetaTable> metaTables = executorService.getExecutor().getMetaDataTables();
+        List<TableInfo> metaTables = executorService.getExecutor().getMetaDataTables();
         log.info("entireTables: {}", metaTables);
     }
 

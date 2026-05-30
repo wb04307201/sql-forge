@@ -4,7 +4,7 @@
   <a href="README.md">English</a> | 中文
 </div>
 
-> **SQL工坊** — 一套基于 Spring Boot 的数据库操作框架，提供 JSON CRUD API、类型安全的实体操作、SQL 模板引擎、Apache Calcite 跨库联邦查询以及 Amis 低代码可视化管理，开箱即用、按需引入。
+> **SQL工坊** — 一套基于 Spring Boot 的数据库操作框架，提供 JSON CRUD API、类型安全的实体操作、SQL 模板引擎、Apache Calcite 跨库联邦查询、Amis 低代码可视化管理以及 MCP（Model Context Protocol）AI 工具集成服务器，开箱即用、按需引入。
 
 ![Maven Central](https://img.shields.io/maven-central/v/io.github.wb04307201/sql-forge-spring-boot-starter?style=flat-square)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
@@ -24,21 +24,21 @@
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.5.10</version>
+    <version>1.5.11</version>
 </dependency>
 
 <!-- Calcite 跨库联邦查询（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
-    <version>1.5.10</version>
+    <version>1.5.11</version>
 </dependency>
 
 <!-- Amis 模板 + Web Console（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
-    <version>1.5.10</version>
+    <version>1.5.11</version>
 </dependency>
 ```
 
@@ -59,6 +59,7 @@
 | **sql-forge-spring-boot-starter** | 基础 Starter：数据库执行器、JSON CRUD API、类型安全实体操作（Entity）、SQL 模板引擎、Record 操作切面、内置用户认证（Session + ApiKey） |
 | **sql-forge-calcite-spring-boot-starter** | 基于 Apache Calcite 的跨数据库联邦查询执行器，可同时查询 MySQL、PostgreSQL 等多种数据源 |
 | **sql-forge-web-spring-boot-starter** | Amis 低代码模板管理 API、Web Console 可视化界面、用户/角色管理 |
+| **sql-forge-mcp** | Model Context Protocol (MCP) 服务器，用于 AI 工具集成 — 通过 stdio 暴露数据库元数据查询、SQL 执行、Amis 模板管理等 MCP 工具 |
 
 ---
 
@@ -806,6 +807,71 @@ content-type: application/json
 | [IRoleTemplateStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IRoleTemplateStorage.java) | 角色-模板关联存储 |
 
 只需实现接口并注册为 Spring Bean 即可自动替换默认实现（`@ConditionalOnMissingBean`）。
+
+---
+
+## 4. sql-forge-mcp（AI MCP 服务器）
+
+基于 [Model Context Protocol](https://modelcontextprotocol.io/)（MCP）协议的服务器，通过 **stdio** 传输方式将 sql-forge 后端能力暴露为 AI 工具。AI 助手（Claude Desktop、Cursor、Windsurf 等）可以通过 MCP 工具调用查询数据库元数据、执行 SQL、管理 Amis 模板。
+
+> 需要一个运行中的 sql-forge 后端（需开启 `sql.forge.api.database.enabled=true`）。
+
+### MCP 工具列表
+
+| 工具 | 说明 |
+|------|------|
+| `getSystems` | 获取所有已配置的系统信息 |
+| `getMetaDataDatabase` | 获取系统的数据库产品名称和版本 |
+| `sqlForgeMetaDataTables` | 获取系统数据库中的所有表 |
+| `getMetaDataTableInfo` | 获取表结构：列、主键、外键、索引 |
+| `executeSQL` | 执行 SQL 查询并返回结果集 |
+| `amisTemplateSave` | 保存 Amis 页面 JSON 模板配置 |
+
+### stdio 使用方式（jbang）
+
+使用 [jbang](https://www.jbang.dev/) 无需本地安装即可运行 MCP 服务器，在 MCP 客户端（Claude Desktop、Cursor 等）中配置如下：
+
+```json
+{
+  "mcpServers": {
+    "sql-forge-mcp": {
+      "command": "jbang.cmd",
+      "args": [
+        "io.github.wb04307201:sql-forge-mcp:1.5.11",
+        "--sql.forge.mcp.systems[0].name=订单系统",
+        "--sql.forge.mcp.systems[0].url=http://localhost:8081",
+        "--sql.forge.mcp.systems[0].description=订单系统，包含系统表：用户、角色、字典等，业务表：商品、订单、支付记录、用户地址、库存、订单物流、商品分类、商品评价等",
+        "--sql.forge.mcp.systems[0].apiKey=test"
+      ]
+    }
+  }
+}
+```
+
+### 多系统配置
+
+配置多个系统可将一个 MCP 服务器连接到多个 sql-forge 后端：
+
+```json
+{
+  "mcpServers": {
+    "sql-forge-mcp": {
+      "command": "jbang.cmd",
+      "args": [
+        "io.github.wb04307201:sql-forge-mcp:1.5.11",
+        "--sql.forge.mcp.systems[0].name=订单系统",
+        "--sql.forge.mcp.systems[0].url=http://localhost:8081",
+        "--sql.forge.mcp.systems[0].description=订单系统",
+        "--sql.forge.mcp.systems[0].apiKey=test",
+        "--sql.forge.mcp.systems[1].name=库存系统",
+        "--sql.forge.mcp.systems[1].url=http://localhost:8082",
+        "--sql.forge.mcp.systems[1].description=库存系统",
+        "--sql.forge.mcp.systems[1].apiKey=test"
+      ]
+    }
+  }
+}
+```
 
 ---
 
