@@ -2,7 +2,6 @@ package cn.wubo.sql.forge;
 
 import cn.wubo.sql.forge.map.ParamMap;
 import cn.wubo.sql.forge.map.RowMap;
-import cn.wubo.sql.forge.records.DatabaseInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -44,7 +43,7 @@ public class ExecutorServiceCalciteTest {
 
     @Test
     void testMetaDataTables() throws SQLException {
-        List<MetaTable> metaTables = executorService.getExecutor().getMetaDataTables();
+        List<TableInfo> metaTables = executorService.getExecutor().getMetaDataTables();
         log.info("entireTables: {}", metaTables);
     }
 
