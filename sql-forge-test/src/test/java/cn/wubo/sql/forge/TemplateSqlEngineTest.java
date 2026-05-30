@@ -1,6 +1,5 @@
 package cn.wubo.sql.forge;
 
-import cn.wubo.sql.forge.records.SqlScript;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 

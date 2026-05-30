@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,61 +26,61 @@ public class EntityExecutorDatabaseTest {
 
     @Test
     void testEntitySelect() throws Exception {
-        EntitySelect<User> select = Entity.select(User.class)
+        EntitySelect<Product> select = Entity.select(Product.class)
                 .distinct(true)
-                .columns(User::getId, User::getUsername, User::getEmail)
-                .orders(User::getUsername)
-                .in(User::getUsername, "alice", "bob");
-        List<User> users = entityExecutor.run(select);
-        log.info("{}", users);
-        assertEquals(2, users.size());
+                .columns(Product::getId, Product::getName, Product::getPrice)
+                .orders(Product::getName)
+                .in(Product::getName, "笔记本电脑", "鼠标");
+        List<Product> products = entityExecutor.run(select);
+        log.info("{}", products);
+        assertEquals(2, products.size());
     }
 
     @Test
     void testEntitySelectPage() throws Exception {
-        EntitySelectPage<User> select = Entity.selectPage(User.class)
+        EntitySelectPage<Product> select = Entity.selectPage(Product.class)
                 .distinct(true)
-                .columns(User::getId, User::getUsername, User::getEmail)
-                .orders(User::getUsername)
-                .in(User::getUsername, "alice", "bob")
+                .columns(Product::getId, Product::getName, Product::getPrice)
+                .orders(Product::getName)
+                .in(Product::getName, "笔记本电脑", "鼠标")
                 .page(0, 1);
-        SelectPageResult<User> users = entityExecutor.run(select);
-        log.info("{}", users);
-        assertEquals(2, users.total());
-        assertEquals(1, users.rows().size());
+        SelectPageResult<Product> products = entityExecutor.run(select);
+        log.info("{}", products);
+        assertEquals(2, products.total());
+        assertEquals(1, products.rows().size());
     }
 
     @Test
     void testEntity() throws Exception {
-        User user = new User();
-        user.setUsername("EntityExecutorDatabaseTest");
-        user.setEmail("wb04307201@gitee.com");
-        user = entityExecutor.run(Entity.save(user));
-        log.info("{}", user);
-        user.setEmail("wb04307201@github.com");
-        user = entityExecutor.run(Entity.save(user));
-        log.info("{}", user);
-        int count = entityExecutor.run(Entity.delete(user));
+        Product product = new Product();
+        product.setName("EntityExecutorDatabaseTest");
+        product.setPrice(new BigDecimal("99.99"));
+        product = entityExecutor.run(Entity.save(product));
+        log.info("{}", product);
+        product.setPrice(new BigDecimal("199.99"));
+        product = entityExecutor.run(Entity.save(product));
+        log.info("{}", product);
+        int count = entityExecutor.run(Entity.delete(product));
         log.info("{}", count);
     }
 
     @Test
     void test() throws Exception {
         String id = UUID.randomUUID().toString();
-        EntityInsert<User> insert = Entity.insert(User.class).set(User::getId, id)
-                .set(User::getUsername, "wb04307201")
-                .set(User::getEmail, "wb04307201@gitee.com");
+        EntityInsert<Product> insert = Entity.insert(Product.class).set(Product::getId, id)
+                .set(Product::getName, "测试产品")
+                .set(Product::getPrice, new BigDecimal("49.99"));
         Object key = entityExecutor.run(insert);
         log.info("{}", key);
 
-        EntityUpdate<User> update = Entity.update(User.class)
-                .set(User::getEmail, "wb04307201@github.com")
-                .eq(User::getId, id);
+        EntityUpdate<Product> update = Entity.update(Product.class)
+                .set(Product::getPrice, new BigDecimal("59.99"))
+                .eq(Product::getId, id);
         int count = entityExecutor.run(update);
         log.info("{}", count);
 
-        EntityDelete<User> delete = Entity.delete(User.class)
-                .eq(User::getId, id);
+        EntityDelete<Product> delete = Entity.delete(Product.class)
+                .eq(Product::getId, id);
         count = entityExecutor.run(delete);
         log.info("{}", count);
     }

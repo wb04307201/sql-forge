@@ -20,6 +20,7 @@ public class SqlForgeProperties {
     private  CalciteProperties calcite = new CalciteProperties();
     private ApiProperties api = new ApiProperties();
     private ConsoleProperties console = new ConsoleProperties();
+    private List<String> apiKeys = new ArrayList<>();
 
     /**
      * Apache Calcite 跨库联邦查询配置。

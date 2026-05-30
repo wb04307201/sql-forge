@@ -34,6 +34,7 @@
     </scm>
 
     <modules>
+        <module>sql-forge-model</module>
         <module>sql-forge-core</module>
         <module>sql-forge-calcite-autoconfigure</module>
         <module>sql-forge-record</module>
@@ -45,6 +46,7 @@
         <module>sql-forge-calcite-spring-boot-starter</module>
         <module>sql-forge-web-autoconfigure</module>
         <module>sql-forge-web-spring-boot-starter</module>
+        <module>sql-forge-mcp</module>
         <module>sql-forge-test</module>
     </modules>
 
@@ -58,6 +60,7 @@
         <jsqlparser.version>5.3</jsqlparser.version>
         <mvel2.version>2.5.2.Final</mvel2.version>
         <calcite.version>1.41.0</calcite.version>
+        <spring-ai.version>1.1.7</spring-ai.version>
     </properties>
 
     <dependencyManagement>
@@ -93,6 +96,13 @@
                 <groupId>org.apache.calcite</groupId>
                 <artifactId>calcite-core</artifactId>
                 <version>${calcite.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

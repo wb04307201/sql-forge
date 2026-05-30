@@ -1,0 +1,15 @@
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        name: sql-forge-mcp-server
+        version: 1.5.10
+
+logging:
+  pattern:
+    console:
+  file:
+    name: ./mcp/sql-forge-mcp-server.log

@@ -1,5 +1,5 @@
 
-package cn.wubo.sql.forge.records;
+package cn.wubo.sql.forge;
 
 /**
  * 列信息记录类
@@ -9,7 +9,6 @@ public record ColumnInfo(
         String typeName,
         int columnSize,
         int decimalDigits,
-        int nullable,
         String remarks,
         String columnDef,
         int ordinalPosition,

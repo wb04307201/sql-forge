@@ -1,11 +1,6 @@
 package cn.wubo.sql.forge;
 
-import cn.wubo.sql.forge.enums.DatasourceType;
 import cn.wubo.sql.forge.map.RowMap;
-import cn.wubo.sql.forge.records.DatabaseInfo;
-import cn.wubo.sql.forge.records.EntireTable;
-import cn.wubo.sql.forge.records.EntireTableInfo;
-import cn.wubo.sql.forge.records.SqlScript;
 import jakarta.validation.Valid;
 
 import java.sql.SQLException;
@@ -79,13 +74,6 @@ public interface IExecutor {
      */
     DatabaseInfo getMetaDataDatabase() throws SQLException;
 
-    /**
-     * 获取数据库支持的表类型列表。
-     *
-     * @return 表类型列表，如 "TABLE"、"VIEW"
-     * @throws SQLException SQL 执行异常
-     */
-    List<String> getTableTypes() throws SQLException;
 
     /**
      * 获取所有表的基本信息列表。
@@ -93,7 +81,7 @@ public interface IExecutor {
      * @return 表信息列表
      * @throws SQLException SQL 执行异常
      */
-    List<EntireTable> getMetaDataTables() throws SQLException;
+    List<TableInfo> getMetaDataTables() throws SQLException;
 
     /**
      * 获取指定表的详细元数据信息（列、主键、外键、索引）。
@@ -105,5 +93,5 @@ public interface IExecutor {
      * @return 表详细元数据信息列表
      * @throws SQLException SQL 执行异常
      */
-    List<EntireTableInfo> getMetaDataTableInfos(String catalog, String schemaPattern, String tableNamePattern, String tableType) throws SQLException;
+    List<TableDefinitionInfo> getMetaDataDefinitions(String catalog, String schemaPattern, String tableNamePattern, String tableType) throws SQLException;
 }

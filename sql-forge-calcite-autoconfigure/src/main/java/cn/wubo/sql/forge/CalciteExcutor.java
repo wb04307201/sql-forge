@@ -1,10 +1,6 @@
 package cn.wubo.sql.forge;
 
 import cn.wubo.sql.forge.map.RowMap;
-import cn.wubo.sql.forge.records.DatabaseInfo;
-import cn.wubo.sql.forge.records.EntireTable;
-import cn.wubo.sql.forge.records.EntireTableInfo;
-import cn.wubo.sql.forge.records.SqlScript;
 import cn.wubo.sql.forge.utils.ExecutorUtils;
 import cn.wubo.sql.forge.utils.MetaDataUtils;
 import jakarta.validation.Valid;
@@ -62,23 +58,16 @@ public record CalciteExcutor(String model,
     }
 
     @Override
-    public List<String> getTableTypes() throws SQLException {
-        try (Connection connection = CalciteExcutorUtils.getConnection(model)) {
-            return MetaDataUtils.getTableTypes(connection);
-        }
-    }
-
-    @Override
-    public List<EntireTable> getMetaDataTables() throws SQLException {
+    public List<TableInfo> getMetaDataTables() throws SQLException {
         try (Connection connection = CalciteExcutorUtils.getConnection(model)) {
             return MetaDataUtils.getMetaDataTables(connection, properties.getCalcite().getSchemata());
         }
     }
 
     @Override
-    public List<EntireTableInfo> getMetaDataTableInfos(String catalog, String schemaPattern, String tableNamePattern, String tableType) throws SQLException {
+    public List<TableDefinitionInfo> getMetaDataDefinitions(String catalog, String schemaPattern, String tableNamePattern, String tableType) throws SQLException {
         try (Connection connection = CalciteExcutorUtils.getConnection(model)) {
-            return MetaDataUtils.getMetaDataTableInfos(connection, catalog, schemaPattern, tableNamePattern, tableType, properties.getCalcite().getSchemata());
+            return MetaDataUtils.getMetaDataDefinitions(connection, catalog, schemaPattern, tableNamePattern, tableType, properties.getCalcite().getSchemata());
         }
     }
 }

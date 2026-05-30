@@ -1,11 +1,10 @@
 package cn.wubo.sql.forge;
 
-import cn.wubo.sql.forge.records.SqlScript;
 import org.mvel2.MVEL;
 import java.util.*;
 import java.util.regex.*;
 
-import static cn.wubo.sql.forge.constant.Constant.QUESTION_MARK;
+import static cn.wubo.sql.forge.Constant.QUESTION_MARK;
 import static org.springframework.core.log.LogFormatUtils.formatValue;
 
 /**

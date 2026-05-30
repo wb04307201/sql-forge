@@ -4,14 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SQL Forge is a Java 17+ Spring Boot 3 library providing database operations, cross-database federated queries (via Apache Calcite), JSON-based CRUD APIs, SQL template engine, and Amis low-code integration. Published to JitPack.
+SQL Forge is a Java 17+ Spring Boot 3 library providing database operations, cross-database federated queries (via Apache Calcite), JSON-based CRUD APIs, SQL template engine, Amis low-code integration, and MCP (Model Context Protocol) server for AI tool integration. Published to Maven Central.
 
 ## Module Architecture
 
 ```
 sql-forge-parent (pom)
 ├── sql-forge-core                        # Core: IExecutor, ExecutorService, SQL builder, DB metadata, SqlForgeProperties
-├── sql-forge-calcite-autoconfigure     # Apache Calcite cross-database federated query executor (CalciteExcutor class + auto-config)
 ├── sql-forge-record                      # JSON-based CRUD (Delete/Insert/Select/Update/SelectPage) with IBeforeRecordExecutor hooks
 ├── sql-forge-entity                      # Type-safe entity operations via lambda refs (Entity.select/insert/update/delete/save)
 ├── sql-forge-template                    # SQL template engine (Enjoy) + Amis template storage
@@ -22,6 +21,7 @@ sql-forge-parent (pom)
 ├── sql-forge-calcite-spring-boot-starter # Starter: depends on calcite-autoconfigure (Calcite 跨库查询, 可选)
 ├── sql-forge-web-autoconfigure           # Auto-config: console endpoints + web UI router (conditional on sql.forge.console.enabled)
 ├── sql-forge-web-spring-boot-starter     # Starter: depends on web-autoconfigure (Amis + Console, 可选)
+├── sql-forge-mcp                         # Model Context Protocol server (Spring AI @Tool, standalone app)
 └── sql-forge-test                        # Integration tests + sample app
 ```
 
@@ -107,6 +107,7 @@ sql:
 ### Key Dependencies
 
 - **Spring Boot** 3.5.13 (managed via BOM)
+- **Spring AI** — MCP tool annotations (`@Tool`, `@ToolParam`) in `sql-forge-mcp`
 - **Apache Calcite** 1.41.0 — cross-database federated queries
 - **JSqlParser** 5.3 — SQL parsing
 - **Enjoy** 5.2.5 — SQL template engine (conditional logic, loops via `#{var}`, `<if>`, `<foreach>`)
@@ -120,6 +121,9 @@ sql:
 # Build all modules (skip tests)
 mvn clean install -DskipTests
 
+# Build skipping Javadoc and GPG signing (faster local builds)
+mvn clean install -DskipTests -Dgpg.skip
+
 # Run all tests
 mvn test
 
@@ -132,7 +136,13 @@ mvn test -pl sql-forge-test -Dtest=EntityExecutorDatabaseTest#testSelect
 # Run the test application (Spring Boot)
 mvn spring-boot:run -pl sql-forge-test
 
-# Package for JitPack release
+# Run the MCP server (AI tool integration)
+mvn spring-boot:run -pl sql-forge-mcp
+
+# Generate Javadoc (strict mode - fails on missing @param/@return)
+mvn javadoc:jar -pl <module-name>
+
+# Package for Maven Central release
 mvn clean install
 ```
 
@@ -146,6 +156,16 @@ Test app config is at `sql-forge-test/src/test/resources/application-test.yml`. 
 - **Before-record hooks**: implement `IBeforeRecordExecutor<T>` for insert/update/delete/select/selectPage (e.g., logging, encryption, auto-timestamps)
 - **Persistent templates**: implement `ITemplateSqlStorage` or `ITemplateAmisStorage` to replace in-memory storage
 - **Entity operations**: use `Entity.select/insert/update/delete/save()` with `EntityExecutor` for type-safe chain operations
+- **MCP AI tools**: add `@Tool`/`@ToolParam` annotated methods to `SqlForgeMcpService` to expose new database operations to AI clients
+
+## Javadoc Requirements
+
+The `maven-javadoc-plugin` runs in **strict mode** during `mvn install`. All public/protected classes, methods, and record components must have complete Javadoc:
+- Class-level: one-sentence Chinese description
+- Methods: `@param` for every parameter (including type parameters like `<T>`), `@return`, and `@throws`
+- Records: `@param` for each component in the class-level Javadoc
+- Enums: class-level Javadoc + inline comments (`/** ... */`) for each constant
+- `@UtilityClass` (Lombok): do **not** add explicit constructors — Lombok generates them and rejects duplicates
 
 ## Testing Notes
 

@@ -1,13 +1,14 @@
-package cn.wubo.sql.forge.records;
+package cn.wubo.sql.forge;
 
 import java.util.List;
 
 /**
  * 整套表信息记录类
  */
-public record EntireTableInfo(
-        String tableName,
+public record TableDefinitionInfo(
+        String tableCat,
         String tableSchema,
+        String tableName,
         String tableType,
         String remarks,
         List<ColumnInfo> columns,

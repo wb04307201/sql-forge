@@ -1,7 +1,7 @@
 package cn.wubo.sql.forge.utils;
 
-import cn.wubo.sql.forge.TreeNode;
-import cn.wubo.sql.forge.records.*;
+import cn.wubo.sql.forge.DatabaseInfo;
+import cn.wubo.sql.forge.*;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static cn.wubo.sql.forge.constant.Constant.NODE_VALUE_TEMPLATE;
+import static cn.wubo.sql.forge.Constant.NODE_VALUE_TEMPLATE;
 
 /**
  * 数据库元数据工具类，通过 JDBC {@link DatabaseMetaData} 查询 Schema、表、列、主键、外键、索引等元数据信息。
@@ -74,8 +74,9 @@ public class MetaDataUtils {
             List<TableInfo> tables = new ArrayList<>();
             while (rs.next()) {
                 tables.add(new TableInfo(
-                        rs.getString("TABLE_NAME"),
+                        rs.getString("TABLE_CAT"),
                         rs.getString("TABLE_SCHEM"),
+                        rs.getString("TABLE_NAME"),
                         rs.getString("TABLE_TYPE"),
                         rs.getString("REMARKS")
                 ));
@@ -99,7 +100,6 @@ public class MetaDataUtils {
                         rs.getString("TYPE_NAME"),
                         rs.getInt("COLUMN_SIZE"),
                         rs.getInt("DECIMAL_DIGITS"),
-                        rs.getInt("NULLABLE"),
                         rs.getString("REMARKS"),
                         rs.getString("COLUMN_DEF"),
                         rs.getInt("ORDINAL_POSITION"),
@@ -326,8 +326,8 @@ public class MetaDataUtils {
     /**
      * 获取所有表的基本信息列表（表名、Schema、类型、备注）。
      */
-    public List<EntireTable> getMetaDataTables(Connection connection, List<String> schemata) throws SQLException {
-        List<EntireTable> entireTables = new ArrayList<>();
+    public List<TableInfo> getMetaDataTables(Connection connection, List<String> schemata) throws SQLException {
+        List<TableInfo> tableInfos = new ArrayList<>();
 
         List<SchemaInfo> schemas = getSchemas(connection, null, null)
                 .stream()
@@ -340,35 +340,27 @@ public class MetaDataUtils {
                 tableTypes = getTableTypes(connection);
             for (String tableType : tableTypes) {
                 List<TableInfo> tables = getTables(connection, null, schema.tableSchema(), null, new String[]{tableType});
-                for (TableInfo table : tables) {
-                    entireTables.add(
-                            new EntireTable(
-                                    table.tableName(),
-                                    schema.tableSchema(),
-                                    table.tableType(),
-                                    table.remarks()
-                            )
-                    );
-                }
+                tableInfos.addAll(tables);
             }
         }
 
-        return entireTables;
+        return tableInfos;
     }
 
     /**
      * 获取指定表的完整元数据信息（列、主键、外键、索引）。
      */
-    public List<EntireTableInfo> getMetaDataTableInfos(Connection connection, String catalog, String schemaPattern, String tableNamePattern, String tableType, List<String> schemata) throws SQLException {
-        List<EntireTableInfo> entireTableInfos = new ArrayList<>();
+    public List<TableDefinitionInfo> getMetaDataDefinitions(Connection connection, String catalog, String schemaPattern, String tableNamePattern, String tableType, List<String> schemata) throws SQLException {
+        List<TableDefinitionInfo> tableDefinitionInfos = new ArrayList<>();
 
         List<TableInfo> tables = getTables(connection, catalog, schemaPattern, tableNamePattern, new String[]{tableType});
 
         for (TableInfo table : tables) {
-            entireTableInfos.add(
-                    new EntireTableInfo(
-                            table.tableName(),
+            tableDefinitionInfos.add(
+                    new TableDefinitionInfo(
+                            table.tableCat(),
                             table.tableSchema(),
+                            table.tableName(),
                             table.tableType(),
                             table.remarks(),
                             getColumns(connection, catalog, table.tableSchema(), table.tableName(), null),
@@ -379,6 +371,6 @@ public class MetaDataUtils {
             );
         }
 
-        return entireTableInfos;
+        return tableDefinitionInfos;
     }
 }

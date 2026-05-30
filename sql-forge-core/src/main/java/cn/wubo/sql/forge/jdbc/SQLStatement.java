@@ -6,8 +6,7 @@ import cn.wubo.sql.forge.enums.StatementType;
 import java.util.ArrayList;
 import java.util.List;
 
-import static cn.wubo.sql.forge.constant.Constant.PAREN_AND;
-import static cn.wubo.sql.forge.constant.Constant.PAREN_OR;
+import static cn.wubo.sql.forge.Constant.*;
 
 public class SQLStatement {
 

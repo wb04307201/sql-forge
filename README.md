@@ -24,21 +24,21 @@ Import the starters you need:
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.5.9</version>
+    <version>1.5.10</version>
 </dependency>
 
 <!-- Calcite cross-database federated queries (optional) -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
-    <version>1.5.9</version>
+    <version>1.5.10</version>
 </dependency>
 
 <!-- Amis templates + Web Console (optional) -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
-    <version>1.5.9</version>
+    <version>1.5.10</version>
 </dependency>
 ```
 
@@ -56,9 +56,9 @@ For `@Id`, `@Table`, `@Column` annotations in the Entity module, additionally im
 
 | Starter | Description |
 |---------|-------------|
-| **sql-forge-spring-boot-starter** | Core starter: database executor, JSON CRUD API, type-safe entity operations (Entity), SQL template engine, Record operation aspects |
+| **sql-forge-spring-boot-starter** | Core starter: database executor, JSON CRUD API, type-safe entity operations (Entity), SQL template engine, Record operation aspects, built-in user authentication (Session + ApiKey) |
 | **sql-forge-calcite-spring-boot-starter** | Apache Calcite-based cross-database federated query executor for MySQL, PostgreSQL, and more |
-| **sql-forge-web-spring-boot-starter** | Amis low-code template management API, Web Console UI, user/role/permission authentication |
+| **sql-forge-web-spring-boot-starter** | Amis low-code template management API, Web Console UI, user/role management |
 
 ---
 
@@ -267,24 +267,17 @@ Content-Type: application/json
 {
   "@column": [
     "u.username",
-    "sex.item_name             AS sex_name",
     "o.total_amount",
     "p.name               AS product_name",
-    "categories.item_name AS product_categories",
     "oi.unit_price",
     "oi.quantity",
     "p.price"
   ],
   "@where": [
     {
-      "column": "sex.dict_code",
-      "condition": "EQ",
-      "value": "sex"
-    },
-    {
-      "column": "categories.dict_code",
-      "condition": "EQ",
-      "value": "categories"
+      "column": "u.username",
+      "condition": "IS_NOT_NULL",
+      "value": null
     }
   ],
   "@join": [
@@ -295,11 +288,6 @@ Content-Type: application/json
     },
     {
       "type": "JOIN",
-      "joinTable": "sys_dict_items sex",
-      "on": "u.dict_sex = sex.item_code"
-    },
-    {
-      "type": "JOIN",
       "joinTable": "order_items oi",
       "on": "o.id = oi.order_id"
     },
@@ -307,11 +295,6 @@ Content-Type: application/json
       "type": "JOIN",
       "joinTable": "products p",
       "on": "oi.product_id = p.id"
-    },
-    {
-      "type": "JOIN",
-      "joinTable": "sys_dict_items categories",
-      "on": "p.dict_categories = categories.item_code"
     }
   ],
   "@order": [
@@ -355,7 +338,9 @@ Content-Type: application/json
   "@set": {
     "id": "26a05ba3-913d-4085-a505-36d40021c8d1",
     "username": "wb04307201",
-    "email": "wb04307201@gitee.com"
+    "password": "123456",
+    "enabled": true,
+    "category": "user"
   },
   "@with_select": {
     "@where": [
@@ -377,7 +362,7 @@ Content-Type: application/json
 
 {
   "@set": {
-    "email": "wb04307201@github.com"
+    "password": "newpassword"
   },
   "@where": [
     {
@@ -447,11 +432,51 @@ public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
 }
 ```
 
-#### Configuration
+### 1.4 Authentication & ApiKey
 
-Can be disabled via `sql.forge.api.json.enabled=false`.
+The core starter includes a built-in user authentication system. All APIs require authentication by default, supporting both **Session login** and **ApiKey** — either one is sufficient to access.
 
-### 1.4 SQL Template Engine
+#### ApiKey Authentication
+
+Pass the ApiKey via the `X-Api-Key` request header to access all APIs without logging in:
+
+```yaml
+sql:
+  forge:
+    api-keys:                # ApiKey list (empty by default, meaning ApiKey authentication is disabled)
+      - sk-your-api-key-here
+      - sk-another-key
+```
+
+Request example:
+
+```http request
+GET http://localhost:8080/sql/forge/api/json/select/users
+X-Api-Key: sk-your-api-key-here
+```
+
+#### Session Login Authentication
+
+Obtain a Session via the login endpoint; subsequent requests automatically carry the Session cookie:
+
+- `POST /sql/forge/api/auth/login` - User login (Body: `{"username": "admin", "password": "admin123"}`)
+- `POST /sql/forge/api/auth/logout` - User logout
+- `GET /sql/forge/api/auth/status` - Get current login status
+- `GET /sql/forge/api/auth/user` - Get current user info
+
+> Default admin account: `admin` / `admin123`
+
+#### Authentication Priority
+
+```
+Request → Valid ApiKey? → Allow
+        → Session logged in? → Allow
+        → Neither → 401 Denied
+```
+
+Whitelisted paths (login endpoints, static resources) are accessible without authentication.
+
+### 1.5 SQL Template Engine
 
 Provides SQL template functionality supporting conditionals (`<if>`), loops (`<foreach>`), and variable binding (`#{var}`), dynamically generating and executing SQL based on parameters.
 
@@ -500,9 +525,7 @@ Response:
 [
   {
     "ID": "1",
-    "USERNAME": "alice",
-    "DICT_SEX": "female",
-    "EMAIL": "alice@example.com"
+    "USERNAME": "alice"
   }
 ]
 ```
@@ -511,11 +534,7 @@ Response:
 
 Uses in-memory storage by default. Implement [ITemplateSqlStorage](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) for custom persistence.
 
-#### Configuration
-
-Can be disabled via `sql.forge.api.template.sql.enabled=false`.
-
-### 1.5 Entity Module
+### 1.6 Entity Module
 
 Provides type-safe entity operation builders with compile-time safe field references via Lambda expressions, supporting chain calls.
 
@@ -543,11 +562,11 @@ public class User {
     @Column(name = "username")
     private String username;
 
-    @Column(name = "email")
-    private String email;
+    @Column(name = "password")
+    private String password;
 
-    @Column(name = "dict_sex")
-    private String dictSex;
+    @Column(name = "category")
+    private String category;
 }
 ```
 
@@ -560,14 +579,14 @@ private EntityExecutor entityExecutor;
 // Query operation
 EntitySelect<User> select = Entity.select(User.class)
                 .distinct(true)
-                .columns(User::getId, User::getUsername, User::getEmail)
+                .columns(User::getId, User::getUsername, User::getCategory)
                 .orders(User::getUsername)
                 .in(User::getUsername, "alice", "bob");
 List<User> users = entityExecutor.run(select);
 
 // Paginated query operation
 EntitySelectPage<User> selectPage = Entity.selectPage(User.class)
-        .columns(User::getId, User::getUsername, User::getEmail)
+        .columns(User::getId, User::getUsername, User::getCategory)
         .orders(User::getUsername)
         .page(0, 10);
 SelectPageResult<User> result = entityExecutor.run(selectPage);
@@ -576,12 +595,12 @@ SelectPageResult<User> result = entityExecutor.run(selectPage);
 EntityInsert<User> insert = Entity.insert(User.class)
         .set(User::getId, UUID.randomUUID().toString())
         .set(User::getUsername, "wb04307201")
-        .set(User::getEmail, "wb04307201@gitee.com");
+        .set(User::getPassword, "123456");
 entityExecutor.run(insert);
 
 // Update operation
 EntityUpdate<User> update = Entity.update(User.class)
-        .set(User::getEmail, "wb04307201@github.com")
+        .set(User::getPassword, "newpassword")
         .eq(User::getId, id);
 int count = entityExecutor.run(update);
 
@@ -593,10 +612,10 @@ count = entityExecutor.run(delete);
 // Object save (auto-detects insert or update)
 User user = new User();
 user.setUsername("wb04307201");
-user.setEmail("wb04307201@gitee.com");
+user.setPassword("123456");
 user = entityExecutor.run(Entity.save(user));  // id is null, performs insert
 
-user.setEmail("wb04307201@github.com");
+user.setPassword("newpassword");
 user = entityExecutor.run(Entity.save(user));  // id is not null, performs update
 
 // Object delete
@@ -698,15 +717,11 @@ Content-Type: application/json
 }
 ```
 
-### Configuration
-
-Disabled by default. Enable via `sql.forge.calcite.enabled=true`.
-
 ---
 
 ## 3. sql-forge-web-spring-boot-starter (Amis + Console)
 
-Provides Amis low-code template management, Web Console UI, and user/role/permission authentication.
+Provides Amis low-code template management, Web Console UI, and user/role management.
 
 > Depends on the core starter (`sql-forge-spring-boot-starter`), which is automatically included.
 
@@ -746,10 +761,6 @@ Rendered page:
 
 Uses in-memory storage by default. Implement [ITemplateAmisStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) for custom persistence.
 
-#### Configuration
-
-Can be disabled via `sql.forge.api.template.amis.enabled=false`.
-
 ### 3.2 Web Console
 
 Provides a visual web interface at: `/sql/forge/web`
@@ -763,16 +774,9 @@ Provides a visual web interface at: `/sql/forge/web`
 - Amis template management and debugging
   ![img_4.png](img_4.png)
 
-### 3.3 User & Permission Authentication
+### 3.3 User & Role Management
 
-Built-in user management, role management, and session authentication. Uses in-memory storage by default, extensible to database persistence.
-
-#### Authentication Endpoints
-
-- `POST /sql/forge/api/auth/login` - User login
-- `POST /sql/forge/api/auth/logout` - User logout
-- `GET /sql/forge/api/auth/status` - Get current login status
-- `GET /sql/forge/api/auth/user` - Get current user info
+The authentication system (Session login + ApiKey) is built into the core starter. See [1.4 Authentication & ApiKey](#14-authentication--apikey) for details. This section only describes user/role management features specific to Web Console.
 
 #### User Management Endpoints (admin required)
 
@@ -796,16 +800,12 @@ All storage uses in-memory implementations by default. Replace with database per
 
 | Interface | Description |
 |-----------|-------------|
-| [IUserStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IUserStorage.java) | User storage |
-| [IUserRoleStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IUserRoleStorage.java) | User-role association storage |
+| [IUserStorage](sql-forge-core/src/main/java/cn/wubo/sql/forge/IUserStorage.java) | User storage |
+| [IUserRoleStorage](sql-forge-core/src/main/java/cn/wubo/sql/forge/IUserRoleStorage.java) | User-role association storage |
 | [IRoleStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IRoleStorage.java) | Role storage |
 | [IRoleTemplateStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IRoleTemplateStorage.java) | Role-template association storage |
 
 Simply implement the interface and register as a Spring Bean to automatically replace the default implementation (`@ConditionalOnMissingBean`).
-
-#### Configuration
-
-Can be disabled via `sql.forge.console.enabled=false`.
 
 ---
 
@@ -816,6 +816,8 @@ sql:
   forge:
     schemata:                      # Configure schema names
       - PUBLIC
+    api-keys:                      # ApiKey list (optional, enables X-Api-Key header access without login)
+      - sk-your-api-key
     calcite:
       enabled: true                # Enable Calcite cross-database federated queries
       configuration: classpath:model.json

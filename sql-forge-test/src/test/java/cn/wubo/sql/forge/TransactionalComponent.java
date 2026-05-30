@@ -1,8 +1,6 @@
 package cn.wubo.sql.forge;
 
 import cn.wubo.sql.forge.map.ParamMap;
-import cn.wubo.sql.forge.records.SqlScript;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 

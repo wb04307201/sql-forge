@@ -1,20 +1,16 @@
 -- 1. 创建 users 表（UUID 主键，应用生成）
 CREATE TABLE users
 (
-    id           VARCHAR(36) NOT NULL PRIMARY KEY,
-    username     VARCHAR(50) NOT NULL UNIQUE,
-    email        VARCHAR(100),
-    password     VARCHAR(200),
-    enabled      BOOLEAN DEFAULT TRUE,
-    category     VARCHAR(50),
-    created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id       VARCHAR(36)  NOT NULL PRIMARY KEY,
+    username VARCHAR(50)  NOT NULL UNIQUE,
+    password VARCHAR(200),
+    enabled  BOOLEAN DEFAULT TRUE,
+    category VARCHAR(50)
 );
 
 COMMENT ON TABLE users IS '用户表';
 COMMENT ON COLUMN users.id IS '用户ID';
 COMMENT ON COLUMN users.username IS '用户名';
-COMMENT ON COLUMN users.email IS '用户邮箱地址';
 
 -- 2. 创建 products 表（UUID 主键，应用生成）
 CREATE TABLE products
@@ -79,10 +75,10 @@ COMMENT ON COLUMN sql_forge_template_amis.description IS '模板描述';
 COMMENT ON COLUMN sql_forge_template_amis.context IS '模板内容';
 
 -- 插入测试用户数据
-INSERT INTO users (id, username, email, password, enabled, category)
-VALUES ('550e8400-e29b-41d4-a716-446655440000', 'alice', 'alice@example.com', '123456', TRUE, 'user'),
-       ('550e8400-e29b-41d4-a716-446655440001', 'bob', 'bob@example.com', '123456', TRUE, 'user'),
-       ('550e8400-e29b-41d4-a716-446655440002', 'charlie', 'charlie@example.com', '123456', TRUE, 'user');
+INSERT INTO users (id, username, password, enabled, category)
+VALUES ('550e8400-e29b-41d4-a716-446655440000', 'alice', '123456', TRUE, 'user'),
+       ('550e8400-e29b-41d4-a716-446655440001', 'bob', '123456', TRUE, 'user'),
+       ('550e8400-e29b-41d4-a716-446655440002', 'charlie', '123456', TRUE, 'user');
 
 -- 插入测试商品数据
 INSERT INTO products (id, name, price)

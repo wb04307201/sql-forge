@@ -2,7 +2,7 @@ package cn.wubo.sql.forge.utils;
 
 import cn.wubo.sql.forge.map.ParamMap;
 import cn.wubo.sql.forge.map.RowMap;
-import cn.wubo.sql.forge.records.SqlScript;
+import cn.wubo.sql.forge.SqlScript;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;

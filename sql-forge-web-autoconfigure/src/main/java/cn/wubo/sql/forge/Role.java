@@ -1,14 +1,13 @@
 package cn.wubo.sql.forge;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * 角色实体，表示系统角色信息。
+ */
 @Data
-@Table(name = "sql_forge_role")
 public class Role {
-    @Id private String id;
-    @Column private String name;
-    @Column private String description;
+    private String id;
+    private String name;
+    private String description;
 }

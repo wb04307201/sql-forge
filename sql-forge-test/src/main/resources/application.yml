@@ -20,6 +20,8 @@ sql:
       database:
         enabled: true
         select-only: false
+    apiKeys:
+      - test
 
 
 server:

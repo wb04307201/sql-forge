@@ -4,10 +4,16 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+/**
+ * 基于内存的用户存储默认实现，内置一个管理员账户（admin/admin123）。
+ */
 public class InMemoryUserStorage implements IUserStorage {
 
     private final Map<String, User> store = new ConcurrentHashMap<>();
 
+    /**
+     * 构造内存用户存储，预置管理员账户。
+     */
     public InMemoryUserStorage() {
         User admin = new User();
         admin.setId("admin-001");

@@ -1,4 +1,4 @@
-package cn.wubo.sql.forge.records;
+package cn.wubo.sql.forge;
 
 import java.util.List;
 
