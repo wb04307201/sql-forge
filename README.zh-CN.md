@@ -24,21 +24,21 @@
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.5.9</version>
+    <version>1.5.10</version>
 </dependency>
 
 <!-- Calcite 跨库联邦查询（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
-    <version>1.5.9</version>
+    <version>1.5.10</version>
 </dependency>
 
 <!-- Amis 模板 + Web Console（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
-    <version>1.5.9</version>
+    <version>1.5.10</version>
 </dependency>
 ```
 
@@ -56,9 +56,9 @@
 
 | Starter | 说明 |
 |---------|------|
-| **sql-forge-spring-boot-starter** | 基础 Starter：数据库执行器、JSON CRUD API、类型安全实体操作（Entity）、SQL 模板引擎、Record 操作切面 |
+| **sql-forge-spring-boot-starter** | 基础 Starter：数据库执行器、JSON CRUD API、类型安全实体操作（Entity）、SQL 模板引擎、Record 操作切面、内置用户认证（Session + ApiKey） |
 | **sql-forge-calcite-spring-boot-starter** | 基于 Apache Calcite 的跨数据库联邦查询执行器，可同时查询 MySQL、PostgreSQL 等多种数据源 |
-| **sql-forge-web-spring-boot-starter** | Amis 低代码模板管理 API、Web Console 可视化界面、用户/角色/权限认证体系 |
+| **sql-forge-web-spring-boot-starter** | Amis 低代码模板管理 API、Web Console 可视化界面、用户/角色管理 |
 
 ---
 
@@ -267,24 +267,17 @@ Content-Type: application/json
 {
   "@column": [
     "u.username",
-    "sex.item_name             AS sex_name",
     "o.total_amount",
     "p.name               AS product_name",
-    "categories.item_name AS product_categories",
     "oi.unit_price",
     "oi.quantity",
     "p.price"
   ],
   "@where": [
     {
-      "column": "sex.dict_code",
-      "condition": "EQ",
-      "value": "sex"
-    },
-    {
-      "column": "categories.dict_code",
-      "condition": "EQ",
-      "value": "categories"
+      "column": "u.username",
+      "condition": "IS_NOT_NULL",
+      "value": null
     }
   ],
   "@join": [
@@ -295,11 +288,6 @@ Content-Type: application/json
     },
     {
       "type": "JOIN",
-      "joinTable": "sys_dict_items sex",
-      "on": "u.dict_sex = sex.item_code"
-    },
-    {
-      "type": "JOIN",
       "joinTable": "order_items oi",
       "on": "o.id = oi.order_id"
     },
@@ -307,11 +295,6 @@ Content-Type: application/json
       "type": "JOIN",
       "joinTable": "products p",
       "on": "oi.product_id = p.id"
-    },
-    {
-      "type": "JOIN",
-      "joinTable": "sys_dict_items categories",
-      "on": "p.dict_categories = categories.item_code"
     }
   ],
   "@order": [
@@ -355,7 +338,9 @@ Content-Type: application/json
   "@set": {
     "id": "26a05ba3-913d-4085-a505-36d40021c8d1",
     "username": "wb04307201",
-    "email": "wb04307201@gitee.com"
+    "password": "123456",
+    "enabled": true,
+    "category": "user"
   },
   "@with_select": {
     "@where": [
@@ -377,7 +362,7 @@ Content-Type: application/json
 
 {
   "@set": {
-    "email": "wb04307201@github.com"
+    "password": "newpassword"
   },
   "@where": [
     {
@@ -447,11 +432,51 @@ public class LogInsertExecute implements IBeforeRecordExecutor<Insert> {
 }
 ```
 
-#### 配置
+### 1.4 认证与 ApiKey
 
-可通过 `sql.forge.api.json.enabled=false` 关闭 JSON API。
+基础 Starter 内置用户认证体系，所有 API 默认需要认证后才能访问，支持 **Session 登录** 和 **ApiKey** 两种方式，任一通过即可访问。
 
-### 1.4 SQL 模板引擎
+#### ApiKey 认证
+
+通过请求头 `X-Api-Key` 传递 ApiKey，无需登录即可访问所有 API：
+
+```yaml
+sql:
+  forge:
+    api-keys:                # 配置 ApiKey 列表（默认为空，表示不启用 ApiKey 认证）
+      - sk-your-api-key-here
+      - sk-another-key
+```
+
+请求示例：
+
+```http request
+GET http://localhost:8080/sql/forge/api/json/select/users
+X-Api-Key: sk-your-api-key-here
+```
+
+#### Session 登录认证
+
+通过登录接口获取 Session，后续请求自动携带 Session Cookie：
+
+- `POST /sql/forge/api/auth/login` - 用户登录（Body: `{"username": "admin", "password": "admin123"}`）
+- `POST /sql/forge/api/auth/logout` - 用户登出
+- `GET /sql/forge/api/auth/status` - 获取当前登录状态
+- `GET /sql/forge/api/auth/user` - 获取当前用户信息
+
+> 默认管理员账户：`admin` / `admin123`
+
+#### 认证优先级
+
+```
+请求进入 → ApiKey 有效？ → 放行
+          → Session 已登录？ → 放行
+          → 都不满足 → 401 拒绝
+```
+
+白名单路径（登录接口、静态资源）无需认证直接放行。
+
+### 1.5 SQL 模板引擎
 
 提供 SQL 模板功能，支持条件判断（`<if>`）、循环（`<foreach>`）、变量绑定（`#{var}`）等模板语法，根据参数动态生成 SQL 执行并返回结果。
 
@@ -500,9 +525,7 @@ content-type: application/json
 [
   {
     "ID": "1",
-    "USERNAME": "alice",
-    "DICT_SEX": "female",
-    "EMAIL": "alice@example.com"
+    "USERNAME": "alice"
   }
 ]
 ```
@@ -511,11 +534,7 @@ content-type: application/json
 
 默认使用内存存储。继承 [ITemplateSqlStorage](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) 实现自定义持久化。
 
-#### 配置
-
-可通过 `sql.forge.api.template.sql.enabled=false` 关闭。
-
-### 1.5 Entity 模块
+### 1.6 Entity 模块
 
 提供类型安全的实体操作构建器，通过 Lambda 引用实现编译期安全的字段引用，支持链式调用。
 
@@ -543,11 +562,11 @@ public class User {
     @Column(name = "username")
     private String username;
 
-    @Column(name = "email")
-    private String email;
+    @Column(name = "password")
+    private String password;
 
-    @Column(name = "dict_sex")
-    private String dictSex;
+    @Column(name = "category")
+    private String category;
 }
 ```
 
@@ -560,14 +579,14 @@ private EntityExecutor entityExecutor;
 // 查询操作
 EntitySelect<User> select = Entity.select(User.class)
                 .distinct(true)
-                .columns(User::getId, User::getUsername, User::getEmail)
+                .columns(User::getId, User::getUsername, User::getCategory)
                 .orders(User::getUsername)
                 .in(User::getUsername, "alice", "bob");
 List<User> users = entityExecutor.run(select);
 
 // 分页查询操作
 EntitySelectPage<User> selectPage = Entity.selectPage(User.class)
-        .columns(User::getId, User::getUsername, User::getEmail)
+        .columns(User::getId, User::getUsername, User::getCategory)
         .orders(User::getUsername)
         .page(0, 10);
 SelectPageResult<User> result = entityExecutor.run(selectPage);
@@ -576,12 +595,12 @@ SelectPageResult<User> result = entityExecutor.run(selectPage);
 EntityInsert<User> insert = Entity.insert(User.class)
         .set(User::getId, UUID.randomUUID().toString())
         .set(User::getUsername, "wb04307201")
-        .set(User::getEmail, "wb04307201@gitee.com");
+        .set(User::getPassword, "123456");
 entityExecutor.run(insert);
 
 // 更新操作
 EntityUpdate<User> update = Entity.update(User.class)
-        .set(User::getEmail, "wb04307201@github.com")
+        .set(User::getPassword, "newpassword")
         .eq(User::getId, id);
 int count = entityExecutor.run(update);
 
@@ -593,10 +612,10 @@ count = entityExecutor.run(delete);
 // 对象保存（自动判断插入或更新）
 User user = new User();
 user.setUsername("wb04307201");
-user.setEmail("wb04307201@gitee.com");
+user.setPassword("123456");
 user = entityExecutor.run(Entity.save(user));  // id 为 null，执行插入
 
-user.setEmail("wb04307201@github.com");
+user.setPassword("newpassword");
 user = entityExecutor.run(Entity.save(user));  // id 不为 null，执行更新
 
 // 对象删除
@@ -658,7 +677,7 @@ count = entityExecutor.run(Entity.delete(user));
 
 > 依赖基础 Starter（`sql-forge-spring-boot-starter`），会自动引入。
 
-### 启用配置
+### 配置
 
 ```yaml
 sql:
@@ -698,15 +717,11 @@ Content-Type: application/json
 }
 ```
 
-### 配置
-
-通过 `sql.forge.calcite.enabled=false` 关闭（默认关闭）。
-
 ---
 
 ## 3. sql-forge-web-spring-boot-starter（Amis + 控制台）
 
-提供 Amis 低代码模板管理、Web Console 可视化界面和用户/角色/权限认证体系。
+提供 Amis 低代码模板管理、Web Console 可视化界面和用户/角色管理。
 
 > 依赖基础 Starter（`sql-forge-spring-boot-starter`），会自动引入。
 
@@ -746,10 +761,6 @@ content-type: application/json
 
 默认使用内存存储。继承 [ITemplateAmisStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) 实现自定义持久化。
 
-#### 配置
-
-可通过 `sql.forge.api.template.amis.enabled=false` 关闭。
-
 ### 3.2 Web Console
 
 提供可视化 Web 界面，访问地址：`/sql/forge/web`
@@ -763,16 +774,9 @@ content-type: application/json
 - Amis 模板管理、调试
   ![img_4.png](img_4.png)
 
-### 3.3 用户与权限认证
+### 3.3 用户与角色管理
 
-内置用户管理、角色管理、会话认证体系，默认使用内存存储，可扩展为数据库持久化。
-
-#### 认证接口
-
-- `POST /sql/forge/api/auth/login` - 用户登录
-- `POST /sql/forge/api/auth/logout` - 用户登出
-- `GET /sql/forge/api/auth/status` - 获取当前登录状态
-- `GET /sql/forge/api/auth/user` - 获取当前用户信息
+认证体系（Session 登录 + ApiKey）已内置于基础 Starter，详见 [1.4 认证与 ApiKey](#14-认证与-apikey)。本节仅描述 Web Console 特有的用户/角色管理功能。
 
 #### 用户管理接口（需管理员权限）
 
@@ -796,16 +800,12 @@ content-type: application/json
 
 | 接口 | 说明 |
 |------|------|
-| [IUserStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IUserStorage.java) | 用户存储 |
-| [IUserRoleStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IUserRoleStorage.java) | 用户-角色关联存储 |
+| [IUserStorage](sql-forge-core/src/main/java/cn/wubo/sql/forge/IUserStorage.java) | 用户存储 |
+| [IUserRoleStorage](sql-forge-core/src/main/java/cn/wubo/sql/forge/IUserRoleStorage.java) | 用户-角色关联存储 |
 | [IRoleStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IRoleStorage.java) | 角色存储 |
 | [IRoleTemplateStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/IRoleTemplateStorage.java) | 角色-模板关联存储 |
 
 只需实现接口并注册为 Spring Bean 即可自动替换默认实现（`@ConditionalOnMissingBean`）。
-
-#### 配置
-
-可通过 `sql.forge.console.enabled=false` 关闭 Web Console 和认证相关 API。
 
 ---
 
@@ -816,6 +816,8 @@ sql:
   forge:
     schemata:                      # 配置 schema 名称
       - PUBLIC
+    api-keys:                      # ApiKey 列表（可选，配置后可通过 X-Api-Key 请求头免登录访问）
+      - sk-your-api-key
     calcite:
       enabled: true                # 启用 Calcite 跨库联邦查询
       configuration: classpath:model.json

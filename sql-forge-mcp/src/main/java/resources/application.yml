@@ -6,7 +6,7 @@ spring:
     mcp:
       server:
         name: sql-forge-mcp-server
-        version: 1.5.9
+        version: 1.5.10
 
 logging:
   pattern:
