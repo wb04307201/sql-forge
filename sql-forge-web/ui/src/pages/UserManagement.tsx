@@ -13,8 +13,6 @@ const UserManagement: Schema = {
     filterTogglable: false,
     filter: {
       type: 'form',
-      title: '搜索',
-      submitText: '提交',
       body: [
         {type: 'input-text', name: 'username', label: '用户名', placeholder: '输入用户名'},
         {type: 'select', name: 'category', label: '用户分类', clearable: true, placeholder: '请选择',
@@ -90,8 +88,8 @@ const UserManagement: Schema = {
     columns: [
       {name: 'id', label: 'ID'},
       {name: 'username', label: '用户名'},
-      {name: 'category', label: '用户分类', type: 'tpl', tpl: '${category:ifThen(category=="admin","管理员","普通用户")}'},
-      {name: 'roles', label: '角色', type: 'tpl', tpl: '${roles:join("、")}'},
+      {name: 'category', label: '用户分类'},
+      {name: 'roles', label: '角色'},
       {name: 'enabled', label: '状态', type: 'switch', disabled: true},
       {
         type: 'operation',

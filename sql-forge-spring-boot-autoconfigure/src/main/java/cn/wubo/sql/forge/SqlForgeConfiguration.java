@@ -3,7 +3,6 @@ package cn.wubo.sql.forge;
 import cn.eubo.sql.forge.EntityExecutor;
 import cn.eubo.sql.forge.cache.EntityCacheService;
 import cn.wubo.sql.forge.record.*;
-import cn.wubo.sql.forge.records.SqlScript;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -66,9 +65,9 @@ public class SqlForgeConfiguration {
 
     @Bean("sqlForgeApiDatabaseRouter")
     @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true")
-    public RouterFunction<ServerResponse> sqlForgeApiDatabaseRouter(SqlForgeProperties sqlForgeProperties, ExecutorService executorService) {
+    public RouterFunction<ServerResponse> sqlForgeApiDatabaseRouter(SqlForgeProperties sqlForgeProperties, ExecutorService executorService, AuthFilter authFilter) {
         RouterFunctions.Builder builder = route();
-        builder.POST("/sql/forge/api/database/execute", request -> {
+        builder.POST(Constant.EXECUTE_SQL_URL, request -> {
             String executorName = request.param("executorName").orElse("database");
             SqlScript sqlScript = request.body(SqlScript.class);
             if (sqlForgeProperties.getApi().getDatabase().getSelectOnly()) {
@@ -76,14 +75,28 @@ public class SqlForgeConfiguration {
             } else {
                 return ServerResponse.ok().body(executorService.getExecutor(executorName).execute(sqlScript));
             }
+        }).GET(Constant.GET_METADATA_DATABASE_URL, request -> {
+            String executorName = request.param("executorName").orElse("database");
+            return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataDatabase());
+        }).GET(Constant.GET_METADATA_TABLES_URL, request -> {
+            String executorName = request.param("executorName").orElse("database");
+            return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTables());
+        }).GET(Constant.GET_METADATA_TABLE_DEFINITIONS_URL, request -> {
+            String executorName = request.param("executorName").orElse("database");
+            String catalog = request.param("catalog").orElse(null);
+            String schema = request.param("schema").orElse(null);
+            String tableType = request.param("tableType").orElse(null);
+            String tableName = request.param("tableName").orElseThrow(() -> new IllegalArgumentException("tableName is required"));
+            return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataDefinitions(catalog, schema, tableName, tableType));
         });
+        builder.filter(authFilter);
 
         return builder.build();
     }
 
     @Bean("sqlForgeApiJsonRouter")
     @ConditionalOnProperty(name = "sql.forge.api.json.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeApiRouter(RecordExecutor recordExecutor) {
+    public RouterFunction<ServerResponse> sqlForgeApiRouter(RecordExecutor recordExecutor, AuthFilter authFilter) {
         RouterFunctions.Builder builder = route();
         builder.POST("sql/forge/api/json/{method}/{tableName}", accept(MediaType.APPLICATION_JSON), request -> {
             String executorName = request.param("executorName").orElse("database");
@@ -99,6 +112,7 @@ public class SqlForgeConfiguration {
             };
             return ServerResponse.ok().body(obj);
         });
+        builder.filter(authFilter);
         return builder.build();
     }
 
@@ -115,7 +129,7 @@ public class SqlForgeConfiguration {
 
     @Bean("sqlForgeApiTemplateSqlRouter")
     @ConditionalOnProperty(name = "sql.forge.api.template.sql.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeApiTemplateSqlRouter(ITemplateSqlStorage templateSqlStorage, TemplateSqlExcutor templateSqlExcutor) {
+    public RouterFunction<ServerResponse> sqlForgeApiTemplateSqlRouter(ITemplateSqlStorage templateSqlStorage, TemplateSqlExcutor templateSqlExcutor, AuthFilter authFilter) {
         RouterFunctions.Builder builder = route();
         builder.PUT("sql/forge/api/template/sql", accept(MediaType.APPLICATION_JSON), request -> {
             TemplateSql template = request.body(TemplateSql.class);
@@ -147,34 +161,8 @@ public class SqlForgeConfiguration {
             });
             return ServerResponse.ok().body(templateSqlExcutor.execute(id, params));
         });
+        builder.filter(authFilter);
         return builder.build();
-    }
-
-    @Bean("sqlForgeApiDatabaseConsoleRouter")
-    @ConditionalOnProperty(name = "sql.forge.api.database.enabled", havingValue = "true")
-    public RouterFunction<ServerResponse> sqlForgeApiDatabaseConsoleRouter(ExecutorService executorService) {
-        return route()
-                .GET("sql/forge/api/database/metaDataDatabase", request -> {
-                    String executorName = request.param("executorName").orElse("database");
-                    return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataDatabase());
-                })
-                .GET("sql/forge/api/database/tableTypes", request -> {
-                    String executorName = request.param("executorName").orElse("database");
-                    return ServerResponse.ok().body(executorService.getExecutor(executorName).getTableTypes());
-                })
-                .GET("sql/forge/api/database/metaDataTables", request -> {
-                    String executorName = request.param("executorName").orElse("database");
-                    return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTables());
-                })
-                .GET("sql/forge/api/database/metaDataTableInfo", request -> {
-                    String executorName = request.param("executorName").orElse("database");
-                    String catalog = request.param("catalog").orElse(null);
-                    String schema = request.param("schema").orElse(null);
-                    String tableType = request.param("tableType").orElse(null);
-                    String tableName = request.param("tableName").orElseThrow(() -> new IllegalArgumentException("tableName is required"));
-                    return ServerResponse.ok().body(executorService.getExecutor(executorName).getMetaDataTableInfos(catalog, schema, tableName, tableType));
-                })
-                .build();
     }
 
 }

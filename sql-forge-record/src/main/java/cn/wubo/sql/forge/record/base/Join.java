@@ -3,7 +3,7 @@ package cn.wubo.sql.forge.record.base;
 import cn.wubo.sql.forge.enums.JoinType;
 import jakarta.validation.constraints.NotBlank;
 
-import static cn.wubo.sql.forge.constant.Constant.ON_TEMPLATE;
+import static cn.wubo.sql.forge.Constant.ON_TEMPLATE;
 
 /**
  * JOIN 子句记录，描述表连接类型、目标表和连接条件。

@@ -3,16 +3,10 @@ package cn.wubo.sql.forge;
 import cn.wubo.sql.forge.map.ParamMap;
 import cn.wubo.sql.forge.map.RowMap;
 import cn.wubo.sql.forge.records.DatabaseInfo;
-import cn.wubo.sql.forge.records.EntireTable;
-import cn.wubo.sql.forge.records.EntireTableInfo;
-import cn.wubo.sql.forge.records.SqlScript;
-import com.mysql.cj.jdbc.MysqlDataSource;
 import lombok.extern.slf4j.Slf4j;
-import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.postgresql.ds.PGSimpleDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -50,8 +44,8 @@ public class ExecutorServiceCalciteTest {
 
     @Test
     void testMetaDataTables() throws SQLException {
-        List<EntireTable> entireTables = executorService.getExecutor().getMetaDataTables();
-        log.info("entireTables: {}", entireTables);
+        List<MetaTable> metaTables = executorService.getExecutor().getMetaDataTables();
+        log.info("entireTables: {}", metaTables);
     }
 
     @Test

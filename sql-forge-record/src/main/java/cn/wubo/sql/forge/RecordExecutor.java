@@ -8,7 +8,6 @@ import cn.wubo.sql.forge.jdbc.SQL;
 import cn.wubo.sql.forge.map.ParamMap;
 import cn.wubo.sql.forge.map.RowMap;
 import cn.wubo.sql.forge.record.*;
-import cn.wubo.sql.forge.records.SqlScript;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 
@@ -16,7 +15,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import static cn.wubo.sql.forge.constant.Constant.QUESTION_MARK;
+import static cn.wubo.sql.forge.Constant.QUESTION_MARK;
 
 /**
  * 基于 JSON Record 的 CRUD 执行器，将 {@link Delete}、{@link Insert}、{@link Select}、{@link SelectPage}、{@link Update}

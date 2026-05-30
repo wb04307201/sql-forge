@@ -1,4 +1,4 @@
-package cn.wubo.sql.forge.records;
+package cn.wubo.sql.forge;
 
 /**
  * 外键信息记录，描述表间外键引用关系。

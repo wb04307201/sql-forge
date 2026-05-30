@@ -20,25 +20,13 @@ import static org.springframework.web.servlet.function.RequestPredicates.accept;
 import static org.springframework.web.servlet.function.RouterFunctions.route;
 
 /**
- * Web 控制台自动配置类，注册 Amis 模板 API、认证鉴权、用户角色管理、Console UI 路由等 Bean。所有存储接口均提供 @ConditionalOnMissingBean 默认内存实现。
+ * Web 控制台自动配置类，注册 Amis 模板 API、角色管理、Console UI 路由等 Bean。认证相关 Bean 由 AuthAutoConfiguration 提供。
  */
 @AutoConfiguration
 @EnableConfigurationProperties(SqlForgeProperties.class)
 public class WebAutoConfiguration {
 
     // ========== 基础 Bean ==========
-
-    @Bean
-    @ConditionalOnMissingBean(IUserStorage.class)
-    public IUserStorage userStorage() {
-        return new InMemoryUserStorage();
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(IUserRoleStorage.class)
-    public IUserRoleStorage userRoleStorage() {
-        return new InMemoryUserRoleStorage();
-    }
 
     @Bean
     @ConditionalOnMissingBean(IRoleTemplateStorage.class)
@@ -50,16 +38,6 @@ public class WebAutoConfiguration {
     @ConditionalOnMissingBean(IRoleStorage.class)
     public IRoleStorage roleStorage() {
         return new InMemoryRoleStorage();
-    }
-
-    @Bean
-    public SessionManager sessionManager(IUserStorage userStorage, IUserRoleStorage userRoleStorage) {
-        return new SessionManager(userStorage, userRoleStorage);
-    }
-
-    @Bean
-    public AuthFilter authFilter(SessionManager sessionManager) {
-        return new AuthFilter(sessionManager);
     }
 
     // ========== AMIS 模板相关 ==========
@@ -74,7 +52,7 @@ public class WebAutoConfiguration {
     @ConditionalOnProperty(name = "sql.forge.api.template.amis.enabled", havingValue = "true", matchIfMissing = true)
     public RouterFunction<ServerResponse> sqlForgeApiTemplateAmisRouter(ITemplateAmisStorage templateAmisStorage, AuthFilter authFilter) {
         return route()
-            .PUT("sql/forge/api/template/amis", accept(MediaType.APPLICATION_JSON), request -> {
+            .PUT(Constant.PUT_TEMPLATE_AMIS_URL, accept(MediaType.APPLICATION_JSON), request -> {
                 TemplateAmis template = request.body(TemplateAmis.class);
                 templateAmisStorage.save(template);
                 return ServerResponse.ok().body(true);
@@ -98,60 +76,6 @@ public class WebAutoConfiguration {
                 return ServerResponse.ok().body(templateAmisStorage.list(filter));
             })
             .filter(authFilter)
-            .build();
-    }
-
-    // ========== 认证相关 ==========
-
-    @Bean("sqlForgeApiAuthRouter")
-    @ConditionalOnProperty(name = "sql.forge.console.enabled", havingValue = "true", matchIfMissing = true)
-    public RouterFunction<ServerResponse> sqlForgeApiAuthRouter(SessionManager sessionManager, IUserRoleStorage userRoleStorage) {
-        return route()
-            .POST("sql/forge/api/auth/login", request -> {
-                Map<String, String> body = request.body(Map.class);
-                String username = body.get("username");
-                String password = body.get("password");
-                SessionManager.LoginResult result = sessionManager.login(
-                    request.servletRequest(), username, password);
-                if (result.success()) {
-                    List<String> roles = userRoleStorage.listRoleIdsByUser(result.user().getId());
-                    return ServerResponse.ok().body(Map.of(
-                        "success", true,
-                        "msg", "登录成功",
-                        "data", Map.of("username", result.user().getUsername(), "category", result.user().getCategory(), "roles", roles)
-                    ));
-                } else {
-                    return ServerResponse.ok().body(Map.of("success", false, "msg", result.message()));
-                }
-            })
-            .POST("sql/forge/api/auth/logout", request -> {
-                sessionManager.logout(request.servletRequest());
-                return ServerResponse.ok().body(Map.of("success", true, "msg", "已退出"));
-            })
-            .GET("sql/forge/api/auth/status", request -> {
-                User user = sessionManager.getCurrentUser(request.servletRequest());
-                if (user != null) {
-                    List<String> roles = userRoleStorage.listRoleIdsByUser(user.getId());
-                    return ServerResponse.ok().body(Map.of(
-                        "success", true,
-                        "data", Map.of("loggedIn", true, "username", user.getUsername(), "category", user.getCategory(), "roles", roles)
-                    ));
-                } else {
-                    return ServerResponse.ok().body(Map.of("success", true, "data", Map.of("loggedIn", false)));
-                }
-            })
-            .GET("sql/forge/api/auth/user", request -> {
-                User user = sessionManager.getCurrentUser(request.servletRequest());
-                if (user != null) {
-                    List<String> roles = userRoleStorage.listRoleIdsByUser(user.getId());
-                    return ServerResponse.ok().body(Map.of(
-                        "success", true,
-                        "data", Map.of("username", user.getUsername(), "category", user.getCategory(), "roles", roles)
-                    ));
-                } else {
-                    return ServerResponse.ok().body(Map.of("success", false, "msg", "未登录"));
-                }
-            })
             .build();
     }
 
@@ -190,8 +114,6 @@ public class WebAutoConfiguration {
                     userMap.put("username", u.getUsername());
                     userMap.put("enabled", u.getEnabled());
                     userMap.put("category", u.getCategory());
-                    userMap.put("createdTime", u.getCreatedTime());
-                    userMap.put("updatedTime", u.getUpdatedTime());
                     userMap.put("roles", userRoleStorage.listRoleIdsByUser(u.getId()));
                     result.add(userMap);
                 }

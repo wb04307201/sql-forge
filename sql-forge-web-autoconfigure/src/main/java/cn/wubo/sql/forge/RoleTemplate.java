@@ -1,13 +1,12 @@
 package cn.wubo.sql.forge;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Data;
 
+/**
+ * 角色-模板关联实体，表示角色与 Amis 模板之间的绑定关系。
+ */
 @Data
-@Table(name = "sql_forge_role_template")
 public class RoleTemplate {
-    @Id @Column(name = "role_id") private String roleId;
-    @Id @Column(name = "template_id") private String templateId;
+    private String roleId;
+    private String templateId;
 }

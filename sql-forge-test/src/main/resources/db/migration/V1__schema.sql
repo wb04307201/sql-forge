@@ -47,19 +47,19 @@ COMMENT ON COLUMN sys_dict_items.sort IS '排序值';
 -- 用户表
 CREATE TABLE users
 (
-    id       VARCHAR(36) NOT NULL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    dict_sex VARCHAR(100),
-    email    VARCHAR(100),
-    create   DATE,
-    CONSTRAINT uk_username UNIQUE (username)
+    id       VARCHAR(36)  NOT NULL PRIMARY KEY,
+    username VARCHAR(50)  NOT NULL UNIQUE,
+    password VARCHAR(200),
+    enabled  BOOLEAN DEFAULT TRUE,
+    category VARCHAR(50)
 );
 
 COMMENT ON TABLE users IS '用户表';
 COMMENT ON COLUMN users.id IS '用户ID';
 COMMENT ON COLUMN users.username IS '用户名';
-COMMENT ON COLUMN users.dict_sex IS '性别';
-COMMENT ON COLUMN users.email IS '用户邮箱地址';
+COMMENT ON COLUMN users.password IS '密码';
+COMMENT ON COLUMN users.enabled IS '是否启用';
+COMMENT ON COLUMN users.category IS '用户分类';
 
 -- 商品表
 CREATE TABLE products
@@ -252,19 +252,6 @@ COMMENT ON COLUMN product_reviews.created_at IS '评价时间';
 -- ========================================
 -- 认证与权限表
 -- ========================================
-
--- 给 users 表添加认证字段
-ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(200);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS enabled BOOLEAN DEFAULT TRUE;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS category VARCHAR(50);
-ALTER TABLE users ADD COLUMN IF NOT EXISTS created_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-
-COMMENT ON COLUMN users.password IS '密码';
-COMMENT ON COLUMN users.enabled IS '是否启用';
-COMMENT ON COLUMN users.category IS '用户分类(admin/user)';
-COMMENT ON COLUMN users.created_time IS '创建时间';
-COMMENT ON COLUMN users.updated_time IS '更新时间';
 
 -- 角色表
 CREATE TABLE IF NOT EXISTS sql_forge_role

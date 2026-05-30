@@ -2,9 +2,6 @@ package cn.wubo.sql.forge;
 
 import cn.wubo.sql.forge.map.ParamMap;
 import cn.wubo.sql.forge.map.RowMap;
-import cn.wubo.sql.forge.records.EntireTable;
-import cn.wubo.sql.forge.records.EntireTableInfo;
-import cn.wubo.sql.forge.records.SqlScript;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +38,8 @@ public class ExecutorServiceDatabaseTest {
 
     @Test
     void testMetaDataTables() throws SQLException {
-        List<EntireTable> entireTables = executorService.getExecutor().getMetaDataTables();
-        log.info("entireTables: {}", entireTables);
+        List<MetaTable> metaTables = executorService.getExecutor().getMetaDataTables();
+        log.info("entireTables: {}", metaTables);
     }
 
     @Test

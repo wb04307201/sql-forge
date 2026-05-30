@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
-import static cn.wubo.sql.forge.constant.Constant.*;
+import static cn.wubo.sql.forge.Constant.*;
 import static cn.wubo.sql.forge.enums.LimitingRowsStrategy.ISO;
 import static cn.wubo.sql.forge.enums.LimitingRowsStrategy.OFFSET_LIMIT;
 import static cn.wubo.sql.forge.enums.StatementType.*;

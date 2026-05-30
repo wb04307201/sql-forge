@@ -17,6 +17,7 @@ public class SqlForgeMcpProperties {
         private String name;
         private String url;
         private String description;
+        private String apiKey;
     }
 
 }

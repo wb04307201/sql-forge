@@ -47,17 +47,17 @@ VALUES ('1-1', 'sex', 'male', '男', 1),
 -- 用户数据
 -- ========================================
 
-INSERT INTO users (id, username, dict_sex, email, password, enabled, category)
-VALUES ('1', 'alice', 'female', 'alice@example.com', '123456', TRUE, 'user'),
-       ('2', 'bob', 'male', 'bob@example.com', '123456', TRUE, 'user'),
-       ('3', 'charlie', 'male', 'charlie@example.com', '123456', TRUE, 'user'),
-       ('4', 'david', 'male', 'david@example.com', '123456', TRUE, 'user'),
-       ('5', 'eve', 'female', 'eve@example.com', '123456', TRUE, 'user'),
-       ('6', 'frank', 'male', 'frank@example.com', '123456', TRUE, 'user'),
-       ('7', 'grace', 'female', 'grace@example.com', '123456', TRUE, 'user'),
-       ('8', 'henry', 'male', 'henry@example.com', '123456', TRUE, 'user'),
-       ('9', 'iris', 'female', 'iris@example.com', '123456', TRUE, 'user'),
-       ('10', 'jack', 'male', 'jack@example.com', '123456', TRUE, 'user');
+INSERT INTO users (id, username, password, enabled, category)
+VALUES ('1', 'alice', '123456', TRUE, 'user'),
+       ('2', 'bob', '123456', TRUE, 'user'),
+       ('3', 'charlie', '123456', TRUE, 'user'),
+       ('4', 'david', '123456', TRUE, 'user'),
+       ('5', 'eve', '123456', TRUE, 'user'),
+       ('6', 'frank', '123456', TRUE, 'user'),
+       ('7', 'grace', '123456', TRUE, 'user'),
+       ('8', 'henry', '123456', TRUE, 'user'),
+       ('9', 'iris', '123456', TRUE, 'user'),
+       ('10', 'jack', '123456', TRUE, 'user');
 
 -- ========================================
 -- 商品数据
@@ -248,8 +248,8 @@ VALUES ('rev-01', '2', '5', '1', '5', '质量不错，版型很好，值得推�
 -- ========================================
 
 -- 添加管理员用户
-INSERT INTO users (id, username, password, enabled, category, created_time, updated_time)
-VALUES ('admin-001', 'admin', 'admin123', TRUE, 'admin', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO users (id, username, password, enabled, category)
+VALUES ('admin-001', 'admin', 'admin123', TRUE, 'admin');
 
 -- 添加角色
 INSERT INTO sql_forge_role (id, name, description)

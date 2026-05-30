@@ -13,6 +13,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.github.wb04307201</groupId>
+            <artifactId>sql-forge-model</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-mcp-server</artifactId>
         </dependency>

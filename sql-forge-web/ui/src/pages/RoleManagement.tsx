@@ -12,8 +12,6 @@ const RoleManagement: Schema = {
     },
     filter: {
       type: 'form',
-      title: '搜索',
-      submitText: '提交',
       body: [
         {type: 'input-text', name: 'name', label: '角色名称', placeholder: '输入角色名称'}
       ]

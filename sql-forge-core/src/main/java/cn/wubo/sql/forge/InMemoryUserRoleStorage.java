@@ -3,10 +3,16 @@ package cn.wubo.sql.forge;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 基于内存的用户-角色关联存储默认实现。
+ */
 public class InMemoryUserRoleStorage implements IUserRoleStorage {
 
     private final Map<String, Set<String>> store = new ConcurrentHashMap<>();
 
+    /**
+     * 构造内存用户-角色关联存储，初始为空。
+     */
     public InMemoryUserRoleStorage() {
         // 默认用户-角色关联为空
     }

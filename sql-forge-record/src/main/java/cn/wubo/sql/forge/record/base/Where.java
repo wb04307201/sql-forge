@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static cn.wubo.sql.forge.constant.Constant.*;
+import static cn.wubo.sql.forge.Constant.*;
 
 /**
  * WHERE 条件记录，描述单个查询条件（列名 + 比较类型 + 值）。

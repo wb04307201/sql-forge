@@ -13,6 +13,12 @@ public class SessionManager {
     private final IUserStorage userStorage;
     private final IUserRoleStorage userRoleStorage;
 
+    /**
+     * 构造会话管理器。
+     *
+     * @param userStorage     用户存储
+     * @param userRoleStorage 用户-角色关联存储
+     */
     public SessionManager(IUserStorage userStorage, IUserRoleStorage userRoleStorage) {
         this.userStorage = userStorage;
         this.userRoleStorage = userRoleStorage;
@@ -93,10 +99,31 @@ public class SessionManager {
         return user != null && "admin".equals(user.getCategory());
     }
 
+    /**
+     * 登录结果记录，包含登录是否成功、用户信息和提示消息。
+     *
+     * @param success 是否登录成功
+     * @param user    登录成功时的用户信息，失败时为 null
+     * @param message 登录失败时的原因，成功时为 null
+     */
     public record LoginResult(boolean success, User user, String message) {
+
+        /**
+         * 创建登录成功结果。
+         *
+         * @param user 登录成功的用户
+         * @return 登录成功结果
+         */
         public static LoginResult success(User user) {
             return new LoginResult(true, user, null);
         }
+
+        /**
+         * 创建登录失败结果。
+         *
+         * @param message 失败原因
+         * @return 登录失败结果
+         */
         public static LoginResult fail(String message) {
             return new LoginResult(false, null, message);
         }
