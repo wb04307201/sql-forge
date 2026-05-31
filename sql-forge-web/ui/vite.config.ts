@@ -8,6 +8,7 @@ export default defineConfig({
   base: './',
   build: {
     outDir: '../target/classes/META-INF/resources/sql/forge/web',
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),

@@ -4,3 +4,6 @@
 /target/maven-status/
 /target/classes/cn/wubo/sql/forge/
 /target/sql-forge-web-1.0-SNAPSHOT.jar
+/target/apidocs/
+/target/javadoc-bundle-options/
+/target/sql-forge-web-1.0-SNAPSHOT-javadoc.jar

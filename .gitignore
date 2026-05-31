@@ -1,6 +1,5 @@
 HELP.md
 .mvn/wrapper/maven-wrapper.jar
-target/
 
 ### STS ###
 .apt_generated
@@ -30,3 +29,4 @@ build/
 ### VS Code ###
 .vscode/
 .playwright-mcp/
+/target/sql-forge-parent-1.0-SNAPSHOT.pom
