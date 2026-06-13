@@ -26,21 +26,21 @@ Import the starters you need:
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.5.12</version>
+    <version>1.6.0</version>
 </dependency>
 
 <!-- Calcite cross-database federated queries (optional) -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
-    <version>1.5.12</version>
+    <version>1.6.0</version>
 </dependency>
 
 <!-- Amis templates + Web Console (optional) -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
-    <version>1.5.12</version>
+    <version>1.6.0</version>
 </dependency>
 ```
 
@@ -185,7 +185,7 @@ Allows frontend to operate the database without writing backend code — describ
   ],
   "@order": ["field_name ASC", "field_name DESC"],
   "@group": ["field_name"],
-  "@distince": false
+  "@distinct": false
 }
 ```
 
@@ -195,7 +195,7 @@ Allows frontend to operate the database without writing backend code — describ
 - `@join`: Join condition array
 - `@order`: Sort field array
 - `@group`: Group by field array
-- `@distince`: Whether to deduplicate
+- `@distinct`: Whether to deduplicate
 
 #### selectPage method
 
@@ -221,7 +221,7 @@ Allows frontend to operate the database without writing backend code — describ
     }
   ],
   "@order": ["field_name ASC", "field_name DESC"],
-  "@distince": false
+  "@distinct": false
 }
 ```
 
@@ -231,7 +231,7 @@ Allows frontend to operate the database without writing backend code — describ
 - `@page`: Pagination parameters (pageIndex starts from 0, pageSize is page size)
 - `@join`: Join condition array
 - `@order`: Sort field array
-- `@distince`: Whether to deduplicate
+- `@distinct`: Whether to deduplicate
 
 #### update method
 
@@ -541,8 +541,8 @@ Uses in-memory storage by default. Implement [ITemplateSqlStorage](sql-forge-tem
 
 Provides type-safe entity operation builders with compile-time safe field references via Lambda expressions, supporting chain calls.
 
-- [Entity](sql-forge-entity/src/main/java/cn/eubo/sql/forge/Entity.java) — Static utility class providing `select/insert/update/delete/save/selectPage` entry points
-- [EntityExecutor](sql-forge-entity/src/main/java/cn/eubo/sql/forge/EntityExecutor.java) — Executes builder database operations
+- [Entity](sql-forge-entity/src/main/java/cn/wubo/sql/forge/Entity.java) — Static utility class providing `select/insert/update/delete/save/selectPage` entry points
+- [EntityExecutor](sql-forge-entity/src/main/java/cn/wubo/sql/forge/EntityExecutor.java) — Executes builder database operations
 
 #### Features
 
@@ -750,8 +750,8 @@ PUT http://localhost:8080/sql/forge/api/template/amis
 content-type: application/json
 
 {
-    "id": "amis-template-users",
-    "name": "User Management",
+    "id": "amis-template-products",
+    "name": "Product Management",
     "context": "{ \"type\": \"page\", \"body\": { \"type\": \"crud\", ... } }"
 }
 ```
@@ -839,7 +839,7 @@ Use [jbang](https://www.jbang.dev/) to run the MCP server without local installa
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.5.12",
+        "io.github.wb04307201:sql-forge-mcp:1.6.0",
         "--sql.forge.mcp.systems[0].name=OrderSystem",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=Order system containing system tables: users, roles, dictionaries, etc. Business tables: products, orders, payment records, user addresses, inventory, order logistics, product categories, product reviews, etc.",
@@ -860,7 +860,7 @@ Configure multiple systems to connect one MCP server to several sql-forge backen
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.5.12",
+        "io.github.wb04307201:sql-forge-mcp:1.6.0",
         "--sql.forge.mcp.systems[0].name=OrderSystem",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=Order system",

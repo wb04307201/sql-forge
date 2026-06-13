@@ -1,8 +1,8 @@
 package cn.wubo.sql.forge;
 
-import cn.eubo.sql.forge.Entity;
-import cn.eubo.sql.forge.EntityExecutor;
-import cn.eubo.sql.forge.entity.*;
+import cn.wubo.sql.forge.Entity;
+import cn.wubo.sql.forge.EntityExecutor;
+import cn.wubo.sql.forge.entity.*;
 import cn.wubo.sql.forge.record.SelectPageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;

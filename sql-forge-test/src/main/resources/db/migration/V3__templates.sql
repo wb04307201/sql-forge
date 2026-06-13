@@ -2175,7 +2175,6 @@ VALUES ('amis-template-order-overview', '订单总览', '订单综合视图', '{
         "@column": [
           "ORDERS.ID as ORDER_ID",
           "users.USERNAME as USER_NAME",
-          "sex.item_name as USER_SEX",
           "products.NAME as PRODUCT_NAME",
           "categories.item_name as PRODUCT_CATEGORY",
           "order_items.QUANTITY",
@@ -2189,11 +2188,6 @@ VALUES ('amis-template-order-overview', '订单总览', '订单综合视图', '{
             "type": "INNER_JOIN",
             "joinTable": "users users",
             "on": "ORDERS.USER_ID = users.ID"
-          },
-          {
-            "type": "LEFT_OUTER_JOIN",
-            "joinTable": "sys_dict_items sex",
-            "on": "users.DICT_SEX = sex.item_code"
           },
           {
             "type": "INNER_JOIN",
@@ -2231,11 +2225,6 @@ VALUES ('amis-template-order-overview', '订单总览', '订单综合视图', '{
             "column": "ORDERS.DICT_ORDER_STATUS",
             "condition": "IN",
             "value": "${ORDER_STATUS | default:undefined | split}"
-          },
-          {
-            "column": "sex.dict_code",
-            "condition": "EQ",
-            "value": "sex"
           },
           {
             "column": "categories.dict_code",
@@ -2286,11 +2275,6 @@ VALUES ('amis-template-order-overview', '订单总览', '订单综合视图', '{
           "label": "用户名",
           "placeholder": "输入用户名"
         }
-      },
-      {
-        "name": "USER_SEX",
-        "label": "性别",
-        "sortable": true
       },
       {
         "name": "PRODUCT_NAME",
