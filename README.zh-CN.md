@@ -26,21 +26,21 @@
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.5.12</version>
+    <version>1.6.0</version>
 </dependency>
 
 <!-- Calcite 跨库联邦查询（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
-    <version>1.5.12</version>
+    <version>1.6.0</version>
 </dependency>
 
 <!-- Amis 模板 + Web Console（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
-    <version>1.5.12</version>
+    <version>1.6.0</version>
 </dependency>
 ```
 
@@ -185,7 +185,7 @@ sql:
   ],
   "@order": ["字段名 ASC", "字段名 DESC"],
   "@group": ["字段名"],
-  "@distince": false
+  "@distinct": false
 }
 ```
 
@@ -195,7 +195,7 @@ sql:
 - `@join`: 关联查询条件数组
 - `@order`: 排序字段数组
 - `@group`: 分组字段数组
-- `@distince`: 是否去重
+- `@distinct`: 是否去重
 
 #### selectPage 方法
 
@@ -221,7 +221,7 @@ sql:
     }
   ],
   "@order": ["字段名 ASC", "字段名 DESC"],
-  "@distince": false
+  "@distinct": false
 }
 ```
 
@@ -231,7 +231,7 @@ sql:
 - `@page`: 分页参数（pageIndex 页码从 0 开始，pageSize 每页大小）
 - `@join`: 关联查询条件数组
 - `@order`: 排序字段数组
-- `@distince`: 是否去重
+- `@distinct`: 是否去重
 
 #### update 方法
 
@@ -541,8 +541,8 @@ content-type: application/json
 
 提供类型安全的实体操作构建器，通过 Lambda 引用实现编译期安全的字段引用，支持链式调用。
 
-- [Entity](sql-forge-entity/src/main/java/cn/eubo/sql/forge/Entity.java) — 静态工具类，提供 `select/insert/update/delete/save/selectPage` 等入口
-- [EntityExecutor](sql-forge-entity/src/main/java/cn/eubo/sql/forge/EntityExecutor.java) — 负责执行构建器的数据库操作
+- [Entity](sql-forge-entity/src/main/java/cn/wubo/sql/forge/Entity.java) — 静态工具类，提供 `select/insert/update/delete/save/selectPage` 等入口
+- [EntityExecutor](sql-forge-entity/src/main/java/cn/wubo/sql/forge/EntityExecutor.java) — 负责执行构建器的数据库操作
 
 #### 特点
 
@@ -750,8 +750,8 @@ PUT http://localhost:8080/sql/forge/api/template/amis
 content-type: application/json
 
 {
-    "id": "amis-template-users",
-    "name": "用户管理",
+    "id": "amis-template-products",
+    "name": "商品管理",
     "context": "{ \"type\": \"page\", \"body\": { \"type\": \"crud\", ... } }"
 }
 ```
@@ -767,6 +767,8 @@ content-type: application/json
 ### 3.2 Web Console
 
 提供可视化 Web 界面，访问地址：`/sql/forge/web`
+
+![img_5.png](img_5.png)
 
 - 数据库元数据查看、SQL 调试（需开启 `sql.forge.api.database.enabled=true`）
   ![img_1.png](img_1.png)
@@ -839,7 +841,7 @@ content-type: application/json
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.5.12",
+        "io.github.wb04307201:sql-forge-mcp:1.6.0",
         "--sql.forge.mcp.systems[0].name=订单系统",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=订单系统，包含系统表：用户、角色、字典等，业务表：商品、订单、支付记录、用户地址、库存、订单物流、商品分类、商品评价等",
@@ -860,7 +862,7 @@ content-type: application/json
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.5.12",
+        "io.github.wb04307201:sql-forge-mcp:1.6.0",
         "--sql.forge.mcp.systems[0].name=订单系统",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=订单系统",

@@ -124,6 +124,14 @@ public class WebAutoConfiguration {
                     return ServerResponse.ok().body(Map.of("status", 1, "msg", "需要管理员权限"));
                 }
                 User user = request.body(User.class);
+                // 兑现前端契约：未提供的字段保留原值（编辑用户时 password 留空不清空、enabled 不重置等）
+                User existing = userStorage.findByUsername(user.getUsername());
+                if (existing != null) {
+                    user.setId(existing.getId());
+                    if (user.getPassword() == null) user.setPassword(existing.getPassword());
+                    if (user.getEnabled() == null) user.setEnabled(existing.getEnabled());
+                    if (user.getCategory() == null) user.setCategory(existing.getCategory());
+                }
                 if (user.getEnabled() == null) user.setEnabled(true);
                 userStorage.save(user);
                 return ServerResponse.ok().body(Map.of("status", 0, "msg", "保存成功", "data", Map.of("id", user.getId())));

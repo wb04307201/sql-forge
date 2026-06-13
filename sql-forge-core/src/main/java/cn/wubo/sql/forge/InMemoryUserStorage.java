@@ -43,6 +43,11 @@ public class InMemoryUserStorage implements IUserStorage {
         if (user.getId() == null) {
             user.setId(UUID.randomUUID().toString());
         }
+        // 兜底：如果 password 是 null 但库里已有该用户，保留旧密码，避免被静默清空
+        User existing = store.get(user.getId());
+        if (existing != null && user.getPassword() == null) {
+            user.setPassword(existing.getPassword());
+        }
         store.put(user.getId(), user);
     }
 

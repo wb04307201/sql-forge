@@ -60,10 +60,14 @@ function Home() {
           };
 
           fetchTemplates();
+        } else {
+          // 未登录（HTTP 200 + success=false），跳转到登录页
+          window.location.href = '/sql/forge/web/login.html';
         }
       })
       .catch(() => {
-        setLoading(false);
+        // 网络错误或会话失效，兜底跳转登录页
+        window.location.href = '/sql/forge/web/login.html';
       });
   }, []);
 

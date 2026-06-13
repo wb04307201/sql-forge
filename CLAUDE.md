@@ -66,18 +66,28 @@ sql-forge-web-spring-boot-starter          ← 依赖基础starter + console静�
 - **`RecordExecutor`** — wraps `ExecutorService`, adds `IBeforeRecordExecutor<T>` aspect hooks per operation type
 - **`EntityExecutor`** — wraps `RecordExecutor`, provides type-safe entity builders with lambda column references
 
-### API Endpoints (defined in `SqlForgeConfiguration`)
+### API Endpoints
 
-All endpoints use Spring WebFlux `RouterFunction<ServerResponse>` (functional routing), **not** `@RestController`.
+All endpoints use **Spring MVC 6 functional routing** (`org.springframework.web.servlet.function.RouterFunction<ServerResponse>`), **not** `@RestController`. Routes are split across three auto-config classes:
 
-| Prefix | Feature | Config Toggle |
-|--------|---------|---------------|
+- **`SqlForgeConfiguration`** — JSON CRUD, SQL template, Amis template, database direct execute
+- **`AuthAutoConfiguration`** — login/logout/status/user
+- **`WebAutoConfiguration`** — user management, role management, console UI router
+
+| Endpoint | Feature | Config Toggle |
+|----------|---------|---------------|
 | `/sql/forge/api/json/{method}/{tableName}` | JSON CRUD | `sql.forge.api.json.enabled` (default true) |
 | `/sql/forge/api/template/sql/*` | SQL template CRUD+exec | `sql.forge.api.template.sql.enabled` (default true) |
 | `/sql/forge/api/template/amis/*` | Amis template CRUD | `sql.forge.api.template.amis.enabled` (default true) |
 | `/sql/forge/api/database/execute` | Direct SQL execution | `sql.forge.api.database.enabled` |
 | `/sql/forge/api/database/metaDataTree` | DB metadata tree | `sql.forge.api.database.enabled` + `sql.forge.console.enabled` |
+| `/sql/forge/api/auth/login` (POST), `/auth/logout` (POST), `/auth/status` (GET), `/auth/user` (GET) | Authentication | `sql.forge.console.enabled` (default true) |
+| `/sql/forge/api/user` (GET/PUT/DELETE) | User management | `sql.forge.console.enabled` (default true) |
+| `/sql/forge/api/role` (GET/PUT/DELETE) | Role management | `sql.forge.console.enabled` (default true) |
+| `/sql/forge/api/user-role` (GET/PUT) | User-role binding | `sql.forge.console.enabled` (default true) |
+| `/sql/forge/api/role-template` (GET/PUT) | Role-template binding | `sql.forge.console.enabled` (default true) |
 | `/sql/forge/api/console/executorName` | List executor names | `sql.forge.console.enabled` (default true) |
+| `/sql/forge/web` (root), `/web/login`, `/web/home` | UI entry redirects | `sql.forge.console.enabled` (default true) |
 | `/sql/forge/console` | Web console UI | `sql.forge.console.enabled` (default true) |
 
 ### Key Configuration Properties
@@ -106,14 +116,14 @@ sql:
 
 ### Key Dependencies
 
-- **Spring Boot** 3.5.13 (managed via BOM)
-- **Spring AI** — MCP tool annotations (`@Tool`, `@ToolParam`) in `sql-forge-mcp`
+- **Spring Boot** 3.5.14 (managed via BOM)
+- **Spring AI** 1.1.7 — MCP tool annotations (`@Tool`, `@ToolParam`) in `sql-forge-mcp`
 - **Apache Calcite** 1.41.0 — cross-database federated queries
 - **JSqlParser** 5.3 — SQL parsing
 - **Enjoy** 5.2.5 — SQL template engine (conditional logic, loops via `#{var}`, `<if>`, `<foreach>`)
 - **MVEL2** 2.5.2 — expression evaluation
 - **Jakarta Persistence API** 3.2.0 — `@Id`, `@Table`, `@Column` annotations for entities
-- **Lombok** 1.18.42
+- **Lombok** 1.18.46
 
 ## Build & Development Commands
 
@@ -139,8 +149,11 @@ mvn spring-boot:run -pl sql-forge-test
 # Run the MCP server (AI tool integration)
 mvn spring-boot:run -pl sql-forge-mcp
 
-# Generate Javadoc (strict mode - fails on missing @param/@return)
+# Generate Javadoc (default doclint: syntax/reference checks, missing @param does NOT fail build)
 mvn javadoc:jar -pl <module-name>
+
+# Strict mode (fails on missing @param/@return)
+mvn javadoc:jar -pl <module-name> -Dmaven.javadoc.failOnError=true
 
 # Package for Maven Central release
 mvn clean install
@@ -160,12 +173,14 @@ Test app config is at `sql-forge-test/src/test/resources/application-test.yml`. 
 
 ## Javadoc Requirements
 
-The `maven-javadoc-plugin` runs in **strict mode** during `mvn install`. All public/protected classes, methods, and record components must have complete Javadoc:
+The `maven-javadoc-plugin` (3.6.0) runs with default doclint (`-Xdoclint:all,-missing`) during `mvn install`, which checks syntax/HTML/references but does **not** fail the build on missing Javadoc. Project standard still requires complete Javadoc on all public/protected API:
 - Class-level: one-sentence Chinese description
 - Methods: `@param` for every parameter (including type parameters like `<T>`), `@return`, and `@throws`
 - Records: `@param` for each component in the class-level Javadoc
 - Enums: class-level Javadoc + inline comments (`/** ... */`) for each constant
 - `@UtilityClass` (Lombok): do **not** add explicit constructors — Lombok generates them and rejects duplicates
+
+To enforce strict mode at build time, add `<doclint>all</doclint>` and `<failOnError>true</failOnError>` to the `maven-javadoc-plugin` configuration in the parent `pom.xml`.
 
 ## Testing Notes
 

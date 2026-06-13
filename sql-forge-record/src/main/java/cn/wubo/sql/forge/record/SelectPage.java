@@ -17,7 +17,7 @@ import java.util.List;
  * @param page     分页参数（JSON 属性 {@code @page}）
  * @param joins    JOIN 列表（JSON 属性 {@code @join}）
  * @param orders   ORDER BY 列列表（JSON 属性 {@code @order}）
- * @param distinct 是否去重（JSON 属性 {@code @distince}）
+ * @param distinct 是否去重（JSON 属性 {@code @distinct}）
  */
 public record SelectPage(
         @JsonProperty("@column")
@@ -34,7 +34,7 @@ public record SelectPage(
         List<Join> joins,
         @JsonProperty("@order")
         List<String> orders,
-        @JsonProperty("@distince")
+        @JsonProperty("@distinct")
         boolean distinct
 ) implements IAllowedRecord {
 

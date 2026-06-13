@@ -1,7 +1,7 @@
 package cn.wubo.sql.forge;
 
-import cn.eubo.sql.forge.EntityExecutor;
-import cn.eubo.sql.forge.cache.EntityCacheService;
+import cn.wubo.sql.forge.EntityExecutor;
+import cn.wubo.sql.forge.cache.EntityCacheService;
 import cn.wubo.sql.forge.record.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

@@ -148,6 +148,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.6.0</version>
+                <configuration>
+                    <!-- 检查语法/HTML/引用/可访问性，但不强制缺失 javadoc 失败（与项目文档化行为一致） -->
+                    <doclint>all,-missing</doclint>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>

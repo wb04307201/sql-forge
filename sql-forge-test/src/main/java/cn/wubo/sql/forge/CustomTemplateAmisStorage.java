@@ -1,8 +1,8 @@
 package cn.wubo.sql.forge;
 
-import cn.eubo.sql.forge.Entity;
-import cn.eubo.sql.forge.EntityExecutor;
-import cn.eubo.sql.forge.entity.EntitySelect;
+import cn.wubo.sql.forge.Entity;
+import cn.wubo.sql.forge.EntityExecutor;
+import cn.wubo.sql.forge.entity.EntitySelect;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 

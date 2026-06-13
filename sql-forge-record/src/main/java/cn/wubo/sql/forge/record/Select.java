@@ -15,7 +15,7 @@ import java.util.List;
  * @param joins    JOIN 列表（JSON 属性 {@code @join}）
  * @param orders   ORDER BY 列列表（JSON 属性 {@code @order}）
  * @param groups   GROUP BY 列列表（JSON 属性 {@code @group}）
- * @param distinct 是否去重（JSON 属性 {@code @distince}）
+ * @param distinct 是否去重（JSON 属性 {@code @distinct}）
  */
 public record Select(
         @JsonProperty("@column")
@@ -30,7 +30,7 @@ public record Select(
         List<String> orders,
         @JsonProperty("@group")
         List<String> groups,
-        @JsonProperty("@distince")
+        @JsonProperty("@distinct")
         boolean distinct
 ) implements IAllowedRecord {
 }
