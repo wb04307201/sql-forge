@@ -331,7 +331,8 @@ VALUES ('1', 'user'),
        ('7', 'user'),
        ('8', 'user'),
        ('9', 'user'),
-       ('10', 'user');
+       ('10', 'user'),
+       ('admin-001', 'user');
 
 -- 添加角色模板
 INSERT INTO sql_forge_role_template (role_id, template_id)
