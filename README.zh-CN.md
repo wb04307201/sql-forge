@@ -13,11 +13,19 @@
 [![fork](https://img.shields.io/github/forks/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)  
 ![License](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
 
-<p style="display: flex">
-  <img src="docs/img.png" alt="Spring AI LoomAgent 应用页" style="width: 33%" />
-  <img src="docs/sqlforge-project-cn.png" alt="SQL工坊 项目概览" style="width: 33%" />
-  <img src="docs/img_1.png" alt="Spring AI LoomAgent 控制台" style="width: 33%" />
-</p>
+<table>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;">
+      <img src="docs/img.png" alt="Spring AI LoomAgent 应用页" style="width: 100%" />
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;">
+      <img src="docs/sqlforge-project-cn.png" alt="SQL工坊 项目概览" style="width: 100%" />
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;">
+      <img src="docs/img_1.png" alt="Spring AI LoomAgent 控制台" style="width: 100%" />
+    </td>
+  </tr>
+</table>
 
 ---
 
