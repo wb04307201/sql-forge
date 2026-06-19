@@ -4,7 +4,7 @@
   <a href="README.md">English</a> | 中文
 </div>
 
-> **SQL工坊** — 一套基于 Spring Boot 的数据库操作框架，提供 JSON CRUD API、类型安全的实体操作、SQL 模板引擎、Apache Calcite 跨库联邦查询、Amis 低代码可视化管理以及 MCP（Model Context Protocol）AI 工具集成服务器，开箱即用、按需引入。
+> 一套基于 Spring Boot 的数据库操作框架，提供 JSON CRUD API、类型安全的实体操作、SQL 模板引擎、Apache Calcite 跨库联邦查询、Amis 低代码可视化管理以及 MCP（Model Context Protocol）AI 工具集成服务器，开箱即用、按需引入。
 
 ![Maven Central](https://img.shields.io/maven-central/v/io.github.wb04307201/sql-forge-spring-boot-starter?style=flat-square)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
@@ -12,6 +12,12 @@
 [![star](https://img.shields.io/github/stars/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)
 [![fork](https://img.shields.io/github/forks/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)  
 ![License](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
+
+<p style="display: flex">
+  <img src="docs/img.png" alt="Spring AI LoomAgent 应用页" style="width: 33%" />
+  <img src="docs/sqlforge-project-cn.png" alt="SQL工坊 项目概览" style="width: 33%" />
+  <img src="docs/img_1.png" alt="Spring AI LoomAgent 控制台" style="width: 33%" />
+</p>
 
 ---
 
@@ -26,21 +32,21 @@
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
 </dependency>
 
 <!-- Calcite 跨库联邦查询（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
 </dependency>
 
 <!-- Amis 模板 + Web Console（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
 </dependency>
 ```
 
@@ -535,7 +541,7 @@ content-type: application/json
 
 #### 持久化模板
 
-默认使用内存存储。继承 [ITemplateSqlStorage](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) 实现自定义持久化。
+默认使用内存存储。实现 [ITemplateSqlStorage](sql-forge-template/src/main/java/cn/wubo/sql/forge/ITemplateSqlStorage.java) 接口以自定义持久化。
 
 ### 1.6 Entity 模块
 
@@ -700,7 +706,7 @@ sql:
 启用后会自动注册一个名为 `calcite` 的执行器，在所有 API 中通过 `executorName=calcite` 参数即可使用：
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/select/orders?executorName=calcite
+POST http://localhost:8080/sql/forge/api/json/select/orders o?executorName=calcite
 Content-Type: application/json
 
 {
@@ -758,26 +764,26 @@ content-type: application/json
 
 渲染后页面：
 
-![img.png](img.png)
+![img.png](docs/img.png)
 
 #### 持久化模板
 
-默认使用内存存储。继承 [ITemplateAmisStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) 实现自定义持久化。
+默认使用内存存储。实现 [ITemplateAmisStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) 接口以自定义持久化。
 
 ### 3.2 Web Console
 
 提供可视化 Web 界面，访问地址：`/sql/forge/web`
 
-![img_5.png](img_5.png)
+![img_5.png](docs/img_5.png)
 
 - 数据库元数据查看、SQL 调试（需开启 `sql.forge.api.database.enabled=true`）
-  ![img_1.png](img_1.png)
+  ![img_1.png](docs/img_1.png)
 - JSON API 调试
-  ![img_2.png](img_2.png)
+  ![img_2.png](docs/img_2.png)
 - SQL 模板管理、调试
-  ![img_3.png](img_3.png)
+  ![img_3.png](docs/img_3.png)
 - Amis 模板管理、调试
-  ![img_4.png](img_4.png)
+  ![img_4.png](docs/img_4.png)
 
 ### 3.3 用户与角色管理
 
@@ -822,14 +828,55 @@ content-type: application/json
 
 ### MCP 工具列表
 
+#### 元数据
+
 | 工具 | 说明 |
 |------|------|
 | `getSystems` | 获取所有已配置的系统信息 |
 | `getMetaDataDatabase` | 获取系统的数据库产品名称和版本 |
 | `sqlForgeMetaDataTables` | 获取系统数据库中的所有表 |
 | `getMetaDataTableInfo` | 获取表结构：列、主键、外键、索引 |
+| `getMetaDataTree` | 获取树形元数据（数据库 → schema → 表） |
+| `listExecutorNames` | 列出系统中可用的执行器名称（如 database、calcite） |
+| `findTablesByName` | 按关键字搜索表（不区分大小写） |
+| `describeSchema` | 一键获取完整 schema（数据库 → 表 → 列/主键/外键/索引） |
+
+#### SQL 执行
+
+| 工具 | 说明 |
+|------|------|
 | `executeSQL` | 执行 SQL 查询并返回结果集 |
+| `countRows` | 统计符合条件的记录数 |
+
+#### JSON CRUD
+
+| 工具 | 说明 |
+|------|------|
+| `jsonSelect` | 通用条件查询（POST /api/json/select/{tableName}） |
+| `jsonSelectPage` | 分页查询（POST /api/json/selectPage/{tableName}） |
+| `jsonInsert` | 插入一条记录（POST /api/json/insert/{tableName}） |
+| `jsonUpdate` | 按条件更新记录（POST /api/json/update/{tableName}） |
+| `jsonDelete` | 按条件删除记录（POST /api/json/delete/{tableName}） |
+
+#### Amis 模板
+
+| 工具 | 说明 |
+|------|------|
 | `amisTemplateSave` | 保存 Amis 页面 JSON 模板配置 |
+| `listAmisTemplates` | 列出 Amis 模板（支持模糊过滤） |
+| `getAmisTemplate` | 根据 ID 获取单个 Amis 模板 |
+| `deleteAmisTemplate` | 根据 ID 删除 Amis 模板 |
+
+#### SQL 模板
+
+| 工具 | 说明 |
+|------|------|
+| `saveSqlTemplate` | 保存或更新 SQL 模板 |
+| `listSqlTemplates` | 列出 SQL 模板（支持模糊过滤） |
+| `getSqlTemplate` | 根据 ID 获取单个 SQL 模板 |
+| `deleteSqlTemplate` | 根据 ID 删除 SQL 模板 |
+| `executeSqlTemplate` | 执行 SQL 模板并绑定参数 |
+| `executeSqlTemplateSafely` | 安全执行 SQL 模板（含参数校验） |
 
 ### stdio 使用方式（jbang）
 
@@ -841,7 +888,7 @@ content-type: application/json
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.6.0",
+        "io.github.wb04307201:sql-forge-mcp:1.6.1",
         "--sql.forge.mcp.systems[0].name=订单系统",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=订单系统，包含系统表：用户、角色、字典等，业务表：商品、订单、支付记录、用户地址、库存、订单物流、商品分类、商品评价等",
@@ -862,7 +909,7 @@ content-type: application/json
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.6.0",
+        "io.github.wb04307201:sql-forge-mcp:1.6.1",
         "--sql.forge.mcp.systems[0].name=订单系统",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=订单系统",

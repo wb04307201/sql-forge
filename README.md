@@ -4,7 +4,7 @@
   English | <a href="README.zh-CN.md">中文</a>
 </div>
 
-> **SQL Forge** — a Spring Boot database framework providing JSON CRUD API, type-safe entity operations, SQL template engine, Apache Calcite cross-database federated queries, Amis low-code visual management, and MCP (Model Context Protocol) server for AI tool integration. Ready to use, import on demand.
+> a Spring Boot database framework providing JSON CRUD API, type-safe entity operations, SQL template engine, Apache Calcite cross-database federated queries, Amis low-code visual management, and MCP (Model Context Protocol) server for AI tool integration. Ready to use, import on demand.
 
 ![Maven Central](https://img.shields.io/maven-central/v/io.github.wb04307201/sql-forge-spring-boot-starter?style=flat-square)
 [![star](https://gitee.com/wb04307201/sql-forge/badge/star.svg?theme=dark)](https://gitee.com/wb04307201/sql-forge)
@@ -12,6 +12,12 @@
 [![star](https://img.shields.io/github/stars/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)
 [![fork](https://img.shields.io/github/forks/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)  
 ![License](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
+
+<p style="display: flex">
+  <img src="docs/img.png" alt="Spring AI LoomAgent App" style="width: 33%" />
+  <img src="docs/sqlforge-project-en.png" alt="SQL Forge Overview" style="width: 33%" />
+  <img src="docs/img_1.png" alt="Spring AI LoomAgent Console" style="width: 33%" />
+</p>
 
 ---
 
@@ -26,21 +32,21 @@ Import the starters you need:
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
 </dependency>
 
 <!-- Calcite cross-database federated queries (optional) -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
 </dependency>
 
 <!-- Amis templates + Web Console (optional) -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
-    <version>1.6.0</version>
+    <version>1.6.1</version>
 </dependency>
 ```
 
@@ -700,7 +706,7 @@ sql:
 Once enabled, a `calcite` executor is automatically registered. Use `executorName=calcite` in any API:
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/select/orders?executorName=calcite
+POST http://localhost:8080/sql/forge/api/json/select/orders o?executorName=calcite
 Content-Type: application/json
 
 {
@@ -758,7 +764,7 @@ content-type: application/json
 
 Rendered page:
 
-![img.png](img.png)
+![img.png](docs/img.png)
 
 #### Persistent Templates
 
@@ -769,13 +775,13 @@ Uses in-memory storage by default. Implement [ITemplateAmisStorage](sql-forge-we
 Provides a visual web interface at: `/sql/forge/web`
 
 - Database metadata viewing and SQL debugging (requires `sql.forge.api.database.enabled=true`)
-  ![img_1.png](img_1.png)
+  ![img_1.png](docs/img_1.png)
 - JSON API debugging
-  ![img_2.png](img_2.png)
+  ![img_2.png](docs/img_2.png)
 - SQL template management and debugging
-  ![img_3.png](img_3.png)
+  ![img_3.png](docs/img_3.png)
 - Amis template management and debugging
-  ![img_4.png](img_4.png)
+  ![img_4.png](docs/img_4.png)
 
 ### 3.3 User & Role Management
 
@@ -820,14 +826,55 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that e
 
 ### MCP Tools
 
+#### Metadata
+
 | Tool | Description |
 |------|-------------|
 | `getSystems` | Get all configured system information |
 | `getMetaDataDatabase` | Get database product name and version for a system |
 | `sqlForgeMetaDataTables` | Get all tables in a system's database |
 | `getMetaDataTableInfo` | Get table structure: columns, primary keys, foreign keys, indexes |
+| `getMetaDataTree` | Get tree-shaped metadata (database → schema → tables) |
+| `listExecutorNames` | List available executor names in a system (e.g. database, calcite) |
+| `findTablesByName` | Search tables by keyword (case-insensitive) |
+| `describeSchema` | Get full schema (database → tables → columns/PKs/FKs/indexes) |
+
+#### SQL Execution
+
+| Tool | Description |
+|------|-------------|
 | `executeSQL` | Execute a SQL query and return the result set |
+| `countRows` | Count rows matching optional WHERE conditions |
+
+#### JSON CRUD
+
+| Tool | Description |
+|------|-------------|
+| `jsonSelect` | Conditional select (POST /api/json/select/{tableName}) |
+| `jsonSelectPage` | Paginated select (POST /api/json/selectPage/{tableName}) |
+| `jsonInsert` | Insert a record (POST /api/json/insert/{tableName}) |
+| `jsonUpdate` | Update records by condition (POST /api/json/update/{tableName}) |
+| `jsonDelete` | Delete records by condition (POST /api/json/delete/{tableName}) |
+
+#### Amis Template
+
+| Tool | Description |
+|------|-------------|
 | `amisTemplateSave` | Save an Amis page JSON template configuration |
+| `listAmisTemplates` | List Amis templates with optional filters |
+| `getAmisTemplate` | Get a single Amis template by ID |
+| `deleteAmisTemplate` | Delete an Amis template by ID |
+
+#### SQL Template
+
+| Tool | Description |
+|------|-------------|
+| `saveSqlTemplate` | Save or update a SQL template |
+| `listSqlTemplates` | List SQL templates with optional filters |
+| `getSqlTemplate` | Get a single SQL template by ID |
+| `deleteSqlTemplate` | Delete a SQL template by ID |
+| `executeSqlTemplate` | Execute a SQL template with parameter binding |
+| `executeSqlTemplateSafely` | Safely execute SQL template with parameter validation |
 
 ### stdio Usage (jbang)
 
@@ -839,7 +886,7 @@ Use [jbang](https://www.jbang.dev/) to run the MCP server without local installa
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.6.0",
+        "io.github.wb04307201:sql-forge-mcp:1.6.1",
         "--sql.forge.mcp.systems[0].name=OrderSystem",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=Order system containing system tables: users, roles, dictionaries, etc. Business tables: products, orders, payment records, user addresses, inventory, order logistics, product categories, product reviews, etc.",
@@ -860,7 +907,7 @@ Configure multiple systems to connect one MCP server to several sql-forge backen
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.6.0",
+        "io.github.wb04307201:sql-forge-mcp:1.6.1",
         "--sql.forge.mcp.systems[0].name=OrderSystem",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=Order system",

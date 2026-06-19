@@ -13,10 +13,10 @@ export default {
         method: 'get',
         url: '/sql/forge/api/template/amis',
         data: {
-          id: '${search_id | default:undefined}',
-          name: '${search_name | default:undefined}',
-          description: '${search_description | default:undefined}',
-          context: '${search_context | default:undefined}'
+          id: '${id | default:undefined}',
+          name: '${name | default:undefined}',
+          description: '${description | default:undefined}',
+          context: '${context | default:undefined}'
         }
       },
       autoFillHeight: true,
@@ -150,7 +150,7 @@ export default {
           label: '模板标识',
           searchable: {
             type: 'input-text',
-            name: 'search-id',
+            name: 'id',
             label: '模板标识'
           }
         },
@@ -159,20 +159,25 @@ export default {
           label: '模板名称',
           searchable: {
             type: 'input-text',
-            name: 'search-name',
+            name: 'name',
             label: '模板名称'
           }
         },
         {
           name: 'description',
-          label: '模板描述'
+          label: '模板描述',
+          searchable: {
+            type: 'input-text',
+            name: 'description',
+            label: '模板名称'
+          }
         },
         {
           name: 'context',
           label: '内容',
           searchable: {
             type: 'input-text',
-            name: 'search-context',
+            name: 'context',
             label: '内容'
           }
         },

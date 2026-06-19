@@ -12,10 +12,11 @@ export default {
         method: 'get',
         url: '/sql/forge/api/template/sql',
         data: {
-          id: '${search_id | default:undefined}',
-          name: '${search_name | default:undefined}',
-          executorName: '${search_executorName | default:undefined}',
-          context: '${search_context | default:undefined}'
+          id: '${id | default:undefined}',
+          name: '${name | default:undefined}',
+          description: '${description | default:undefined}',
+          executorName: '${executorName | default:undefined}',
+          context: '${context | default:undefined}'
         }
       },
       autoFillHeight: true,
@@ -96,7 +97,7 @@ export default {
           label: '模板标识',
           searchable: {
             type: 'input-text',
-            name: 'search-id',
+            name: 'id',
             label: '模板标识'
           }
         },
@@ -105,20 +106,25 @@ export default {
           label: '模板名称',
           searchable: {
             type: 'input-text',
-            name: 'search-name',
+            name: 'name',
             label: '模板名称'
           }
         },
         {
           name: 'description',
-          label: '模板描述'
+          label: '模板描述',
+          searchable: {
+            type: 'input-text',
+            name: 'description',
+            label: '模板名称'
+          }
         },
         {
           name: 'executorName',
           label: '数据源',
           searchable: {
             type: 'select',
-            name: 'search_executorName',
+            name: 'executorName',
             label: '数据源',
             clearable: true,
             source: {
@@ -142,7 +148,7 @@ export default {
           label: '内容',
           searchable: {
             type: 'input-text',
-            name: 'search-context',
+            name: 'context',
             label: '内容'
           }
         },
