@@ -147,10 +147,12 @@ public class SqlForgeConfiguration {
         });
         builder.GET("sql/forge/api/template/sql", accept(MediaType.APPLICATION_JSON), request -> {
             String id = request.param("id").orElse(null);
+            String description = request.param("description").orElse(null);
             String executorName = request.param("executorName").orElse(null);
             String context = request.param("context").orElse(null);
             TemplateSql template = new TemplateSql();
             template.setId(id);
+            template.setDescription(description);
             template.setExecutorName(executorName);
             template.setContext(context);
             return ServerResponse.ok().body(templateSqlStorage.list(template));
