@@ -13,16 +13,71 @@
 [![fork](https://img.shields.io/github/forks/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)  
 ![License](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
 
-<table>
+<table style="width: 100%; table-layout: fixed; border-collapse: collapse;">
   <tr>
-    <td style="padding: 0 10px; border: none; text-align: center;">
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="12">
+      SQL工坊
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="4">
+      应用页
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="4">
+      项目概览
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="4">
+      控制台
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="4">
       <img src="docs/img.png" alt="Spring AI LoomAgent 应用页" style="width: 100%" />
     </td>
-    <td style="padding: 0 10px; border: none; text-align: center;">
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="4">
       <img src="docs/sqlforge-project-cn.png" alt="SQL工坊 项目概览" style="width: 100%" />
     </td>
-    <td style="padding: 0 10px; border: none; text-align: center;">
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="4">
       <img src="docs/img_1.png" alt="Spring AI LoomAgent 控制台" style="width: 100%" />
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="12">
+      使用MCP对接智能体
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="6">
+      一句话出报告
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="6">
+      一句话出CRUD
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="3">
+      <img src="docs/java-brain-nl2sql.png" alt="Java Brain 自然语言SQL" style="width: 100%" />
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="3">
+      <img src="docs/java-brain-nl2sql-report.png" alt="Java Brain 自然语言SQL报告" style="width: 100%" />
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="3">
+      <img src="docs/java-brain-nl2crud.png" alt="Java Brain 自然语言CRUD" style="width: 100%" />
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="3">
+      <img src="docs/java-brain-nl2crud-page.png" alt="Java Brain 自然语言CRUD页面" style="width: 100%" />
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="6">
+      智能体：灵梭<br/>
+      <a href="https://gitee.com/wb04307201/spring-ai-loom-agent">Gitee</a> |
+      <a href="https://github.com/wb04307201/spring-ai-loom-agent">GitHub</a>
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="6">
+      示例：JavaBrain<br/>
+      <a href="https://gitee.com/wb04307201/java-brain">Gitee</a> |
+      <a href="https://github.com/wb04307201/java-brain">GitHub</a>
     </td>
   </tr>
 </table>
