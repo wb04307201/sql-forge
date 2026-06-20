@@ -13,16 +13,71 @@
 [![fork](https://img.shields.io/github/forks/wb04307201/sql-forge)](https://github.com/wb04307201/sql-forge)  
 ![License](https://img.shields.io/badge/License-Apache2.0-blue.svg) ![JDK](https://img.shields.io/badge/JDK-17+-green.svg) ![SpringBoot](https://img.shields.io/badge/Spring%20Boot-3+-green.svg)
 
-<table>
+<table style="width: 100%; table-layout: fixed; border-collapse: collapse;">
   <tr>
-    <td style="padding: 0 10px; border: none; text-align: center;">
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="12">
+      SQL Forge
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="4">
+      App Page
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="4">
+      Project Overview
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="4">
+      Console
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="4">
       <img src="docs/img.png" alt="Spring AI LoomAgent App" style="width: 100%" />
     </td>
-    <td style="padding: 0 10px; border: none; text-align: center;">
-      <img src="docs/sqlforge-project-en.png" alt="SQL Forge Overview" style="width: 100%" />
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="4">
+      <img src="docs/sqlforge-project-en.png" alt="SQL Forge Project Overview" style="width: 100%" />
     </td>
-    <td style="padding: 0 10px; border: none; text-align: center;">
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="4">
       <img src="docs/img_1.png" alt="Spring AI LoomAgent Console" style="width: 100%" />
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="12">
+      Using MCP to Connect AI Agents
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="6">
+      One-Sentence Report
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="6">
+      One-Sentence CRUD
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="3">
+      <img src="docs/java-brain-nl2sql.png" alt="Java Brain Natural Language SQL" style="width: 100%" />
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="3">
+      <img src="docs/java-brain-nl2sql-report.png" alt="Java Brain Natural Language SQL Report" style="width: 100%" />
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="3">
+      <img src="docs/java-brain-nl2crud.png" alt="Java Brain Natural Language CRUD" style="width: 100%" />
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;" colspan="3">
+      <img src="docs/java-brain-nl2crud-page.png" alt="Java Brain Natural Language CRUD Page" style="width: 100%" />
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="6">
+      Agent: Loom<br/>
+      <a href="https://gitee.com/wb04307201/spring-ai-loom-agent">Gitee</a> |
+      <a href="https://github.com/wb04307201/spring-ai-loom-agent">GitHub</a>
+    </td>
+    <td style="padding: 0 10px; border: none; text-align: center;font-weight: bold;" colspan="6">
+      Example: JavaBrain<br/>
+      <a href="https://gitee.com/wb04307201/java-brain">Gitee</a> |
+      <a href="https://github.com/wb04307201/java-brain">GitHub</a>
     </td>
   </tr>
 </table>
