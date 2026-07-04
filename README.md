@@ -134,6 +134,37 @@ For `@Id`, `@Table`, `@Column` annotations in the Entity module, additionally im
 
 ---
 
+## Build a Complete System Without Writing Backend Code
+
+> Write zero Java backend code. Use JSON configuration to build a full business system with **data access · dynamic SQL · cross-database federation · authentication & authorization · visual pages · AI integration**.
+
+### Capability Loop
+
+SQL Forge decomposes "building a system" into eight no-code stages. Use any one independently, or compose them freely:
+
+| Layer | Capability | Configuration | Endpoint |
+|-------|-----------|---------------|----------|
+| Data access | CRUD / pagination / multi-table joins | JSON-described conditions | `POST /sql/forge/api/json/{method}/{tableName}` |
+| Complex queries | Conditional branches, `IN` loops, reports | Template syntax `<if>` / `<foreach>` | `POST /sql/forge/api/template/sql/{id}` |
+| Cross-database federation | MySQL, PostgreSQL and other heterogeneous DBs joined in one SQL | JSON + `model.json` | `executorName=calcite` |
+| Authentication | Session login + ApiKey dual channel | YAML / endpoints | Built-in |
+| Authorization | User—role—page three-level grants | Endpoints | `/api/role-template` · `/api/user-role` |
+| Pages | CRUD forms, charts, details, dialogs | Amis JSON Schema | `PUT /api/template/amis` |
+| Console | Metadata browser, SQL/template/page debugging | Browser | `/sql/forge/web` |
+| AI integration | Natural language to CRUD / reports / pages | MCP tools | Any MCP client |
+
+### 30-Second Quick Start
+
+1. **Write an Amis JSON** → `PUT /api/template/amis` renders a CRUD page automatically
+2. **Point the page's `api` field** to `/sql/forge/api/json/{method}/{table}` → data reads/writes itself
+3. **Need cross-database query?** Change `executorName` in the URL to `calcite` — no SQL changes
+4. **Want AI to use it too?** Start `sql-forge-mcp`; Claude / Cursor can operate via natural language
+5. **Want to restrict who sees which pages?** Use `/api/role-template` to grant Amis templates to roles
+
+The following sections are detailed documentation for each stage — read as needed.
+
+---
+
 ## 1. sql-forge-spring-boot-starter (Core Starter)
 
 Provides core database capabilities including executor management, JSON CRUD API, Entity chain operations, SQL template engine, and Record aspect extensions.
@@ -178,6 +209,8 @@ sql:
 ```
 
 - `POST /sql/forge/api/database/execute?executorName=database` - Execute SQL
+
+> 💡 **Low-code perspective**: This is the data access layer of the no-code system. The frontend calls one URL to perform CRUD, pagination, and JOIN on any table — no backend code required.
 
 ### 1.3 JSON CRUD API
 
@@ -548,6 +581,8 @@ Request → Valid ApiKey? → Allow
 
 Whitelisted paths (login endpoints, static resources) are accessible without authentication.
 
+> 💡 **Low-code perspective**: This is the complex query layer. Conditional branches (`<if>`), `IN` loops (`<foreach>`), and reports are all configured via template syntax — no Java needed.
+
 ### 1.5 SQL Template Engine
 
 Provides SQL template functionality supporting conditionals (`<if>`), loops (`<foreach>`), and variable binding (`#{var}`), dynamically generating and executing SQL based on parameters.
@@ -797,6 +832,8 @@ Provides Amis low-code template management, Web Console UI, and user/role manage
 
 > Depends on the core starter (`sql-forge-spring-boot-starter`), which is automatically included.
 
+> 💡 **Low-code perspective**: This is the page layer. Drop the JSON CRUD URL from 1.3 or the SQL template URL from 1.5 into the Amis `api` field — the page works.
+
 ### 3.1 Amis Template API
 
 Use [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) together with JSON API and SQL Template API to rapidly build web pages.
@@ -832,6 +869,8 @@ Rendered page:
 #### Persistent Templates
 
 Uses in-memory storage by default. Implement [ITemplateAmisStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) for custom persistence.
+
+> 💡 **Low-code perspective**: This is the debug & operations layer. Every template, metadata, and SQL query is managed visually in the browser — no command line required.
 
 ### 3.2 Web Console
 
@@ -984,6 +1023,104 @@ Configure multiple systems to connect one MCP server to several sql-forge backen
   }
 }
 ```
+
+---
+
+## 5. End-to-End Demo: Build an Order Management System from Zero
+
+> Follow this section end-to-end to see: **using only JSON configuration, no Java code written**, you can build an order management page with complex reports + CRUD + access control.
+
+### Goal
+
+- Order list filterable by username
+- Display order + user + product joined information (cross-table JOIN)
+- Only the "manager" role can access
+
+### Step 1: Register SQL Template (Complex Report)
+
+```http request
+PUT http://localhost:8080/sql/forge/api/template/sql
+Content-Type: application/json
+
+{
+  "id": "order-report",
+  "executorName": "database",
+  "context": "SELECT o.id, u.username, p.name AS product_name, o.total_amount, o.order_date FROM orders o JOIN users u ON o.user_id = u.id JOIN order_items oi ON o.id = oi.order_id JOIN products p ON oi.product_id = p.id <if test=\"username != null && username != ''\">WHERE u.username = #{username}</if> ORDER BY o.order_date DESC"
+}
+```
+
+Verify execution:
+
+```http request
+POST http://localhost:8080/sql/forge/api/template/sql/order-report
+Content-Type: application/json
+
+{"username": "alice"}
+```
+
+### Step 2: Register Amis Page Template
+
+```http request
+PUT http://localhost:8080/sql/forge/api/template/amis
+Content-Type: application/json
+
+{
+  "id": "order-management",
+  "name": "Order Management",
+  "description": "Order report filterable by username",
+  "context": "{ \"type\": \"page\", \"body\": [ { \"type\": \"form\", \"api\": \"post:/sql/forge/api/template/sql/order-report\", \"body\": [ { \"type\": \"input-text\", \"name\": \"username\", \"label\": \"Username\" } ], \"actions\": [ { \"type\": \"submit\", \"label\": \"Search\" } ] }, { \"type\": \"crud\", \"api\": \"post:/sql/forge/api/template/sql/order-report\", \"columns\": [ { \"name\": \"id\", \"label\": \"Order ID\" }, { \"name\": \"username\", \"label\": \"User\" }, { \"name\": \"product_name\", \"label\": \"Product\" }, { \"name\": \"total_amount\", \"label\": \"Amount\" }, { \"name\": \"order_date\", \"label\": \"Date\" } ] } ] }"
+}
+```
+
+> Key point: the Amis `api` field points directly at a SQL template URL — **the frontend completes data queries without any backend code**.
+
+### Step 3: Bind Role Permissions
+
+Grant the Order Management page to the "manager" role:
+
+```http request
+PUT http://localhost:8080/sql/forge/api/role-template
+Content-Type: application/json
+
+{
+  "roleId": "manager",
+  "templateIds": ["order-management"]
+}
+```
+
+Then assign the "manager" role to a specific user (admin only):
+
+```http request
+PUT http://localhost:8080/sql/forge/api/user-role
+Content-Type: application/json
+
+{
+  "userId": "alice-id",
+  "roleIds": ["manager"]
+}
+```
+
+### Step 4: Login and Access
+
+```http request
+POST http://localhost:8080/sql/forge/api/auth/login
+Content-Type: application/json
+
+{"username": "alice", "password": "..."}
+```
+
+After login, visit the Web Console (`/sql/forge/web`) and open the "Order Management" page.
+
+### What You Just Built
+
+| Step | Call | Capability Triggered |
+|------|------|---------------------|
+| 1 | `PUT /template/sql` | SQL template engine (conditional <if>) |
+| 2 | `PUT /template/amis` | Amis rendering + data binding |
+| 3 | `PUT /role-template` + `PUT /user-role` | Role—page three-level authorization |
+| 4 | `POST /auth/login` + Console | Authentication + visual console |
+
+**Zero Java code written throughout.** For cross-database MySQL/PostgreSQL joins, just change the SQL template's `executorName` to `calcite`; for AI access via natural language, start `sql-forge-mcp`.
 
 ---
 
