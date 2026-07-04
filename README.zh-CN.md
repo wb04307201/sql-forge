@@ -134,6 +134,37 @@
 
 ---
 
+## 零代码搭建完整业务系统
+
+> 不写一行 Java 后端代码，仅靠 JSON 配置就能搭建一套具备 **数据访问 · 动态 SQL · 跨库联邦 · 鉴权授权 · 可视化页面 · AI 接入** 的完整业务系统。
+
+### 能力闭环
+
+SQL Forge 把"建系统"这件事拆成八个零代码环节，每一环都可以独立使用，也可以任意组合：
+
+| 层级 | 能力 | 配置方式 | 落地点 |
+|------|------|---------|--------|
+| 数据访问 | CRUD 增删改查 / 分页 / 多表关联 | JSON 描述条件 | `POST /sql/forge/api/json/{method}/{tableName}` |
+| 复杂查询 | 条件分支、循环 IN、统计报表 | 模板语法 `<if>` / `<foreach>` | `POST /sql/forge/api/template/sql/{id}` |
+| 跨库联邦 | MySQL、PostgreSQL 等异构库一条 SQL JOIN | JSON + `model.json` | `executorName=calcite` |
+| 鉴权 | Session 登录 + ApiKey 双通道 | YAML / 接口 | 内置 |
+| 授权 | 用户—角色—页面 三级授权 | 接口 | `/api/role-template` · `/api/user-role` |
+| 页面 | CRUD 表单、图表、详情、弹窗 | Amis JSON Schema | `PUT /api/template/amis` |
+| 控制台 | 元数据浏览、SQL/模板/页面 调试 | 浏览器 | `/sql/forge/web` |
+| AI 接入 | 自然语言生成 CRUD / 报表 / 页面 | MCP 工具 | 任意 MCP 客户端 |
+
+### 30 秒上手流程
+
+1. **写一段 Amis JSON** → `PUT /api/template/amis` 自动渲染一个 CRUD 页面
+2. **页面里 `api` 字段**指向 `/sql/forge/api/json/{method}/{table}` → 数据自动读写
+3. **想跨库查询？** 把 URL 的 `executorName` 改成 `calcite`，无需改 SQL
+4. **想让 AI 也能用？** 启动 `sql-forge-mcp`，Claude / Cursor 即可自然语言操控
+5. **想限制谁能看哪些页面？** 用 `/api/role-template` 给角色授权 Amis 模板
+
+下面章节是对每一个环节的详细文档，按需查阅即可。
+
+---
+
 ## 1. sql-forge-spring-boot-starter（基础 Starter）
 
 提供数据库操作的核心能力，包括数据库执行器管理、JSON CRUD API、Entity 链式操作、SQL 模板引擎和 Record 切面扩展。
@@ -178,6 +209,8 @@ sql:
 ```
 
 - `POST /sql/forge/api/database/execute?executorName=database` - 执行 SQL
+
+> 💡 **低代码视角**：这是零代码的数据访问层。前端调用一个 URL 即可对任意表完成 CRUD、分页、JOIN，无需任何后端代码。
 
 ### 1.3 JSON CRUD API
 
@@ -548,6 +581,8 @@ X-Api-Key: sk-your-api-key-here
 
 白名单路径（登录接口、静态资源）无需认证直接放行。
 
+> 💡 **低代码视角**：这是零代码的复杂查询层。条件分支（`<if>`）、循环 IN（`<foreach>`）、统计报表都通过模板语法配置，无需写 Java。
+
 ### 1.5 SQL 模板引擎
 
 提供 SQL 模板功能，支持条件判断（`<if>`）、循环（`<foreach>`）、变量绑定（`#{var}`）等模板语法，根据参数动态生成 SQL 执行并返回结果。
@@ -797,6 +832,8 @@ Content-Type: application/json
 
 > 依赖基础 Starter（`sql-forge-spring-boot-starter`），会自动引入。
 
+> 💡 **低代码视角**：这是零代码的页面层。把 1.3 的 JSON CRUD URL 或 1.5 的 SQL 模板 URL 写进 Amis 的 `api` 字段，页面就通了。
+
 ### 3.1 Amis 模板 API
 
 使用 [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) 配合 JSON API、SQL 模板 API 快速构建 Web 页面。
@@ -832,6 +869,8 @@ content-type: application/json
 #### 持久化模板
 
 默认使用内存存储。实现 [ITemplateAmisStorage](sql-forge-web-autoconfigure/src/main/java/cn/wubo/sql/forge/ITemplateAmisStorage.java) 接口以自定义持久化。
+
+> 💡 **低代码视角**：这是零代码的调试与运营层。所有模板、元数据、SQL 都能在浏览器里可视化管理，无需命令行。
 
 ### 3.2 Web Console
 
@@ -986,6 +1025,104 @@ content-type: application/json
   }
 }
 ```
+
+---
+
+## 5. 端到端示例：从零搭建订单管理系统
+
+> 跟随本节完整走一遍，你将看到：**仅通过 JSON 配置，不写一行 Java 代码**，就能搭出一个具备复杂报表 + CRUD + 权限控制的订单管理页面。
+
+### 业务目标
+
+- 订单列表支持按用户名筛选
+- 展示订单 + 用户 + 商品的关联信息（跨表 JOIN）
+- 仅"经理"角色可见
+
+### 步骤 1：注册 SQL 模板（复杂报表）
+
+```http request
+PUT http://localhost:8080/sql/forge/api/template/sql
+Content-Type: application/json
+
+{
+  "id": "order-report",
+  "executorName": "database",
+  "context": "SELECT o.id, u.username, p.name AS product_name, o.total_amount, o.order_date FROM orders o JOIN users u ON o.user_id = u.id JOIN order_items oi ON o.id = oi.order_id JOIN products p ON oi.product_id = p.id <if test=\"username != null && username != ''\">WHERE u.username = #{username}</if> ORDER BY o.order_date DESC"
+}
+```
+
+执行验证：
+
+```http request
+POST http://localhost:8080/sql/forge/api/template/sql/order-report
+Content-Type: application/json
+
+{"username": "alice"}
+```
+
+### 步骤 2：注册 Amis 页面模板
+
+```http request
+PUT http://localhost:8080/sql/forge/api/template/amis
+Content-Type: application/json
+
+{
+  "id": "order-management",
+  "name": "订单管理",
+  "description": "按用户名筛选的订单报表",
+  "context": "{ \"type\": \"page\", \"body\": [ { \"type\": \"form\", \"api\": \"post:/sql/forge/api/template/sql/order-report\", \"body\": [ { \"type\": \"input-text\", \"name\": \"username\", \"label\": \"用户名\" } ], \"actions\": [ { \"type\": \"submit\", \"label\": \"查询\" } ] }, { \"type\": \"crud\", \"api\": \"post:/sql/forge/api/template/sql/order-report\", \"columns\": [ { \"name\": \"id\", \"label\": \"订单号\" }, { \"name\": \"username\", \"label\": \"用户\" }, { \"name\": \"product_name\", \"label\": \"商品\" }, { \"name\": \"total_amount\", \"label\": \"金额\" }, { \"name\": \"order_date\", \"label\": \"下单时间\" } ] } ] }"
+}
+```
+
+> 关键点：Amis 的 `api` 字段直接指向 SQL 模板 URL，**前端无需任何后端代码就能完成数据查询**。
+
+### 步骤 3：绑定角色权限
+
+把订单管理页面授权给"经理"角色：
+
+```http request
+PUT http://localhost:8080/sql/forge/api/role-template
+Content-Type: application/json
+
+{
+  "roleId": "manager",
+  "templateIds": ["order-management"]
+}
+```
+
+再把"经理"角色授予具体用户（管理员权限）：
+
+```http request
+PUT http://localhost:8080/sql/forge/api/user-role
+Content-Type: application/json
+
+{
+  "userId": "alice-id",
+  "roleIds": ["manager"]
+}
+```
+
+### 步骤 4：登录后访问
+
+```http request
+POST http://localhost:8080/sql/forge/api/auth/login
+Content-Type: application/json
+
+{"username": "alice", "password": "..."}
+```
+
+登录后访问 Web Console（`/sql/forge/web`），即可看到并打开"订单管理"页面。
+
+### 全程发生了什么
+
+| 步骤 | 调用 | 触发的能力 |
+|------|------|-----------|
+| 1 | `PUT /template/sql` | SQL 模板引擎（条件判断 <if>） |
+| 2 | `PUT /template/amis` | Amis 页面渲染 + 数据绑定 |
+| 3 | `PUT /role-template` + `PUT /user-role` | 角色—页面 三级授权 |
+| 4 | `POST /auth/login` + Console | 鉴权 + 可视化控制台 |
+
+**全程 0 行 Java 代码**。如果想跨 MySQL/PostgreSQL 联合查询，只把 SQL 模板里的 `executorName` 改为 `calcite`；如果想让 AI 也能用自然语言操控整套系统，启动 `sql-forge-mcp` 即可。
 
 ---
 
