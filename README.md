@@ -95,21 +95,21 @@ Import the starters you need:
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.6.1</version>
+    <version>1.6.2</version>
 </dependency>
 
 <!-- Calcite cross-database federated queries (optional) -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
-    <version>1.6.1</version>
+    <version>1.6.2</version>
 </dependency>
 
 <!-- Amis templates + Web Console (optional) -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
-    <version>1.6.1</version>
+    <version>1.6.2</version>
 </dependency>
 ```
 
@@ -1044,7 +1044,7 @@ Use [jbang](https://www.jbang.dev/) to run the MCP server without local installa
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.6.1",
+        "io.github.wb04307201:sql-forge-mcp:1.6.2",
         "--sql.forge.mcp.systems[0].name=OrderSystem",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=Order system containing system tables: users, roles, dictionaries, etc. Business tables: products, orders, payment records, user addresses, inventory, order logistics, product categories, product reviews, etc.",
@@ -1065,7 +1065,7 @@ Configure multiple systems to connect one MCP server to several sql-forge backen
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.6.1",
+        "io.github.wb04307201:sql-forge-mcp:1.6.2",
         "--sql.forge.mcp.systems[0].name=OrderSystem",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=Order system",
