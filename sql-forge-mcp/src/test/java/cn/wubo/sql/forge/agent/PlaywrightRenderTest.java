@@ -3,6 +3,7 @@ package cn.wubo.sql.forge.agent;
 import cn.wubo.sql.forge.amis.PlaywrightRenderer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * CI 默认 skip（避免每次跑都要下载），本地开发跑（用环境变量 {@code RUN_BROWSER_TESTS=1} 开启）。
  * </p>
  */
+@EnabledIfEnvironmentVariable(named = "RUN_BROWSER_TESTS", matches = "1")
 class PlaywrightRenderTest {
 
     /**

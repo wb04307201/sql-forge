@@ -8,6 +8,7 @@ import cn.wubo.sql.forge.SqlForgeMcpService;
 import cn.wubo.sql.forge.TemplateService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.client.RestClient;
@@ -57,8 +58,13 @@ class PageIterationTest {
 
     /**
      * 主迭代：从有缺陷的 CRUD 模板开始，自动修复到 Playwright 渲染无错为止。
+     * <p>
+     * 集成测试 — 需要真实业务后端 sql-forge-test (localhost:8081) + Playwright Chromium。
+     * CI 默认不跑,设环境变量 {@code PAGE_ITERATION_TEST=true} 才启用。
+     * </p>
      */
     @Test
+    @EnabledIfEnvironmentVariable(named = "PAGE_ITERATION_TEST", matches = "true")
     void iterateCrudPageUntilRenderedClean() throws Exception {
         // 构造 system 上下文（MCP 进程里 SystemInfo 来自 yaml，这里手工注入一份让 MCP 知道 baseUrl）
         SqlForgeMcpProperties.SystemInfo sys = new SqlForgeMcpProperties.SystemInfo();

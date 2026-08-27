@@ -47,6 +47,16 @@ public class AmisService {
         if (amisRenderer == null) {
             return new PlaywrightRenderer.PreviewResult(false, false, "PlaywrightRenderer 不可用", java.util.List.of());
         }
-        return amisRenderer.render(systemName, context);
+        // 解析 systemName -> baseUrl 注入 HTML,让 makeFetcher 把相对 URL(amis CRUD 模板
+        // 最常见 'POST /sql/forge/...' 写法)拼成绝对 URL,修 about:blank 上 XHR.open
+        // 抛 'Invalid URL' 的问题。
+        String baseUrl = null;
+        if (systemName != null && !systemName.isBlank()) {
+            Object resolved = support.resolveSystem(systemName);
+            if (resolved instanceof McpToolSupport.SystemContext ctx) {
+                baseUrl = ctx.baseUrl();
+            }
+        }
+        return amisRenderer.render(systemName, baseUrl, context);
     }
 }
