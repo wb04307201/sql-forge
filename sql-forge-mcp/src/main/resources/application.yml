@@ -5,12 +5,11 @@ spring:
   ai:
     mcp:
       server:
-        name: sql-forge-mcp-server
-        version: 1.6.1
+        name: sql-forge-mcp
+        version: @project.version@
 
 logging:
-  level:
-    cn.wubo.sql.forge: INFO
-    org.springframework.ai: INFO
+  pattern:
+    console:
   file:
     name: ./mcp/sql-forge-mcp-server.log
