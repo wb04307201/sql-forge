@@ -102,6 +102,15 @@ public class PlaywrightRenderer {
      * @return 渲染结果（静态 + 渲染信息）
      */
     public PreviewResult render(String systemName, String context) {
+        return render(systemName, null, context);
+    }
+
+    /**
+     * 带 baseUrl 的渲染版本：把后端 baseUrl 注入 HTML,让 makeFetcher 把相对 URL(amis
+     * CRUD 模板最常见的 "POST /sql/forge/..." 写法)拼成绝对 URL,避免 about:blank 上
+     * XHR.open 抛 "Invalid URL"。可空(空 = 不解析相对 URL,行为同旧版)。
+     */
+    public PreviewResult render(String systemName, String baseUrl, String context) {
         BrowserHolder holder;
         try {
             holder = acquireBrowser();
@@ -109,7 +118,7 @@ public class PlaywrightRenderer {
             log.warn("Chromium 启动失败: {}", ex.getMessage());
             return unavailable(ex.getMessage());
         }
-        String html = buildHtml(context);
+        String html = buildHtml(context, baseUrl);
         try (BrowserContext ctx = holder.browser.newContext();
              Page page = ctx.newPage()) {
             List<PreviewError> errors = new ArrayList<>();
@@ -179,7 +188,23 @@ public class PlaywrightRenderer {
      * @return 完整 HTML 字符串
      */
     String buildHtml(String context) {
+        return buildHtml(context, null);
+    }
+
+    /**
+     * 带 baseUrl 的 HTML 拼装:把 baseUrl 写入 window.__AMIS_BASE_URL__,让 makeFetcher
+     * 把相对 API URL 拼成绝对 URL。可空(空 = 旧行为,相对 URL 直接传给 XHR)。
+     */
+    String buildHtml(String context, String baseUrl) {
         String b64 = Base64.getEncoder().encodeToString((context == null ? "" : context).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        // baseUrl 转义:防止 HTML/JS 注入(虽然 config 来自 .mcp.json 但仍防御)
+        String baseUrlJson;
+        if (baseUrl == null || baseUrl.isBlank()) {
+            baseUrlJson = "null";
+        } else {
+            // JSON.stringify 自动转义,后端用 JSON.parse 取回
+            baseUrlJson = "\"" + baseUrl.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+        }
         // amis 6.x SDK 的完整资源（jsdelivr CDN）：
         //   - sdk.js (UMD bundle, 通过 amisRequire 暴露 amis/embed 模块)
         //   - sdk.css + helper.css + iconfont.css + cxd.css (主题)
@@ -255,12 +280,20 @@ public class PlaywrightRenderer {
                 + "  function b64Decode(str){try{return decodeURIComponent(atob(str).split('').map(function(c){return '%'+('00'+c.charCodeAt(0).toString(16)).slice(-2);}).join(''));}catch(e){return atob(str);}}\n"
                 + "  var schema;\n"
                 + "  try { schema = JSON.parse(b64Decode(b64)); } catch(e) { document.body.innerText='JSON parse error: '+e.message; return; }\n"
+                + "  // 业务后端 baseUrl(可空)。makeFetcher 用它把相对 URL 拼成绝对 URL\n"
+                + "  // —— 修 about:blank 上 XHR.open('POST /sql/forge/...') 抛 'Invalid URL' 的问题\n"
+                + "  window.__AMIS_BASE_URL__ = " + baseUrlJson + ";\n"
                 + "  function makeFetcher(){\n"
                 + "    return function(req){\n"
                 + "      return new Promise(function(resolve){\n"
                 + "        try {\n"
+                + "          // 相对 URL 解析:amis CRUD 模板常见 'POST /sql/forge/...' 写法\n"
+                + "          var url = req.url;\n"
+                + "          if (window.__AMIS_BASE_URL__ && url && url.charAt(0) === '/' && !/^https?:/i.test(url)) {\n"
+                + "            try { url = new URL(url, window.__AMIS_BASE_URL__).href; } catch(e) { /* keep raw */ }\n"
+                + "          }\n"
                 + "          var xhr = new XMLHttpRequest();\n"
-                + "          xhr.open(req.method || 'GET', req.url, true);\n"
+                + "          xhr.open(req.method || 'GET', url, true);\n"
                 + "          if (req.headers) { for (var k in req.headers) { if (req.headers[k] != null) xhr.setRequestHeader(k, req.headers[k]); } }\n"
                 + "          xhr.responseType = 'text';\n"
                 + "          xhr.onload = function(){\n"
