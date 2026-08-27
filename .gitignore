@@ -40,3 +40,6 @@ build/
 
 # MCP 运行时日志(audit + server log,jvm 启动时 cwd 下生成)
 /mcp/
+
+# sql-forge-test 运行时 H2 file-based 数据目录
+/sql-forge-test/sql-forge-test/
