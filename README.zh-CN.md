@@ -95,21 +95,21 @@
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.6.1</version>
+    <version>1.6.2</version>
 </dependency>
 
 <!-- Calcite 跨库联邦查询（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
-    <version>1.6.1</version>
+    <version>1.6.2</version>
 </dependency>
 
 <!-- Amis 模板 + Web Console（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
-    <version>1.6.1</version>
+    <version>1.6.2</version>
 </dependency>
 ```
 
@@ -366,7 +366,7 @@ sql:
 1. 查询
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/select/orders o
+POST http://localhost:8081/sql/forge/api/json/select/orders o
 Content-Type: application/json
 
 {
@@ -413,7 +413,7 @@ Content-Type: application/json
 在查询 JSON 基础上增加 `@page` 参数即可：
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/selectPage/orders o
+POST http://localhost:8081/sql/forge/api/json/selectPage/orders o
 Content-Type: application/json
 
 {
@@ -436,7 +436,7 @@ Content-Type: application/json
 3. 插入
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/insert/users
+POST http://localhost:8081/sql/forge/api/json/insert/users
 Content-Type: application/json
 
 {
@@ -462,7 +462,7 @@ Content-Type: application/json
 4. 更新
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/update/users
+POST http://localhost:8081/sql/forge/api/json/update/users
 Content-Type: application/json
 
 {
@@ -491,7 +491,7 @@ Content-Type: application/json
 5. 删除
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/delete/users
+POST http://localhost:8081/sql/forge/api/json/delete/users
 Content-Type: application/json
 
 {
@@ -556,7 +556,7 @@ sql:
 请求示例：
 
 ```http request
-GET http://localhost:8080/sql/forge/api/json/select/users
+GET http://localhost:8081/sql/forge/api/json/select/users
 X-Api-Key: sk-your-api-key-here
 ```
 
@@ -603,7 +603,7 @@ X-Api-Key: sk-your-api-key-here
 模板配置：
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/template/sql
+PUT http://localhost:8081/sql/forge/api/template/sql
 content-type: application/json
 
 {
@@ -617,7 +617,7 @@ content-type: application/json
 执行模板：
 
 ```http request
-POST http://localhost:8080/sql/forge/api/template/sql/sql-template-database
+POST http://localhost:8081/sql/forge/api/template/sql/sql-template-database
 content-type: application/json
 
 {
@@ -804,7 +804,7 @@ sql:
 启用后会自动注册一个名为 `calcite` 的执行器，在所有 API 中通过 `executorName=calcite` 参数即可使用：
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/select/orders o?executorName=calcite
+POST http://localhost:8081/sql/forge/api/json/select/orders o?executorName=calcite
 Content-Type: application/json
 
 {
@@ -852,7 +852,7 @@ Content-Type: application/json
 #### 示例
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/template/amis
+PUT http://localhost:8081/sql/forge/api/template/amis
 content-type: application/json
 
 {
@@ -924,13 +924,19 @@ content-type: application/json
 
 ## 4. sql-forge-mcp（AI MCP 服务器）
 
-基于 [Model Context Protocol](https://modelcontextprotocol.io/)（MCP）协议的服务器，通过 **stdio** 传输方式将 sql-forge 后端能力暴露为 AI 工具。AI 助手（Claude Desktop、Cursor、Windsurf 等）可以通过 MCP 工具调用查询数据库元数据、执行 SQL、管理 Amis 模板。
+基于 [Model Context Protocol](https://modelcontextprotocol.io/)（MCP）协议的服务器，通过 **stdio** 传输方式将 sql-forge 后端能力暴露为 AI 工具，让 Claude Code、Claude Desktop、Cursor、Windsurf 等 AI 助手可以直接"看到"数据库元数据、读 Amis 知识、按自然语言描述拼装 Amis 页面、保存到系统、用 headless Chromium 真实渲染校验。
 
-> 需要一个运行中的 sql-forge 后端（需开启 `sql.forge.api.database.enabled=true`）。
+> 需要一个运行中的 sql-forge 后端（需开启 `sql.forge.api.database.enabled=true`），并提前安装 Playwright Chromium 以使用 `previewAmisTemplate`。
 
-### MCP 工具列表
+### MCP 三类原语一览
 
-#### 元数据
+MCP 服务按规范把能力分到三类原语（**29 个 Tool** + **5 个 Resource** + **3 个 Prompt**）：
+
+- **Tools = 动作（CRUD、校验、渲染、保存）**，按需 invoke
+- **Resources = 只读参考（Amis 知识、组件清单、范例）**，建议 AI 客户端初始化阶段预读到上下文
+- **Prompts = 任务模板（带占位符的预制指令）**，可作为 `/slash-command` 触发
+
+### 元数据
 
 | 工具 | 说明 |
 |------|------|
@@ -943,14 +949,7 @@ content-type: application/json
 | `findTablesByName` | 按关键字搜索表（不区分大小写） |
 | `describeSchema` | 一键获取完整 schema（数据库 → 表 → 列/主键/外键/索引） |
 
-#### SQL 执行
-
-| 工具 | 说明 |
-|------|------|
-| `executeSQL` | 执行 SQL 查询并返回结果集 |
-| `countRows` | 统计符合条件的记录数 |
-
-#### JSON CRUD
+### JSON CRUD
 
 | 工具 | 说明 |
 |------|------|
@@ -959,26 +958,82 @@ content-type: application/json
 | `jsonInsert` | 插入一条记录（POST /api/json/insert/{tableName}） |
 | `jsonUpdate` | 按条件更新记录（POST /api/json/update/{tableName}） |
 | `jsonDelete` | 按条件删除记录（POST /api/json/delete/{tableName}） |
+| `countRows` | 统计符合 WHERE 条件的行数 |
 
-#### Amis 模板
-
-| 工具 | 说明 |
-|------|------|
-| `amisTemplateSave` | 保存 Amis 页面 JSON 模板配置 |
-| `listAmisTemplates` | 列出 Amis 模板（支持模糊过滤） |
-| `getAmisTemplate` | 根据 ID 获取单个 Amis 模板 |
-| `deleteAmisTemplate` | 根据 ID 删除 Amis 模板 |
-
-#### SQL 模板
+### SQL 模板与执行
 
 | 工具 | 说明 |
 |------|------|
-| `saveSqlTemplate` | 保存或更新 SQL 模板 |
+| `executeSQL` | 直接执行 SQL（默认仅 SELECT，受 `sql.forge.api.database.select-only` 控制） |
+| `saveSqlTemplate` | 保存或更新 SQL 模板（Enjoy 语法：`#{}` 占位符、`<if>`/`<foreach>` 条件循环） |
 | `listSqlTemplates` | 列出 SQL 模板（支持模糊过滤） |
 | `getSqlTemplate` | 根据 ID 获取单个 SQL 模板 |
 | `deleteSqlTemplate` | 根据 ID 删除 SQL 模板 |
 | `executeSqlTemplate` | 执行 SQL 模板并绑定参数 |
-| `executeSqlTemplateSafely` | 安全执行 SQL 模板（含参数校验） |
+| `executeSqlTemplateSafely` | 安全执行：先校验模板存在 + 参数完整 + 不执行未绑定占位符 SQL（推荐路径） |
+
+### Amis 模板 CRUD
+
+| 工具 | 说明 |
+|------|------|
+| `amisTemplateSave` | 保存 Amis 页面 JSON 模板配置（落业务后端 Amis 表） |
+| `listAmisTemplates` | 列出 Amis 模板（支持按 id/name/description/context 模糊过滤） |
+| `getAmisTemplate` | 根据 ID 获取单个 Amis 模板 |
+| `deleteAmisTemplate` | 根据 ID 删除 Amis 模板（破坏性，Agent 应先向用户确认） |
+
+### Amis 动作 & MCP 健康
+
+| 工具 | 说明 |
+|------|------|
+| `validateAmisTemplate` | 静态校验：JSON 语法、必填字段、组件 type、api 格式、嵌套递归。返回 `{valid, errors[]}`（severity: error/warning） |
+| `previewAmisTemplate` | 用 headless Chromium **真实渲染** Amis 模板（自包含 HTML，`page.setContent()` 注入，**不弹窗**）。返回 `{available, rendered, reason, errors[]}`。Chromium 不可用时降级返回 `available=false + reason` |
+| `mcpHealth` | MCP 自身 + 各业务后端 + Playwright 健康检查。返回 `{overall, mcp, backends, playwright, limits}`。用于探活、Agent 启动自检、人工排查 |
+| `metrics` | 进程内指标：每个 Tool 的调用次数、错误数、平均延迟、最大延迟。用于探活、告警、Agent 自我诊断 |
+
+### MCP Resources（5 个，只读）
+
+| URI | mimeType | 说明 |
+|---|---|---|
+| `amis://schema-hints` | `text/markdown` | 整篇 Amis Schema 速查手册（表达式 / API 写法 / CRUD 套路 / 踩坑清单）。**最建议常驻** |
+| `amis://components` | `application/json` | 组件目录轻量索引（仅 type/name/category/description，54 个） |
+| `amis://examples` | `application/json` | 范例轻量索引（仅 name/title/tags/description，17 个） |
+| `amis://components/{type}` | `application/json` | 按 type 获取组件完整规格（含 required/keyProps/minimalExample/docUrl） |
+| `amis://examples/{name}` | `application/json` | 按 name 获取完整可运行的 JSON Schema，作为模板基础 |
+
+> 资源加载由 `AmisMcpResources` 暴露（spring-ai 1.1.x 用程序化 `List<McpServerFeatures.SyncResourceSpecification>` Bean）。Round 5 把 6 个 Amis 知识 Tool 全部迁移到 Resource，以便 AI 客户端把 `amis://schema-hints` 预读到系统提示而无需 invoke。
+
+### MCP Prompts（3 个，任务模板）
+
+| Prompt | 入参 | 作用 |
+|---|---|---|
+| `create-amis-page` | `<systemName> <tableName> <pageTitle>` | 标准化走"探表 → 读 schema-hints → 读 component spec → 改造 → 校验 → 预览"全流程 |
+| `diagnose-render-error` | `<context> <errors>` | 把 preview 失败的 errors 喂回去，让 AI 改 schema 再来一次 |
+| `quick-crud-template` | `<systemName> <tableName> [withFilter]` | 一键骨架：只读模式，最少对话生成最简 CRUD |
+
+### Agent 构造链路（11 步标准路径）
+
+```
+1. tools/call   mcpHealth                            → 确认后端可达 + Chromium 可用
+2. tools/call   findTablesByName / describeSchema     → 探表 + 列元数据
+3. resources/read amis://schema-hints                 → 速查手册（建议常驻）
+4. resources/read amis://components/crud             → 必填字段
+5. resources/read amis://examples/crud-page          → 范例 schema 作为模板
+6. tools/call   validateAmisTemplate(json)           → 必须先通过
+7. tools/call   previewAmisTemplate(systemName, json)→ 可视化验证（headless，不弹窗）
+8. tools/call   amisTemplateSave(...)                → 保存到后端
+9. tools/call   getAmisTemplate(...)                 → 反查验证
+10. tools/call  update / re-validate / re-preview    → 修改重保存
+11. tools/call  deleteAmisTemplate(...)              → 清场
+```
+
+> 完整实操示例（含每一步期望返回、常见错误排查、Prompts 触发方式）见 [`docs/agent-journey.md`](docs/agent-journey.md)。
+
+### 模块约束（本模块不持有任何 web 入口）
+
+- **不依赖** `sql-forge-web` 模块、不引入 servlet / `RouterFunction`
+- **preview 用 `page.setContent()`** 自包含 HTML，`spring.main.web-application-type=none`
+- **Amis SDK 由浏览器按需从 jsdelivr CDN 拉取**（不内嵌到 MCP 包里）
+- 这样保证 MCP 进程轻量、独立、可在任何环境下启动
 
 ### stdio 使用方式（jbang）
 
@@ -990,7 +1045,7 @@ content-type: application/json
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.6.1",
+        "io.github.wb04307201:sql-forge-mcp:1.6.2",
         "--sql.forge.mcp.systems[0].name=订单系统",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=订单系统，包含系统表：用户、角色、字典等，业务表：商品、订单、支付记录、用户地址、库存、订单物流、商品分类、商品评价等",
@@ -1011,7 +1066,7 @@ content-type: application/json
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.6.1",
+        "io.github.wb04307201:sql-forge-mcp:1.6.2",
         "--sql.forge.mcp.systems[0].name=订单系统",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=订单系统",
@@ -1032,6 +1087,8 @@ content-type: application/json
 
 > 跟随本节完整走一遍，你将看到：**仅通过 JSON 配置，不写一行 Java 代码**，就能搭出一个具备复杂报表 + CRUD + 权限控制的订单管理页面。
 
+> 💡 **端口约定**：本节默认业务后端跑在 `http://localhost:8081`（与 `sql-forge-mcp` 章节示例一致，便于 Step 5 用 MCP 工具复刻）。这同时也是 Starter 的新默认（`application.yml` 已将 `server.port` 改为 8081），改回 8080 仅是为了兼容旧习惯 — 直接替换 URL 即可。
+
 ### 业务目标
 
 - 订单列表支持按用户名筛选
@@ -1041,7 +1098,7 @@ content-type: application/json
 ### 步骤 1：注册 SQL 模板（复杂报表）
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/template/sql
+PUT http://localhost:8081/sql/forge/api/template/sql
 Content-Type: application/json
 
 {
@@ -1054,7 +1111,7 @@ Content-Type: application/json
 执行验证：
 
 ```http request
-POST http://localhost:8080/sql/forge/api/template/sql/order-report
+POST http://localhost:8081/sql/forge/api/template/sql/order-report
 Content-Type: application/json
 
 {"username": "alice"}
@@ -1063,7 +1120,7 @@ Content-Type: application/json
 ### 步骤 2：注册 Amis 页面模板
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/template/amis
+PUT http://localhost:8081/sql/forge/api/template/amis
 Content-Type: application/json
 
 {
@@ -1081,7 +1138,7 @@ Content-Type: application/json
 把订单管理页面授权给"经理"角色：
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/role-template
+PUT http://localhost:8081/sql/forge/api/role-template
 Content-Type: application/json
 
 {
@@ -1093,7 +1150,7 @@ Content-Type: application/json
 再把"经理"角色授予具体用户（管理员权限）：
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/user-role
+PUT http://localhost:8081/sql/forge/api/user-role
 Content-Type: application/json
 
 {
@@ -1105,13 +1162,36 @@ Content-Type: application/json
 ### 步骤 4：登录后访问
 
 ```http request
-POST http://localhost:8080/sql/forge/api/auth/login
+POST http://localhost:8081/sql/forge/api/auth/login
 Content-Type: application/json
 
 {"username": "alice", "password": "..."}
 ```
 
 登录后访问 Web Console（`/sql/forge/web`），即可看到并打开"订单管理"页面。
+
+### 步骤 5：用 AI Agent 通过 MCP 复刻上述全部步骤
+
+如果你已经按 [第 4 节](#4-sql-forge-mcpai-mcp-服务器) 启动了 `sql-forge-mcp` 并把后端注册成 `TestSys`，上述 4 步可以用 AI Agent 一句话完成。比如对 Claude Code 说：
+
+> "用 TestSys 的 MCP 工具，给 ORDERS 表构造一个带按用户名筛选的订单管理页面，跟上面的 HTTP 示例功能一致，保存为 `order-management`。"
+
+Agent 会按以下链路完成（每步对应一个 MCP Tool 调用）：
+
+| Agent 操作 | MCP 原语 | 工具 | 替代了哪个 HTTP 步骤 |
+|---|---|---|---|
+| 探表 + 拿列 | Tool | `describeSchema(TestSys, ORDERS)` | —（HTTP 端没用到） |
+| 读 Amis 知识 | Resource | `amis://schema-hints` + `amis://examples/crud-page` | — |
+| 注册 SQL 模板 | Tool | `saveSqlTemplate(TestSys, order-report, ...)` | Step 1 PUT |
+| 校验拼装的页面 JSON | Tool | `validateAmisTemplate(json)` | — |
+| 渲染验证 | Tool | `previewAmisTemplate(TestSys, json)` | — |
+| 保存 Amis 模板 | Tool | `amisTemplateSave(TestSys, order-management, ...)` | Step 2 PUT |
+| 绑定角色-模板 | Tool | `saveSqlTemplate` / 直接执行 SQL | Step 3 PUT |
+| 反查验证 | Tool | `getAmisTemplate(TestSys, order-management)` | Step 4 起打开页面 |
+
+无需手写 HTTP / 拼 JSON / 等浏览器刷新 —— Agent 全程用 MCP 通道完成，最终拿到的是同一个 `order-management` 页面。
+
+> 完整 11 步标准链路、Prompts 触发方式、常见错误排查见 [`docs/agent-journey.md`](docs/agent-journey.md)。
 
 ### 全程发生了什么
 
@@ -1151,4 +1231,33 @@ sql:
           enabled: true            # 启用 Amis 模板 API（默认 true）
     console:
       enabled: true                # 启用 Web Console（默认 true）
+
+server:
+  port: 8081                      # 默认 8081,与 .mcp.json 配置对齐;详见下一节
 ```
+
+---
+
+## 🔌 端口配置同步指南
+
+本仓库所有 HTTP / MCP 示例默认使用 **`http://localhost:8081`**。如需修改，需**同时**调整以下两处保持一致：
+
+| 位置 | 字段 | 说明 |
+|------|------|------|
+| 业务后端 `application.yml` | `server.port` | Starter 实际监听端口（默认 8081,跟文档和 `.mcp.json` 配置完全对齐） |
+| MCP `.mcp.json` 的 `--sql.forge.mcp.systems[i].url` | url | MCP fetcher 访问的后端 baseUrl，必须与 `server.port` 一致 |
+
+> 任何 MCP 工具调用（`executeSQL` / `jsonSelect` / `amisTemplateSave` …）都基于 url 配置访问后端；不一致会出现 `mcpHealth` 返回 `DEGRADED` 或 HTTP 404/401。
+>
+> 不接 MCP、只用 Starter 时,若不想用默认 8081 也可以改回 8080(不需调 .mcp.json),文档中所有 `localhost:8081` 替换为 `localhost:8080` 即可。
+
+---
+
+## 📚 延伸阅读
+
+| 文档 | 内容 | 受众 |
+|------|------|------|
+| [`docs/agent-journey.md`](docs/agent-journey.md) | 完整 11 步 MCP Agent 实操链路:探表 → 读知识 → 拼装 → 校验 → 渲染 → 保存 → 反查 → 删除,含 Prompts 触发方式和常见错误排查 | Claude Code / Cursor / AI Agent 用户 |
+| [`docs/deployment.md`](docs/deployment.md) | sql-forge-mcp 生产部署手册:JVM 参数 / .mcp.json / 鉴权 / 日志 / 监控 / 告警阈值 / 回滚 / 安全审计 / 部署前后检查清单 | 运维 / SRE |
+| [`docs/profiling.md`](docs/profiling.md) | sql-forge-mcp 性能分析指南:async-profiler / JFR / jcmd / 5 类常见瓶颈与调优顺序 | 需要排查性能问题的开发者 |
+| [`sql-forge-mcp/README.md`](sql-forge-mcp/README.md) / [`README.en.md`](sql-forge-mcp/README.en.md) | MCP 模块专属文档:Resources 5 / Tools 29 / Prompts 3,模块约束、设计理念 | MCP 服务开发者 / 集成方 |

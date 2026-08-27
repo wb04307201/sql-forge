@@ -1,0 +1,1145 @@
+[
+  {
+    "type": "page",
+    "name": "Page",
+    "category": "layout",
+    "description": "页面根组件，所有 Amis 页面必须以 page 开头",
+    "required": ["type"],
+    "keyProps": {
+      "title": "页面标题",
+      "body": "页面内容（可以是组件、数组或 SchemaNode）",
+      "subTitle": "副标题",
+      "toolbar": "工具栏按钮组",
+      "aside": "侧边栏",
+      "initApi": "页面初始化时请求的 API",
+      "cssVars": "CSS 变量",
+      "definitions": "复用组件定义（drawer/dialog/form 内部引用）"
+    },
+    "minimalExample": {
+      "type": "page",
+      "title": "标题",
+      "body": "Hello"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/page"
+  },
+  {
+    "type": "container",
+    "name": "Container",
+    "category": "layout",
+    "description": "通用容器，可包裹任意子组件",
+    "required": ["type"],
+    "keyProps": {
+      "body": "容器内容",
+      "className": "自定义 CSS 类名",
+      "style": "内联样式",
+      "wrapperComponent": "外层标签（div/section/article）"
+    },
+    "minimalExample": {
+      "type": "container",
+      "body": "容器内容"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/container"
+  },
+  {
+    "type": "grid",
+    "name": "Grid",
+    "category": "layout",
+    "description": "栅格布局，基于 12 栅格系统",
+    "required": ["type"],
+    "keyProps": {
+      "columns": "列定义数组，每列可用 md/sm/lg 等断点",
+      "gap": "列间距",
+      "align": "垂直对齐方式"
+    },
+    "minimalExample": {
+      "type": "grid",
+      "columns": [
+        {"body": "列 1", "md": 6},
+        {"body": "列 2", "md": 6}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/grid"
+  },
+  {
+    "type": "panel",
+    "name": "Panel",
+    "category": "layout",
+    "description": "带边框的容器，常用于表单分组",
+    "required": ["type"],
+    "keyProps": {
+      "title": "面板标题",
+      "body": "面板内容",
+      "headerClassName": "头部样式",
+      "actions": "右上角操作"
+    },
+    "minimalExample": {
+      "type": "panel",
+      "title": "面板标题",
+      "body": "面板内容"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/panel"
+  },
+  {
+    "type": "tabs",
+    "name": "Tabs",
+    "category": "layout",
+    "description": "标签页",
+    "required": ["type", "tabs"],
+    "keyProps": {
+      "tabs": "标签项数组 [{title, body, icon}]",
+      "activeKey": "当前激活 key",
+      "mountOnEnter": "懒挂载",
+      "unmountOnExit": "卸载保留"
+    },
+    "minimalExample": {
+      "type": "tabs",
+      "tabs": [
+        {"title": "标签1", "body": "内容1"},
+        {"title": "标签2", "body": "内容2"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/tabs"
+  },
+  {
+    "type": "breadcrumb",
+    "name": "Breadcrumb",
+    "category": "layout",
+    "description": "面包屑导航，指示当前页面路径",
+    "required": ["type", "items"],
+    "keyProps": {
+      "items": "面包屑项 [{label, href, icon}]",
+      "separator": "分隔符"
+    },
+    "minimalExample": {
+      "type": "breadcrumb",
+      "items": [
+        {"label": "首页", "href": "/"},
+        {"label": "用户管理", "href": "/users"},
+        {"label": "详情"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/breadcrumb"
+  },
+  {
+    "type": "steps",
+    "name": "Steps",
+    "category": "layout",
+    "description": "步骤条，展示流程进度（与 wizard 不同：只展示，不可交互）",
+    "required": ["type", "steps"],
+    "keyProps": {
+      "steps": "步骤数组 [{title, description, status}]",
+      "current": "当前激活步骤索引",
+      "status": "整体状态：wait / process / finish / error",
+      "direction": "horizontal / vertical"
+    },
+    "minimalExample": {
+      "type": "steps",
+      "steps": [
+        {"title": "提交", "status": "finish"},
+        {"title": "审核", "status": "process"},
+        {"title": "完成", "status": "wait"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/steps"
+  },
+  {
+    "type": "form",
+    "name": "Form",
+    "category": "form",
+    "description": "表单容器，包裹表单项并提交",
+    "required": ["type", "api"],
+    "keyProps": {
+      "api": "提交 API（POST/PUT），返回 status:0 表示成功",
+      "body": "表单项数组",
+      "mode": "提交模式：normal / horizontal / inline / flex",
+      "actions": "底部按钮组",
+      "redirect": "成功后跳转地址",
+      "initApi": "初始数据 API",
+      "rules": "校验规则数组",
+      "messages": "校验文案"
+    },
+    "minimalExample": {
+      "type": "form",
+      "api": "POST /sql/forge/api/json/insert/users",
+      "body": [
+        {"type": "input-text", "name": "name", "label": "姓名"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form"
+  },
+  {
+    "type": "input-text",
+    "name": "InputText",
+    "category": "form",
+    "description": "单行文本输入框",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "placeholder": "占位符",
+      "value": "默认值",
+      "required": "是否必填",
+      "disabled": "是否禁用",
+      "maxLength": "最大长度",
+      "validations": "校验（同 rules）"
+    },
+    "minimalExample": {
+      "type": "input-text",
+      "name": "name",
+      "label": "姓名"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-text"
+  },
+  {
+    "type": "input-number",
+    "name": "InputNumber",
+    "category": "form",
+    "description": "数字输入框",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "min": "最小值",
+      "max": "最大值",
+      "step": "步长",
+      "precision": "小数位",
+      "prefix": "前缀",
+      "suffix": "后缀"
+    },
+    "minimalExample": {
+      "type": "input-number",
+      "name": "age",
+      "label": "年龄",
+      "min": 0,
+      "max": 150
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-number"
+  },
+  {
+    "type": "input-date",
+    "name": "InputDate",
+    "category": "form",
+    "description": "日期选择器",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "format": "显示格式，默认 YYYY-MM-DD",
+      "valueFormat": "提交值格式",
+      "minDate": "可选最小日期",
+      "maxDate": "可选最大日期"
+    },
+    "minimalExample": {
+      "type": "input-date",
+      "name": "birthday",
+      "label": "出生日期"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-date"
+  },
+  {
+    "type": "input-datetime",
+    "name": "InputDateTime",
+    "category": "form",
+    "description": "日期时间选择器",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "format": "显示格式，如 YYYY-MM-DD HH:mm:ss",
+      "valueFormat": "提交值格式",
+      "timeFormat": "时间格式"
+    },
+    "minimalExample": {
+      "type": "input-datetime",
+      "name": "createdAt",
+      "label": "创建时间",
+      "format": "YYYY-MM-DD HH:mm:ss"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-datetime"
+  },
+  {
+    "type": "input-time",
+    "name": "InputTime",
+    "category": "form",
+    "description": "时间选择器（仅时分秒）",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "timeFormat": "时间格式"
+    },
+    "minimalExample": {
+      "type": "input-time",
+      "name": "startTime",
+      "label": "开始时间"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-time"
+  },
+  {
+    "type": "input-month",
+    "name": "InputMonth",
+    "category": "form",
+    "description": "月份选择器",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "format": "显示格式，如 YYYY-MM"
+    },
+    "minimalExample": {
+      "type": "input-month",
+      "name": "month",
+      "label": "月份"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-month"
+  },
+  {
+    "type": "input-quarter",
+    "name": "InputQuarter",
+    "category": "form",
+    "description": "季度选择器",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "format": "显示格式"
+    },
+    "minimalExample": {
+      "type": "input-quarter",
+      "name": "quarter",
+      "label": "季度"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-quarter"
+  },
+  {
+    "type": "input-year",
+    "name": "InputYear",
+    "category": "form",
+    "description": "年份选择器",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "format": "显示格式，如 YYYY"
+    },
+    "minimalExample": {
+      "type": "input-year",
+      "name": "year",
+      "label": "年份"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-year"
+  },
+  {
+    "type": "input-range",
+    "name": "InputRange",
+    "category": "form",
+    "description": "数值范围滑块（双滑块）",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "min": "最小值",
+      "max": "最大值",
+      "step": "步长",
+      "parts": "分段数"
+    },
+    "minimalExample": {
+      "type": "input-range",
+      "name": "priceRange",
+      "label": "价格区间",
+      "min": 0,
+      "max": 1000
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-range"
+  },
+  {
+    "type": "select",
+    "name": "Select",
+    "category": "form",
+    "description": "下拉选择器（单选/多选）",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "options": "静态选项 [{label, value}]",
+      "source": "远程选项 API",
+      "multiple": "是否多选",
+      "extractValue": "是否只提交 value",
+      "joinValues": "多选时是否拼接为分隔字符串",
+      "delimiter": "多选分隔符",
+      "clearable": "是否可清空"
+    },
+    "minimalExample": {
+      "type": "select",
+      "name": "status",
+      "label": "状态",
+      "options": [
+        {"label": "启用", "value": "ON"},
+        {"label": "禁用", "value": "OFF"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/select"
+  },
+  {
+    "type": "switch",
+    "name": "Switch",
+    "category": "form",
+    "description": "开关",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "trueValue": "开启值，默认 true",
+      "falseValue": "关闭值，默认 false",
+      "option": "文字描述"
+    },
+    "minimalExample": {
+      "type": "switch",
+      "name": "enabled",
+      "label": "启用"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/switch"
+  },
+  {
+    "type": "textarea",
+    "name": "Textarea",
+    "category": "form",
+    "description": "多行文本域",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "minRows": "最小行数",
+      "maxRows": "最大行数"
+    },
+    "minimalExample": {
+      "type": "textarea",
+      "name": "description",
+      "label": "描述"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/textarea"
+  },
+  {
+    "type": "checkbox",
+    "name": "Checkbox",
+    "category": "form",
+    "description": "复选框",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "trueValue": "勾选值",
+      "falseValue": "未勾选值",
+      "option": "文字"
+    },
+    "minimalExample": {
+      "type": "checkbox",
+      "name": "agreed",
+      "label": "同意条款"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/checkbox"
+  },
+  {
+    "type": "radios",
+    "name": "Radios",
+    "category": "form",
+    "description": "单选按钮组",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "options": "选项数组",
+      "inline": "是否内联"
+    },
+    "minimalExample": {
+      "type": "radios",
+      "name": "gender",
+      "label": "性别",
+      "options": [
+        {"label": "男", "value": "M"},
+        {"label": "女", "value": "F"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/radios"
+  },
+  {
+    "type": "hidden",
+    "name": "Hidden",
+    "category": "form",
+    "description": "隐藏字段，常用于编辑表单携带主键 ID",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "value": "隐藏字段的值"
+    },
+    "minimalExample": {
+      "type": "hidden",
+      "name": "id"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/hidden"
+  },
+  {
+    "type": "combo",
+    "name": "Combo",
+    "category": "form",
+    "description": "组合输入，多个表单项作为一个字段值（一对多但不需要子表）",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "items": "子项数组 [{type, name, ...}]",
+      "multiple": "是否允许多组",
+      "minLength": "最少组数",
+      "maxLength": "最多组数",
+      "addable": "是否可新增",
+      "removable": "是否可删除"
+    },
+    "minimalExample": {
+      "type": "combo",
+      "name": "addresses",
+      "label": "地址列表",
+      "items": [
+        {"type": "input-text", "name": "city", "label": "城市"},
+        {"type": "input-text", "name": "detail", "label": "详细地址"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/combo"
+  },
+  {
+    "type": "input-tree",
+    "name": "InputTree",
+    "category": "form",
+    "description": "树形单选/多选控件，支持异步加载子节点",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "source": "远程数据 API（返回树形结构）",
+      "multiple": "是否多选",
+      "autoCheckChildren": "父节点选中时是否自动选中子节点",
+      "cascade": "是否级联选择",
+      "searchable": "是否可搜索",
+      "onlyLeaf": "是否只能选叶子节点"
+    },
+    "minimalExample": {
+      "type": "input-tree",
+      "name": "category",
+      "label": "分类",
+      "source": "POST /sql/forge/api/json/select/categories"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-tree"
+  },
+  {
+    "type": "input-tree-select",
+    "name": "InputTreeSelect",
+    "category": "form",
+    "description": "树形下拉选择器，比 input-tree 更紧凑",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "source": "远程数据 API",
+      "multiple": "是否多选",
+      "clearable": "是否可清空",
+      "searchable": "是否可搜索"
+    },
+    "minimalExample": {
+      "type": "input-tree-select",
+      "name": "department",
+      "label": "部门",
+      "source": "POST /sql/forge/api/json/select/departments"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-tree-select"
+  },
+  {
+    "type": "input-tag",
+    "name": "InputTag",
+    "category": "form",
+    "description": "标签输入，支持新增/删除多个标签",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "options": "预设标签列表",
+      "joinValues": "是否以分隔符连接",
+      "delimiter": "分隔符",
+      "maxTagCount": "最多标签数"
+    },
+    "minimalExample": {
+      "type": "input-tag",
+      "name": "tags",
+      "label": "标签",
+      "options": ["重要", "紧急", "普通"]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-tag"
+  },
+  {
+    "type": "input-file",
+    "name": "InputFile",
+    "category": "form",
+    "description": "文件上传控件，支持多文件、限制类型",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "receiver": "上传接收端点（占位，非 sql-forge 内置）",
+      "accept": "接收文件类型，如 .jpg,.png",
+      "maxSize": "单文件最大字节数",
+      "multiple": "是否多选",
+      "maxLength": "最多文件数"
+    },
+    "minimalExample": {
+      "type": "input-file",
+      "name": "attachment",
+      "label": "附件",
+      "accept": ".pdf,.doc,.docx",
+      "maxSize": 10485760
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-file"
+  },
+  {
+    "type": "input-image",
+    "name": "InputImage",
+    "category": "form",
+    "description": "图片上传/裁剪控件",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "receiver": "上传接收端点",
+      "crop": "是否启用裁剪",
+      "cropRatio": "裁剪比例",
+      "maxSize": "单文件最大字节数"
+    },
+    "minimalExample": {
+      "type": "input-image",
+      "name": "avatar",
+      "label": "头像",
+      "crop": true,
+      "cropRatio": "1:1"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-image"
+  },
+  {
+    "type": "input-rich-text",
+    "name": "InputRichText",
+    "category": "form",
+    "description": "富文本编辑器（基于 tinymce / froala）",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "vendor": "编辑器类型：tinymce / froala",
+      "options": "编辑器配置项"
+    },
+    "minimalExample": {
+      "type": "input-rich-text",
+      "name": "content",
+      "label": "正文",
+      "vendor": "tinymce"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-rich-text"
+  },
+  {
+    "type": "input-group",
+    "name": "InputGroup",
+    "category": "form",
+    "description": "输入组合，给 input 加左右 addon（图标/按钮/文本）",
+    "required": ["type", "body"],
+    "keyProps": {
+      "body": "内部输入组件（如 input-text）",
+      "addOn": "左侧/右侧附加内容"
+    },
+    "minimalExample": {
+      "type": "input-group",
+      "body": [
+        {"type": "input-text", "name": "price", "label": "价格"}
+      ],
+      "addOn": [
+        {"type": "text", "position": "right", "body": "元"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/input-group"
+  },
+  {
+    "type": "search-box",
+    "name": "SearchBox",
+    "category": "form",
+    "description": "搜索框组件，常用于 crud 顶部搜索或表单内筛选",
+    "required": ["type"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "searchImediately": "是否立即搜索（无需回车）",
+      "mini": "是否迷你模式"
+    },
+    "minimalExample": {
+      "type": "search-box",
+      "name": "keyword",
+      "label": "搜索",
+      "searchImediately": true
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/search-box"
+  },
+  {
+    "type": "picker",
+    "name": "Picker",
+    "category": "form",
+    "description": "范围选择器（日期范围/数值范围/多选项范围）",
+    "required": ["type", "name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "标签",
+      "type": "范围类型：date / datetime / time / select",
+      "format": "显示格式",
+      "valueFormat": "提交值格式"
+    },
+    "minimalExample": {
+      "type": "picker",
+      "name": "dateRange",
+      "label": "日期范围",
+      "type": "date",
+      "format": "YYYY-MM-DD"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/form/picker"
+  },
+  {
+    "type": "wizard",
+    "name": "Wizard",
+    "category": "form",
+    "description": "向导/分步表单",
+    "required": ["type", "steps"],
+    "keyProps": {
+      "steps": "步骤数组，每步是一个 form 片段",
+      "actionNextLabel": "下一步按钮文案",
+      "actionPrevLabel": "上一步按钮文案",
+      "actionFinishLabel": "完成按钮文案",
+      "mode": "vertical / horizontal"
+    },
+    "minimalExample": {
+      "type": "wizard",
+      "steps": [
+        {"title": "第一步", "body": {"type": "form", "body": []}}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/wizard"
+  },
+  {
+    "type": "crud",
+    "name": "CRUD",
+    "category": "crud",
+    "description": "增删改查表格，最常用的复合组件",
+    "required": ["type", "api", "columns"],
+    "keyProps": {
+      "api": "列表 API（POST）",
+      "columns": "列定义数组",
+      "filter": "筛选条件",
+      "headerToolbar": "头部工具栏（新增/批量/导出）",
+      "footerToolbar": "底部工具栏（分页/统计）",
+      "quickSaveApi": "行内编辑保存 API",
+      "quickSaveItemApi": "单条编辑保存 API",
+      "perPage": "每页条数",
+      "orderBy": "默认排序字段",
+      "syncLocation": "是否同步 URL 参数",
+      "bulkActions": "批量操作按钮数组"
+    },
+    "minimalExample": {
+      "type": "crud",
+      "api": "POST /sql/forge/api/json/select/users",
+      "columns": [
+        {"name": "id", "label": "ID"},
+        {"name": "name", "label": "姓名"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/crud"
+  },
+  {
+    "type": "table",
+    "name": "Table",
+    "category": "crud",
+    "description": "纯展示表格，不带 CRUD 行为",
+    "required": ["type", "dataSource"],
+    "keyProps": {
+      "dataSource": "数据来源：${数据变量} 或 API",
+      "columns": "列定义",
+      "title": "表格标题",
+      "footable": "小屏自适应",
+      "combineNum": "行合并",
+      "thClassName": "表头样式"
+    },
+    "minimalExample": {
+      "type": "table",
+      "dataSource": "${rows}",
+      "columns": [
+        {"name": "id", "label": "ID"},
+        {"name": "name", "label": "姓名"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/table"
+  },
+  {
+    "type": "table-column",
+    "name": "TableColumn",
+    "category": "crud",
+    "description": "表格列定义，嵌套在 crud/table 内",
+    "required": ["name"],
+    "keyProps": {
+      "name": "字段名",
+      "label": "列标题",
+      "type": "列内容类型：text / link / tpl / mapping / date / progress",
+      "sortable": "是否可排序",
+      "searchable": "是否可搜索",
+      "tpl": "自定义模板",
+      "map": "枚举映射",
+      "width": "列宽",
+      "quickEdit": "是否行内可编辑",
+      "quickEditOnUpdate": "行内编辑保存 API"
+    },
+    "minimalExample": {
+      "name": "status",
+      "label": "状态",
+      "type": "mapping",
+      "map": {"ON": "启用", "OFF": "禁用"}
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/table-column"
+  },
+  {
+    "type": "operation",
+    "name": "Operation",
+    "category": "crud",
+    "description": "操作列，嵌套在 crud/table 的 columns 数组内",
+    "required": ["type", "label"],
+    "keyProps": {
+      "label": "列标题",
+      "buttons": "按钮数组",
+      "fixed": "是否固定列：left / right"
+    },
+    "minimalExample": {
+      "type": "operation",
+      "label": "操作",
+      "buttons": [
+        {"type": "button", "label": "编辑", "actionType": "dialog", "dialog": {"title": "编辑", "body": {"type": "form", "api": "POST /sql/forge/api/json/update/users", "body": []}}}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/operation"
+  },
+  {
+    "type": "dialog",
+    "name": "Dialog",
+    "category": "feedback",
+    "description": "弹窗，通常包含一个 form",
+    "required": ["type", "title", "body"],
+    "keyProps": {
+      "title": "弹窗标题",
+      "body": "弹窗内容（通常是 form）",
+      "size": "尺寸：xs / sm / md / lg / xl",
+      "actions": "底部按钮",
+      "showCloseButton": "是否显示关闭按钮",
+      "closeOnEsc": "ESC 关闭",
+      "closeOnOutside": "点击外部关闭"
+    },
+    "minimalExample": {
+      "type": "dialog",
+      "title": "新增",
+      "body": {
+        "type": "form",
+        "api": "POST /sql/forge/api/json/insert/users",
+        "body": [{"type": "input-text", "name": "name", "label": "姓名"}]
+      }
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/dialog"
+  },
+  {
+    "type": "drawer",
+    "name": "Drawer",
+    "category": "feedback",
+    "description": "抽屉，从侧边滑出",
+    "required": ["type", "title", "body"],
+    "keyProps": {
+      "title": "标题",
+      "body": "内容",
+      "position": "位置：left / right / top / bottom",
+      "size": "尺寸",
+      "actions": "底部按钮"
+    },
+    "minimalExample": {
+      "type": "drawer",
+      "title": "详情",
+      "body": {"type": "form", "body": []}
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/drawer"
+  },
+  {
+    "type": "button",
+    "name": "Button",
+    "category": "feedback",
+    "description": "按钮，可触发各种 action",
+    "required": ["type", "label"],
+    "keyProps": {
+      "label": "按钮文字",
+      "level": "按钮类型：primary / secondary / success / warning / danger / light / link / default",
+      "size": "尺寸",
+      "icon": "图标（iconfont class 名）",
+      "actionType": "动作类型：button / submit / reset / url / dialog / drawer / ajax",
+      "api": "ajax 时调用的 API",
+      "dialog": "弹窗配置",
+      "drawer": "抽屉配置",
+      "tooltip": "悬浮提示",
+      "disabled": "是否禁用"
+    },
+    "minimalExample": {
+      "type": "button",
+      "label": "新增",
+      "actionType": "dialog",
+      "dialog": {
+        "title": "新增",
+        "body": {"type": "form", "body": []}
+      }
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/button"
+  },
+  {
+    "type": "action",
+    "name": "Action",
+    "category": "feedback",
+    "description": "动作组容器，按钮的批量容器（与 button 区别：可折叠为下拉）",
+    "required": ["type", "actions"],
+    "keyProps": {
+      "actions": "按钮数组",
+      "type": "button / action / dropdown-button",
+      "level": "按钮级别"
+    },
+    "minimalExample": {
+      "type": "action",
+      "actions": [
+        {"type": "button", "label": "编辑"},
+        {"type": "button", "label": "删除"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/action"
+  },
+  {
+    "type": "dropdown-button",
+    "name": "DropdownButton",
+    "category": "feedback",
+    "description": "下拉按钮，点击主按钮弹出下拉菜单",
+    "required": ["type", "label"],
+    "keyProps": {
+      "label": "主按钮文字",
+      "buttons": "下拉项按钮数组",
+      "icon": "主按钮图标"
+    },
+    "minimalExample": {
+      "type": "dropdown-button",
+      "label": "更多",
+      "buttons": [
+        {"type": "button", "label": "导出 CSV"},
+        {"type": "button", "label": "导出 Excel"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/dropdown-button"
+  },
+  {
+    "type": "alert",
+    "name": "Alert",
+    "category": "feedback",
+    "description": "提示框",
+    "required": ["type"],
+    "keyProps": {
+      "level": "info / success / warning / danger",
+      "body": "提示内容",
+      "showCloseButton": "是否可关闭",
+      "icon": "图标"
+    },
+    "minimalExample": {
+      "type": "alert",
+      "level": "info",
+      "body": "提示内容"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/alert"
+  },
+  {
+    "type": "chart",
+    "name": "Chart",
+    "category": "chart",
+    "description": "图表，基于 G2Plot 封装",
+    "required": ["type", "config"],
+    "keyProps": {
+      "config": "G2Plot 配置对象",
+      "source": "数据来源",
+      "replaceChartOption": "是否替换 chart option",
+      "clickable": "是否可点击"
+    },
+    "minimalExample": {
+      "type": "chart",
+      "config": {"type": "line", "data": []}
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/chart"
+  },
+  {
+    "type": "tpl",
+    "name": "Tpl",
+    "category": "display",
+    "description": "模板字符串渲染，支持 ${var} 占位和 HTML",
+    "required": ["type", "tpl"],
+    "keyProps": {
+      "tpl": "模板字符串",
+      "className": "自定义样式类"
+    },
+    "minimalExample": {
+      "type": "tpl",
+      "tpl": "<div>姓名：${name}<br/>邮箱：${email}</div>"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/tpl"
+  },
+  {
+    "type": "mapping",
+    "name": "Mapping",
+    "category": "display",
+    "description": "枚举映射展示，把后端值映射为中文标签",
+    "required": ["type", "map"],
+    "keyProps": {
+      "map": "映射表 {value: label}",
+      "value": "当前值"
+    },
+    "minimalExample": {
+      "type": "mapping",
+      "map": {"ON": "启用", "OFF": "禁用"},
+      "value": "${status}"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/mapping"
+  },
+  {
+    "type": "link",
+    "name": "Link",
+    "category": "display",
+    "description": "超链接展示",
+    "required": ["type", "href"],
+    "keyProps": {
+      "href": "链接地址",
+      "body": "链接文字",
+      "blank": "是否新窗口打开"
+    },
+    "minimalExample": {
+      "type": "link",
+      "href": "/users/${id}",
+      "body": "${name}"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/link"
+  },
+  {
+    "type": "image",
+    "name": "Image",
+    "category": "display",
+    "description": "图片展示",
+    "required": ["type", "src"],
+    "keyProps": {
+      "src": "图片 URL",
+      "alt": "替代文字",
+      "thumbnail": "缩略图模式"
+    },
+    "minimalExample": {
+      "type": "image",
+      "src": "${avatar}",
+      "alt": "头像"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/image"
+  },
+  {
+    "type": "tag",
+    "name": "Tag",
+    "category": "display",
+    "description": "标签展示，可显示颜色、图标",
+    "required": ["type"],
+    "keyProps": {
+      "displayMode": "展示模式：normal / badge",
+      "color": "颜色：primary / success / warning / danger 或自定义颜色值",
+      "label": "标签文字"
+    },
+    "minimalExample": {
+      "type": "tag",
+      "color": "success",
+      "label": "已支付"
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/tag"
+  },
+  {
+    "type": "progress",
+    "name": "Progress",
+    "category": "display",
+    "description": "进度条",
+    "required": ["type"],
+    "keyProps": {
+      "value": "当前值",
+      "max": "最大值",
+      "strokeWidth": "线条宽度",
+      "showLabel": "是否显示百分比文字"
+    },
+    "minimalExample": {
+      "type": "progress",
+      "value": "${completionRate}",
+      "showLabel": true
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/progress"
+  },
+  {
+    "type": "timeline",
+    "name": "Timeline",
+    "category": "display",
+    "description": "时间线，展示时间序列事件",
+    "required": ["type", "items"],
+    "keyProps": {
+      "items": "事件数组 [{time, title, body, color}]",
+      "direction": "horizontal / vertical"
+    },
+    "minimalExample": {
+      "type": "timeline",
+      "items": [
+        {"time": "2026-08-01", "title": "创建", "body": "订单创建", "color": "primary"},
+        {"time": "2026-08-02", "title": "支付", "body": "已支付", "color": "success"}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/timeline"
+  },
+  {
+    "type": "service",
+    "name": "Service",
+    "category": "display",
+    "description": "数据请求容器，自动请求 API 后渲染 body（子组件可通过 data.xxx 访问）",
+    "required": ["type", "api"],
+    "keyProps": {
+      "api": "数据 API",
+      "body": "渲染内容",
+      "data": "默认数据（API 未返回前）"
+    },
+    "minimalExample": {
+      "type": "service",
+      "api": "POST /sql/forge/api/json/select/users",
+      "body": {
+        "type": "tpl",
+        "tpl": "用户数：${rows.length}"
+      }
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/service"
+  },
+  {
+    "type": "condition",
+    "name": "Condition",
+    "category": "display",
+    "description": "条件渲染容器，根据表达式切换显示不同分支",
+    "required": ["type"],
+    "keyProps": {
+      "test": "条件表达式（如 status === 'ON'）",
+      "items": "分支数组 [{conditions, body}]"
+    },
+    "minimalExample": {
+      "type": "condition",
+      "test": "${status}",
+      "items": [
+        {"conditions": [{"type": "eq", "value": "ON"}], "body": {"type": "tpl", "tpl": "启用中"}},
+        {"conditions": [{"type": "eq", "value": "OFF"}], "body": {"type": "tpl", "tpl": "已停用"}}
+      ]
+    },
+    "docUrl": "https://aisuda.bce.baidu.com/amis/zh-CN/components/condition"
+  }
+]

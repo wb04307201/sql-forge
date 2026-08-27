@@ -60,7 +60,8 @@
         <jsqlparser.version>5.3</jsqlparser.version>
         <mvel2.version>2.5.2.Final</mvel2.version>
         <calcite.version>1.41.0</calcite.version>
-        <spring-ai.version>1.1.7</spring-ai.version>
+        <spring-ai.version>1.1.8</spring-ai.version>
+        <playwright.version>1.50.0</playwright.version>
     </properties>
 
     <dependencyManagement>
@@ -103,6 +104,11 @@
                 <version>${spring-ai.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.microsoft.playwright</groupId>
+                <artifactId>playwright</artifactId>
+                <version>${playwright.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

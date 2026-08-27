@@ -29,10 +29,66 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
+        <!-- Playwright：编译期可见（SqlForgeMcpApplication 用 @ConditionalOnClass 探测），
+             运行期 optional（不强制用户装 Chromium），测试期 non-optional（PlaywrightRenderTest 用） -->
+        <dependency>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+        </dependency>
+        <!-- httpclient5：连接池支持（Round 5 R5-3） -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
+        <!-- 资源过滤:让 application.yml 里的 @project.version@ 等占位符在 build 阶段替换为实际版本
+             (只过滤 yaml/properties 类文本资源,不过滤 JSON/二进制,避免 catalog.json 等被误替换) -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>application.yml</include>
+                    <include>logback-spring.xml</include>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>application.yml</exclude>
+                    <exclude>logback-spring.xml</exclude>
+                    <exclude>**/*.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
+            <!-- 显式锁定 JDK 17 编译：用 release 而非 source/target，禁止 17 之后才有的 API -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.15.0</version>
+                <configuration>
+                    <release>17</release>
+                    <encoding>UTF-8</encoding>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

@@ -5,8 +5,8 @@ spring:
   ai:
     mcp:
       server:
-        name: sql-forge-mcp-server
-        version: 1.6.1
+        name: sql-forge-mcp
+        version: @project.version@
 
 logging:
   pattern:

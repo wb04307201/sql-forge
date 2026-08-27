@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "sql-forge-mcp": {
+      "command": "jbang",
+      "args": [
+        "--java-options=-Dfile.encoding=UTF-8",
+        "--java-options=-Dsun.jnu.encoding=UTF-8",
+        "./sql-forge-mcp/target/sql-forge-mcp-1.0-SNAPSHOT.jar",
+        "--sql.forge.mcp.systems[0].name=TestSys",
+        "--sql.forge.mcp.systems[0].url=http://localhost:8081",
+        "--sql.forge.mcp.systems[0].apiKey=test",
+        "--sql.forge.mcp.systems[0].description=Local test backend (sql-forge-test:8081)"
+      ]
+    }
+  }
+}
