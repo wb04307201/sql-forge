@@ -9,7 +9,8 @@ spring:
         version: 1.6.1
 
 logging:
-  pattern:
-    console:
+  level:
+    cn.wubo.sql.forge: INFO
+    org.springframework.ai: INFO
   file:
     name: ./mcp/sql-forge-mcp-server.log

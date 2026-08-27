@@ -1,0 +1,606 @@
+[
+  {
+    "name": "crud-page",
+    "title": "基础 CRUD 页面",
+    "tags": ["crud", "page", "table", "list"],
+    "description": "标准列表页：包含 CRUD、筛选、分页、行内编辑",
+    "schema": {
+      "type": "page",
+      "title": "用户管理",
+      "body": {
+        "type": "crud",
+        "api": "POST /sql/forge/api/json/select/users",
+        "perPage": 20,
+        "filter": {
+          "title": "筛选",
+          "body": [
+            {"type": "input-text", "name": "name", "label": "姓名", "placeholder": "请输入姓名"}
+          ]
+        },
+        "headerToolbar": [
+          {"type": "button", "label": "新增", "actionType": "dialog", "dialog": {
+            "title": "新增用户",
+            "body": {
+              "type": "form",
+              "api": "POST /sql/forge/api/json/insert/users",
+              "body": [
+                {"type": "input-text", "name": "name", "label": "姓名", "required": true},
+                {"type": "input-text", "name": "email", "label": "邮箱"},
+                {"type": "switch", "name": "enabled", "label": "启用", "value": true}
+              ]
+            }
+          }}
+        ],
+        "columns": [
+          {"name": "id", "label": "ID", "sortable": true},
+          {"name": "name", "label": "姓名", "searchable": true},
+          {"name": "email", "label": "邮箱"},
+          {"name": "enabled", "label": "状态", "type": "mapping", "map": {"true": "启用", "false": "禁用"}},
+          {
+            "type": "operation",
+            "label": "操作",
+            "buttons": [
+              {"type": "button", "label": "编辑", "actionType": "dialog", "dialog": {
+                "title": "编辑用户",
+                "body": {
+                  "type": "form",
+                  "api": "POST /sql/forge/api/json/update/users",
+                  "body": [
+                    {"type": "hidden", "name": "id"},
+                    {"type": "input-text", "name": "name", "label": "姓名"},
+                    {"type": "input-text", "name": "email", "label": "邮箱"}
+                  ]
+                }
+              }},
+              {"type": "button", "label": "删除", "actionType": "ajax", "api": "POST /sql/forge/api/json/delete/users", "confirmText": "确认删除？"}
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "page-with-form",
+    "title": "独立表单页面",
+    "tags": ["page", "form"],
+    "description": "单页表单（非弹窗），适合大表单或独立编辑场景",
+    "schema": {
+      "type": "page",
+      "title": "新增用户",
+      "body": {
+        "type": "form",
+        "api": "POST /sql/forge/api/json/insert/users",
+        "mode": "horizontal",
+        "redirect": "/users",
+        "body": [
+          {"type": "group", "body": [
+            {"type": "input-text", "name": "name", "label": "姓名", "required": true, "md": 6},
+            {"type": "input-text", "name": "email", "label": "邮箱", "md": 6, "validations": {"isEmail": true}}
+          ]},
+          {"type": "group", "body": [
+            {"type": "input-number", "name": "age", "label": "年龄", "min": 0, "max": 150, "md": 6},
+            {"type": "input-date", "name": "birthday", "label": "生日", "md": 6}
+          ]},
+          {"type": "textarea", "name": "remark", "label": "备注"},
+          {"type": "checkbox", "name": "agreed", "label": "同意条款", "required": true}
+        ]
+      }
+    }
+  },
+  {
+    "name": "filter-table",
+    "title": "带筛选的表格",
+    "tags": ["table", "filter", "crud"],
+    "description": "筛选 + 表格 + 顶部工具栏（导出/新增/批量删除）",
+    "schema": {
+      "type": "page",
+      "title": "订单列表",
+      "body": {
+        "type": "crud",
+        "api": "POST /sql/forge/api/json/selectPage/orders",
+        "perPage": 20,
+        "filter": {
+          "title": "筛选条件",
+          "body": [
+            {"type": "input-text", "name": "orderNo", "label": "订单号"},
+            {"type": "select", "name": "status", "label": "状态", "options": [
+              {"label": "待支付", "value": "PENDING"},
+              {"label": "已支付", "value": "PAID"},
+              {"label": "已发货", "value": "SHIPPED"}
+            ]},
+            {"type": "input-date", "name": "createdAt", "label": "创建时间"}
+          ]
+        },
+        "headerToolbar": [
+          "bulkActions",
+          {"type": "button", "label": "导出", "actionType": "ajax", "api": "GET /api/orders/export", "tooltip": "占位：自定义导出端点，非 sql-forge 内置"},
+          {"type": "button", "label": "新增", "level": "primary", "actionType": "dialog", "dialog": {
+            "title": "新增订单",
+            "body": {"type": "form", "api": "POST /sql/forge/api/json/insert/orders", "body": []}
+          }}
+        ],
+        "columns": [
+          {"name": "id", "label": "ID"},
+          {"name": "orderNo", "label": "订单号"},
+          {"name": "amount", "label": "金额"},
+          {"name": "status", "label": "状态"},
+          {"name": "createdAt", "label": "创建时间", "type": "date"}
+        ]
+      }
+    }
+  },
+  {
+    "name": "chart-dashboard",
+    "title": "图表仪表盘",
+    "tags": ["chart", "dashboard", "grid"],
+    "description": "使用 grid + chart 实现的多图仪表盘",
+    "schema": {
+      "type": "page",
+      "title": "运营仪表盘",
+      "body": [
+        {
+          "type": "grid",
+          "columns": [
+            {"body": {"type": "chart", "config": {"type": "line", "data": []}}, "md": 6},
+            {"body": {"type": "chart", "config": {"type": "bar", "data": []}}, "md": 6}
+          ]
+        },
+        {
+          "type": "grid",
+          "columns": [
+            {"body": {"type": "chart", "config": {"type": "pie", "data": []}}, "md": 12}
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "tabs-detail",
+    "title": "Tab 详情页",
+    "tags": ["page", "tabs", "detail"],
+    "description": "详情页使用 tabs 拆分多个区块",
+    "schema": {
+      "type": "page",
+      "title": "订单详情",
+      "body": {
+        "type": "tabs",
+        "tabs": [
+          {"title": "基本信息", "body": {"type": "panel", "body": []}},
+          {"title": "商品列表", "body": {"type": "table", "dataSource": "${items}", "columns": []}},
+          {"title": "操作日志", "body": {"type": "table", "dataSource": "${logs}", "columns": []}}
+        ]
+      }
+    }
+  },
+  {
+    "name": "wizard-page",
+    "title": "分步表单（向导）",
+    "tags": ["wizard", "form", "step"],
+    "description": "多步骤向导表单，每步独立表单片段",
+    "schema": {
+      "type": "page",
+      "title": "新增项目",
+      "body": {
+        "type": "wizard",
+        "api": "POST /sql/forge/api/json/insert/projects",
+        "steps": [
+          {
+            "title": "基本信息",
+            "body": {"type": "form", "api": "POST /sql/forge/api/json/insert/projects", "body": [
+              {"type": "input-text", "name": "name", "label": "项目名", "required": true},
+              {"type": "textarea", "name": "description", "label": "描述"}
+            ]}
+          },
+          {
+            "title": "成员配置",
+            "body": {"type": "form", "api": "POST /sql/forge/api/json/insert/projects", "body": [
+              {"type": "select", "name": "owner", "label": "负责人", "source": "POST /sql/forge/api/json/select/users"}
+            ]}
+          },
+          {
+            "title": "确认",
+            "body": {"type": "form", "api": "POST /sql/forge/api/json/insert/projects", "body": [
+              {"type": "checkbox", "name": "confirmed", "label": "我已确认信息无误", "required": true}
+            ]}
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "dialog-form",
+    "title": "弹窗表单",
+    "tags": ["button", "dialog", "form"],
+    "description": "按钮触发弹窗，弹窗内嵌表单",
+    "schema": {
+      "type": "page",
+      "body": {
+        "type": "button",
+        "label": "新增用户",
+        "level": "primary",
+        "actionType": "dialog",
+        "dialog": {
+          "title": "新增用户",
+          "size": "md",
+          "body": {
+            "type": "form",
+            "api": "POST /sql/forge/api/json/insert/users",
+            "body": [
+              {"type": "input-text", "name": "name", "label": "姓名", "required": true},
+              {"type": "input-text", "name": "email", "label": "邮箱"}
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "drawer-form",
+    "title": "抽屉表单",
+    "tags": ["button", "drawer", "form"],
+    "description": "按钮触发抽屉，抽屉内嵌表单",
+    "schema": {
+      "type": "page",
+      "body": {
+        "type": "button",
+        "label": "查看详情",
+        "actionType": "drawer",
+        "drawer": {
+          "title": "用户详情",
+          "position": "right",
+          "size": "lg",
+          "body": {
+            "type": "form",
+            "mode": "horizontal",
+            "api": "POST /sql/forge/api/json/update/users",
+            "body": [
+              {"type": "input-text", "name": "name", "label": "姓名"},
+              {"type": "input-text", "name": "email", "label": "邮箱"}
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "panel-form",
+    "title": "分组面板表单",
+    "tags": ["form", "panel", "group"],
+    "description": "使用 panel + group 实现表单分组",
+    "schema": {
+      "type": "page",
+      "title": "用户配置",
+      "body": [
+        {"type": "panel", "title": "基础信息", "body": {"type": "form", "api": "POST /sql/forge/api/json/insert/users", "body": [
+          {"type": "input-text", "name": "name", "label": "姓名", "required": true},
+          {"type": "input-text", "name": "email", "label": "邮箱"}
+        ]}},
+        {"type": "panel", "title": "高级选项", "body": {"type": "form", "api": "POST /sql/forge/api/json/insert/users", "body": [
+          {"type": "switch", "name": "enabled", "label": "启用"},
+          {"type": "textarea", "name": "remark", "label": "备注"}
+        ]}}
+      ]
+    }
+  },
+  {
+    "name": "page-with-table",
+    "title": "独立表格页（非 CRUD）",
+    "tags": ["page", "table"],
+    "description": "纯展示表格页，数据来自 initApi",
+    "schema": {
+      "type": "page",
+      "title": "数据列表",
+      "initApi": "POST /sql/forge/api/json/select/users",
+      "body": {
+        "type": "table",
+        "dataSource": "${rows}",
+        "columns": [
+          {"name": "id", "label": "ID"},
+          {"name": "name", "label": "姓名"},
+          {"name": "email", "label": "邮箱"}
+        ]
+      }
+    }
+  },
+  {
+    "name": "bulk-actions-crud",
+    "title": "批量操作 CRUD",
+    "tags": ["crud", "bulk-actions", "batch"],
+    "description": "带行选择 + 批量删除/批量启用的 CRUD 表格",
+    "schema": {
+      "type": "page",
+      "title": "用户管理（批量操作）",
+      "body": {
+        "type": "crud",
+        "api": "POST /sql/forge/api/json/selectPage/users",
+        "perPage": 20,
+        "bulkActions": [
+          {
+            "type": "button",
+            "label": "批量启用",
+            "actionType": "ajax",
+            "api": "POST /sql/forge/api/json/update/users",
+            "data": {
+              "@set": {"enabled": true},
+              "@where": [{"column": "id", "condition": "IN", "value": "${ids}"}]
+            }
+          },
+          {
+            "type": "button",
+            "label": "批量删除",
+            "level": "danger",
+            "actionType": "ajax",
+            "api": "POST /sql/forge/api/json/delete/users",
+            "data": {
+              "@where": [{"column": "id", "condition": "IN", "value": "${ids}"}]
+            },
+            "confirmText": "确认批量删除选中的用户？"
+          }
+        ],
+        "headerToolbar": [
+          "bulkActions",
+          {"type": "button", "label": "新增", "level": "primary", "actionType": "dialog", "dialog": {
+            "title": "新增用户",
+            "body": {"type": "form", "api": "POST /sql/forge/api/json/insert/users", "body": [
+              {"type": "input-text", "name": "name", "label": "姓名", "required": true},
+              {"type": "switch", "name": "enabled", "label": "启用", "value": true}
+            ]}
+          }}
+        ],
+        "columns": [
+          {"name": "id", "label": "ID", "sortable": true},
+          {"name": "name", "label": "姓名"},
+          {"name": "enabled", "label": "状态", "type": "mapping", "map": {"true": "启用", "false": "禁用"}},
+          {
+            "type": "operation",
+            "label": "操作",
+            "buttons": [
+              {"type": "button", "label": "编辑", "actionType": "dialog", "dialog": {
+                "title": "编辑用户",
+                "body": {"type": "form", "api": "POST /sql/forge/api/json/update/users", "body": [
+                  {"type": "hidden", "name": "id"},
+                  {"type": "input-text", "name": "name", "label": "姓名"}
+                ]}
+              }},
+              {"type": "button", "label": "删除", "level": "danger", "actionType": "ajax",
+                "api": "POST /sql/forge/api/json/delete/users",
+                "data": {"@where": [{"column": "id", "condition": "EQ", "value": "${id}"}]},
+                "confirmText": "确认删除？"}
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "name": "cascading-filter",
+    "title": "级联筛选（省/市）",
+    "tags": ["crud", "filter", "cascading", "select"],
+    "description": "省份和城市下拉联动，城市选项根据省份过滤",
+    "schema": {
+      "type": "page",
+      "title": "门店列表",
+      "body": {
+        "type": "crud",
+        "api": {
+          "method": "post",
+          "url": "/sql/forge/api/json/selectPage/stores",
+          "data": {
+            "@column": ["id", "name", "province", "city", "address"],
+            "@where": [
+              {"column": "province", "condition": "EQ", "value": "${province}"},
+              {"column": "city", "condition": "EQ", "value": "${city}"}
+            ],
+            "@page": {"pageIndex": 0, "pageSize": 20}
+          }
+        },
+        "perPage": 20,
+        "filter": {
+          "title": "筛选条件",
+          "body": [
+            {"type": "select", "name": "province", "label": "省份",
+              "source": "POST /sql/forge/api/json/select/provinces",
+              "valueField": "code",
+              "labelField": "name",
+              "clearable": true},
+            {"type": "select", "name": "city", "label": "城市",
+              "source": {
+                "method": "post",
+                "url": "/sql/forge/api/json/select/cities",
+                "data": {"@where": [{"column": "provinceCode", "condition": "EQ", "value": "${province}"}]}
+              },
+              "valueField": "code",
+              "labelField": "name",
+              "clearable": true}
+          ]
+        },
+        "columns": [
+          {"name": "id", "label": "ID"},
+          {"name": "name", "label": "门店名"},
+          {"name": "province", "label": "省份"},
+          {"name": "city", "label": "城市"},
+          {"name": "address", "label": "地址"}
+        ]
+      }
+    }
+  },
+  {
+    "name": "tree-with-crud",
+    "title": "左侧树 + 右侧 CRUD",
+    "tags": ["page", "hbox", "tree", "crud"],
+    "description": "左侧分类树 + 右侧商品 CRUD，选择树节点过滤右侧表格",
+    "schema": {
+      "type": "page",
+      "title": "商品管理（按分类）",
+      "body": [
+        {
+          "type": "grid",
+          "columns": [
+            {
+              "body": {
+                "type": "panel",
+                "title": "商品分类",
+                "body": {
+                  "type": "input-tree",
+                  "name": "categoryId",
+                  "label": false,
+                  "source": "POST /sql/forge/api/json/select/categories",
+                  "selectFirst": true
+                }
+              },
+              "md": 3
+            },
+            {
+              "body": {
+                "type": "crud",
+                "api": {
+                  "method": "post",
+                  "url": "/sql/forge/api/json/selectPage/products",
+                  "data": {
+                    "@column": ["id", "name", "price", "categoryId"],
+                    "@where": [{"column": "categoryId", "condition": "EQ", "value": "${categoryId}"}],
+                    "@page": {"pageIndex": 0, "pageSize": 20}
+                  }
+                },
+                "perPage": 20,
+                "columns": [
+                  {"name": "id", "label": "ID"},
+                  {"name": "name", "label": "商品名称"},
+                  {"name": "price", "label": "价格", "type": "tpl",
+                    "tpl": "¥${price}"}
+                ]
+              },
+              "md": 9
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "edit-form-with-init",
+    "title": "编辑表单（initApi 回填）",
+    "tags": ["page", "form", "init-api", "edit"],
+    "description": "编辑页用 initApi 回填表单字段（携带主键 + 表单回显）",
+    "schema": {
+      "type": "page",
+      "title": "编辑用户",
+      "initApi": {
+        "method": "post",
+        "url": "/sql/forge/api/json/select/users",
+        "data": {
+          "@column": ["id", "name", "email", "enabled"],
+          "@where": [{"column": "id", "condition": "EQ", "value": "${id}"}],
+          "@page": {"pageIndex": 0, "pageSize": 1}
+        }
+      },
+      "body": {
+        "type": "form",
+        "api": "POST /sql/forge/api/json/update/users",
+        "body": [
+          {"type": "hidden", "name": "id"},
+          {"type": "input-text", "name": "name", "label": "姓名", "required": true},
+          {"type": "input-text", "name": "email", "label": "邮箱",
+            "validations": {"isEmail": true}},
+          {"type": "switch", "name": "enabled", "label": "启用"}
+        ],
+        "actions": [
+          {"type": "button", "label": "取消", "actionType": "cancel"},
+          {"type": "submit", "label": "保存", "level": "primary"}
+        ]
+      }
+    }
+  },
+  {
+    "name": "linked-form",
+    "title": "联动表单（可见性联动）",
+    "tags": ["form", "linked", "visible-on", "disabled-on"],
+    "description": "字段根据其他字段值动态显隐/启用禁用（visibleOn / disabledOn）",
+    "schema": {
+      "type": "page",
+      "title": "联动表单演示",
+      "body": {
+        "type": "form",
+        "api": "POST /sql/forge/api/json/insert/orders",
+        "body": [
+          {"type": "radios", "name": "orderType", "label": "订单类型", "required": true,
+            "options": [
+              {"label": "实物商品", "value": "PHYSICAL"},
+              {"label": "虚拟商品", "value": "VIRTUAL"}
+            ],
+            "value": "PHYSICAL"},
+          {"type": "input-text", "name": "shippingAddress", "label": "收货地址",
+            "visibleOn": "${orderType === 'PHYSICAL'}",
+            "requiredOn": "${orderType === 'PHYSICAL'}"},
+          {"type": "input-text", "name": "couponCode", "label": "优惠码",
+            "visibleOn": "${orderType === 'PHYSICAL'}"},
+          {"type": "input-text", "name": "activationKey", "label": "激活码",
+            "visibleOn": "${orderType === 'VIRTUAL'}"},
+          {"type": "switch", "name": "needInvoice", "label": "需要发票"},
+          {"type": "input-text", "name": "invoiceTitle", "label": "发票抬头",
+            "visibleOn": "${needInvoice}",
+            "disabledOn": "${!needInvoice}"}
+        ]
+      }
+    }
+  },
+  {
+    "name": "file-upload",
+    "title": "文件上传表单",
+    "tags": ["form", "upload", "input-file"],
+    "description": "带文件上传的表单（receiver 为占位，需后端实际实现）",
+    "schema": {
+      "type": "page",
+      "title": "提交申请材料",
+      "body": {
+        "type": "form",
+        "api": "POST /sql/forge/api/json/insert/applications",
+        "body": [
+          {"type": "input-text", "name": "applicant", "label": "申请人", "required": true},
+          {"type": "input-text", "name": "title", "label": "申请标题", "required": true},
+          {"type": "textarea", "name": "reason", "label": "申请理由"},
+          {"type": "input-file", "name": "attachments", "label": "附件",
+            "accept": ".pdf,.doc,.docx,.jpg,.png",
+            "maxSize": 10485760,
+            "multiple": true,
+            "maxLength": 5},
+          {"type": "input-image", "name": "cover", "label": "封面图",
+            "accept": ".jpg,.png",
+            "maxSize": 5242880,
+            "crop": true,
+            "cropRatio": "16:9"}
+        ]
+      }
+    }
+  },
+  {
+    "name": "conditional-page",
+    "title": "条件渲染（condition 容器）",
+    "tags": ["page", "condition", "tpl"],
+    "description": "使用 condition 容器按状态切换不同展示分支",
+    "schema": {
+      "type": "page",
+      "title": "订单状态展示",
+      "body": [
+        {"type": "service", "api": {
+          "method": "post",
+          "url": "/sql/forge/api/json/select/orders",
+          "data": {"@where": [{"column": "id", "condition": "EQ", "value": "${id}"}]}
+        }, "body": {
+          "type": "condition",
+          "test": "${status}",
+          "items": [
+            {"conditions": [{"type": "eq", "value": "PENDING"}],
+              "body": {"type": "alert", "level": "warning", "body": "订单待支付，请尽快完成支付"}},
+            {"conditions": [{"type": "eq", "value": "PAID"}],
+              "body": {"type": "alert", "level": "info", "body": "订单已支付，等待发货"}},
+            {"conditions": [{"type": "eq", "value": "SHIPPED"}],
+              "body": {"type": "alert", "level": "success", "body": "订单已发货"}},
+            {"conditions": [{"type": "eq", "value": "DELIVERED"}],
+              "body": {"type": "alert", "level": "success", "body": "订单已完成"}}
+          ]
+        }}
+      ]
+    }
+  }
+]
