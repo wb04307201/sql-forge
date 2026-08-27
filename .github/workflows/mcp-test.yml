@@ -1,0 +1,119 @@
+name: MCP Test
+
+on:
+  push:
+    branches: [master, dev-mcp]
+    paths:
+      - 'sql-forge-mcp/**'
+      - 'sql-forge-test/**'
+      - '.github/workflows/mcp-test.yml'
+  pull_request:
+    branches: [master, dev-mcp]
+    paths:
+      - 'sql-forge-mcp/**'
+      - 'sql-forge-test/**'
+      - '.github/workflows/mcp-test.yml'
+  # 每周一跑一次混沌 + 性能
+  schedule:
+    - cron: '0 2 * * 1'
+
+jobs:
+  test:
+    name: sql-forge-mcp Tests (PR)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # L1: 单元测试 + 集成测试（~30s，含 Mock fixture，无真实后端）
+      - name: L1 Unit + Integration tests
+        run: mvn -pl sql-forge-mcp -am test -B -q \
+            -Dtest='AmisValidatorTest,EndToEndChainTest,McpApplicationContextTest,SqlForgeMcpServiceTest,McpIntegrationTest,AmisMcpPromptsTest,ChaosAndPerformanceTest' \
+            -Dsurefire.failIfNoSpecifiedTests=false
+
+      # L2: 编译 jar（e2e 脚本需要）
+      - name: Build MCP server jar
+        run: mvn -pl sql-forge-mcp -am install -DskipTests -Dgpg.skip -q
+
+      # L3: 端到端测试（启动真实后端 + MCP server，~3min）
+      - name: L3 E2E tests
+        run: bash sql-forge-test/scripts/test-mcp-e2e.sh
+        env:
+          PATH: /usr/bin:/bin:$PATH
+
+      # 上传测试日志（失败时排查用）
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-test-logs
+          path: |
+            /tmp/sql-forge-test.log
+            sql-forge-mcp/mcp/sql-forge-mcp-server.log
+            **/target/surefire-reports/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # 夜间跑混沌测试 + 压测 + Playwright 渲染（PR 不跑，节省 CI 资源）
+  chaos:
+    name: sql-forge-mcp Chaos + Load + Playwright (nightly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build MCP server jar
+        run: mvn -pl sql-forge-mcp -am install -DskipTests -Dgpg.skip -q
+
+      # L4: 混沌（kill -9 + 50 并发）
+      - name: L4 Chaos tests
+        run: bash sql-forge-test/scripts/test-mcp-chaos.sh
+        env:
+          PATH: /usr/bin:/bin:$PATH
+
+      # L5: 压测（默认 50 并发 × 200 请求，P95 < 200ms）
+      - name: L5 Load test
+        run: bash sql-forge-test/scripts/test-mcp-loadtest.sh --users 50 --requests 200
+        env:
+          PATH: /usr/bin:/bin:$PATH
+
+      # L6: Playwright 渲染验证（需要装 Chromium）
+      - name: L6 Playwright render
+        run: |
+          mvn -pl sql-forge-mcp dependency:resolve \
+              -DincludeArtifactIds=playwright -DexcludeTransitive=true -q
+          mvn -pl sql-forge-mcp exec:java \
+              -Dexec.mainClass=com.microsoft.playwright.CLI \
+              -Dexec.classpathScope=test \
+              -Dexec.args="install chromium" || true
+          mvn -pl sql-forge-mcp test -q -Dtest=PlaywrightRenderTest
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-chaos-logs
+          path: |
+            /tmp/sql-forge-test-*.log
+            **/target/surefire-reports/
+          if-no-files-found: ignore
+          retention-days: 7

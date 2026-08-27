@@ -117,7 +117,7 @@ sql:
 ### Key Dependencies
 
 - **Spring Boot** 3.5.14 (managed via BOM)
-- **Spring AI** 1.1.7 — MCP tool annotations (`@Tool`, `@ToolParam`) in `sql-forge-mcp`
+- **Spring AI** 1.1.8 — MCP tool annotations (`@Tool`, `@ToolParam`) in `sql-forge-mcp`
 - **Apache Calcite** 1.41.0 — cross-database federated queries
 - **JSqlParser** 5.3 — SQL parsing
 - **Enjoy** 5.2.5 — SQL template engine (conditional logic, loops via `#{var}`, `<if>`, `<foreach>`)
@@ -170,6 +170,19 @@ Test app config is at `sql-forge-test/src/test/resources/application-test.yml`. 
 - **Persistent templates**: implement `ITemplateSqlStorage` or `ITemplateAmisStorage` to replace in-memory storage
 - **Entity operations**: use `Entity.select/insert/update/delete/save()` with `EntityExecutor` for type-safe chain operations
 - **MCP AI tools**: add `@Tool`/`@ToolParam` annotated methods to `SqlForgeMcpService` to expose new database operations to AI clients
+- **Amis knowledge / validation / rendering**: extend `AmisKnowledgeService` (load new resources), `AmisValidator` (new rule), or `PlaywrightRenderer` (new error capture) in `sql-forge-mcp`
+
+### MCP 模块约束（重要）
+
+`sql-forge-mcp` 模块**不持有任何 web 入口**（servlet / RouterFunction），
+也**不依赖**`sql-forge-web` 模块。预览通过 `page.setContent()` 自包含 HTML 完成，
+不向任何业务后端发请求加载页面。这保证了 MCP 进程的轻量、独立、可在任何环境下启动。
+
+约束检查清单：
+- `grep -r "preview.html" sql-forge-mcp/` 命中数应为 0
+- `target/classes/META-INF/resources/sql/forge/web/preview.html` 不应存在
+- `SqlForgeMcpProperties.SystemInfo` 中不应有 `previewUrl` 字段
+- `application.yml` 中 `spring.main.web-application-type` 保持 `none`
 
 ## Javadoc Requirements
 

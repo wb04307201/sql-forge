@@ -366,7 +366,7 @@ Allows frontend to operate the database without writing backend code — describ
 1. Query
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/select/orders o
+POST http://localhost:8081/sql/forge/api/json/select/orders o
 Content-Type: application/json
 
 {
@@ -413,7 +413,7 @@ Content-Type: application/json
 Simply add the `@page` parameter to a query JSON:
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/selectPage/orders o
+POST http://localhost:8081/sql/forge/api/json/selectPage/orders o
 Content-Type: application/json
 
 {
@@ -436,7 +436,7 @@ Content-Type: application/json
 3. Insert
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/insert/users
+POST http://localhost:8081/sql/forge/api/json/insert/users
 Content-Type: application/json
 
 {
@@ -462,7 +462,7 @@ Content-Type: application/json
 4. Update
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/update/users
+POST http://localhost:8081/sql/forge/api/json/update/users
 Content-Type: application/json
 
 {
@@ -491,7 +491,7 @@ Content-Type: application/json
 5. Delete
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/delete/users
+POST http://localhost:8081/sql/forge/api/json/delete/users
 Content-Type: application/json
 
 {
@@ -556,7 +556,7 @@ sql:
 Request example:
 
 ```http request
-GET http://localhost:8080/sql/forge/api/json/select/users
+GET http://localhost:8081/sql/forge/api/json/select/users
 X-Api-Key: sk-your-api-key-here
 ```
 
@@ -603,7 +603,7 @@ Provides SQL template functionality supporting conditionals (`<if>`), loops (`<f
 Template configuration:
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/template/sql
+PUT http://localhost:8081/sql/forge/api/template/sql
 content-type: application/json
 
 {
@@ -617,7 +617,7 @@ content-type: application/json
 Execute template:
 
 ```http request
-POST http://localhost:8080/sql/forge/api/template/sql/sql-template-database
+POST http://localhost:8081/sql/forge/api/template/sql/sql-template-database
 content-type: application/json
 
 {
@@ -804,7 +804,7 @@ sql:
 Once enabled, a `calcite` executor is automatically registered. Use `executorName=calcite` in any API:
 
 ```http request
-POST http://localhost:8080/sql/forge/api/json/select/orders o?executorName=calcite
+POST http://localhost:8081/sql/forge/api/json/select/orders o?executorName=calcite
 Content-Type: application/json
 
 {
@@ -852,7 +852,7 @@ Use [Amis](https://aisuda.bce.baidu.com/amis/zh-CN/docs/index) together with JSO
 #### Example
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/template/amis
+PUT http://localhost:8081/sql/forge/api/template/amis
 content-type: application/json
 
 {
@@ -922,13 +922,19 @@ Simply implement the interface and register as a Spring Bean to automatically re
 
 ## 4. sql-forge-mcp (AI MCP Server)
 
-A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that exposes sql-forge backend capabilities as AI tools via **stdio** transport. AI assistants (Claude Desktop, Cursor, Windsurf, etc.) can query database metadata, execute SQL, and manage Amis templates through MCP tool calls.
+A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that exposes sql-forge backend capabilities as AI-callable tools via **stdio** transport, so Claude Code, Claude Desktop, Cursor, Windsurf and other AI assistants can "see" database metadata, read Amis knowledge, assemble Amis pages from natural language descriptions, save them to the system, and validate with headless Chromium rendering.
 
-> Requires a running sql-forge backend (with `sql.forge.api.database.enabled=true`).
+> Requires a running sql-forge backend (with `sql.forge.api.database.enabled=true`) and Playwright Chromium installed for `previewAmisTemplate`.
 
-### MCP Tools
+### MCP Three Primitives at a Glance
 
-#### Metadata
+The MCP server splits capabilities into three primitives (**29 Tools** + **5 Resources** + **3 Prompts**):
+
+- **Tools = actions** (CRUD, validation, rendering, save) — invoked on demand
+- **Resources = read-only references** (Amis knowledge, component catalog, examples) — recommended to pre-load into context at AI client init
+- **Prompts = task templates** (pre-built instructions with placeholders) — triggerable as `/slash-command`
+
+### Metadata
 
 | Tool | Description |
 |------|-------------|
@@ -941,14 +947,7 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that e
 | `findTablesByName` | Search tables by keyword (case-insensitive) |
 | `describeSchema` | Get full schema (database → tables → columns/PKs/FKs/indexes) |
 
-#### SQL Execution
-
-| Tool | Description |
-|------|-------------|
-| `executeSQL` | Execute a SQL query and return the result set |
-| `countRows` | Count rows matching optional WHERE conditions |
-
-#### JSON CRUD
+### JSON CRUD
 
 | Tool | Description |
 |------|-------------|
@@ -957,26 +956,83 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server that e
 | `jsonInsert` | Insert a record (POST /api/json/insert/{tableName}) |
 | `jsonUpdate` | Update records by condition (POST /api/json/update/{tableName}) |
 | `jsonDelete` | Delete records by condition (POST /api/json/delete/{tableName}) |
+| `countRows` | Count rows matching optional WHERE conditions |
 
-#### Amis Template
-
-| Tool | Description |
-|------|-------------|
-| `amisTemplateSave` | Save an Amis page JSON template configuration |
-| `listAmisTemplates` | List Amis templates with optional filters |
-| `getAmisTemplate` | Get a single Amis template by ID |
-| `deleteAmisTemplate` | Delete an Amis template by ID |
-
-#### SQL Template
+### SQL Template & Execution
 
 | Tool | Description |
 |------|-------------|
-| `saveSqlTemplate` | Save or update a SQL template |
+| `executeSQL` | Execute SQL directly (SELECT only by default, controlled by `sql.forge.api.database.select-only`) |
+| `saveSqlTemplate` | Save or update a SQL template (Enjoy syntax: `#{}` placeholders, `<if>`/`<foreach>` conditionals) |
 | `listSqlTemplates` | List SQL templates with optional filters |
 | `getSqlTemplate` | Get a single SQL template by ID |
 | `deleteSqlTemplate` | Delete a SQL template by ID |
 | `executeSqlTemplate` | Execute a SQL template with parameter binding |
-| `executeSqlTemplateSafely` | Safely execute SQL template with parameter validation |
+| `executeSqlTemplateSafely` | Safer execution: validates template exists + params complete + refuses unbound-placeholder SQL (recommended) |
+
+### Amis Template CRUD
+
+| Tool | Description |
+|------|-------------|
+| `amisTemplateSave` | Save an Amis page JSON template (persists to backend's Amis table) |
+| `listAmisTemplates` | List Amis templates (fuzzy filter on id/name/description/context) |
+| `getAmisTemplate` | Get a single Amis template by ID |
+| `deleteAmisTemplate` | Delete an Amis template by ID (destructive; Agent should confirm with user) |
+
+### Amis Actions & MCP Health
+
+| Tool | Description |
+|------|-------------|
+| `validateAmisTemplate` | Static validation: JSON syntax, required fields, component type, API format, nested recursion. Returns `{valid, errors[]}` (severity: error/warning) |
+| `previewAmisTemplate` | **Real render** via headless Chromium (self-contained HTML via `page.setContent()`, **no popup**). Returns `{available, rendered, reason, errors[]}`. Degrades to `available=false + reason` when Chromium unavailable |
+| `mcpHealth` | Health check on MCP itself + each backend + Playwright. Returns `{overall, mcp, backends, playwright, limits}`. For liveness probe, Agent startup self-check, manual troubleshooting |
+| `metrics` | In-process metrics: per-Tool call count, error count, avg latency, max latency. For liveness, alerting, Agent self-diagnosis |
+
+### MCP Resources (5 read-only)
+
+| URI | mimeType | Description |
+|---|---|---|
+| `amis://schema-hints` | `text/markdown` | Full Amis Schema cheat sheet (expressions / API idioms / CRUD patterns / pitfall list). **Strongly recommended as resident reference** |
+| `amis://components` | `application/json` | Component catalog lightweight index (type/name/category/description only, 54 entries) |
+| `amis://examples` | `application/json` | Example lightweight index (name/title/tags/description only, 17 entries) |
+| `amis://components/{type}` | `application/json` | Get component full spec by type (with required/keyProps/minimalExample/docUrl) |
+| `amis://examples/{name}` | `application/json` | Get full runnable JSON Schema by name, as template base |
+
+> Resources are exposed via `AmisMcpResources` (spring-ai 1.1.x programmatic `List<McpServerFeatures.SyncResourceSpecification>` Bean). Round 5 moved 6 Amis-knowledge Tools to Resources so AI clients can pre-load `amis://schema-hints` into the system prompt without invoking.
+
+### MCP Prompts (3 task templates)
+
+| Prompt | Args | Purpose |
+|---|---|---|
+| `create-amis-page` | `<systemName> <tableName> <pageTitle>` | Standard pipeline: probe table → read schema-hints → read component spec → adapt → validate → preview |
+| `diagnose-render-error` | `<context> <errors>` | Feed failed preview errors back, have AI fix the schema and try again |
+| `quick-crud-template` | `<systemName> <tableName> [withFilter]` | One-shot skeleton: read-only mode, minimum dialogue to produce a minimal CRUD |
+
+### Agent Build Pipeline (11 standard steps)
+
+```
+1.  tools/call   mcpHealth                            → confirm backend reachable + Chromium available
+2.  tools/call   findTablesByName / describeSchema     → probe table + column metadata
+3.  resources/read amis://schema-hints                 → cheat sheet (recommend resident)
+4.  resources/read amis://components/crud             → required fields
+5.  resources/read amis://examples/crud-page          → example schema as template base
+6.  tools/call   validateAmisTemplate(json)           → must pass first
+7.  tools/call   previewAmisTemplate(systemName, json) → visual validation (headless, no popup)
+8.  tools/call   amisTemplateSave(...)                 → save to backend
+9.  tools/call   getAmisTemplate(...)                 → round-trip verification
+10. tools/call   update / re-validate / re-preview    → modify and re-save
+11. tools/call   deleteAmisTemplate(...)               → cleanup
+```
+
+> A full hands-on walkthrough (with expected return per step, common error fixes, Prompts triggers) lives in [`docs/agent-journey.md`](docs/agent-journey.md).
+
+### Module Constraints (no web entrypoints)
+
+- Does **not** depend on `sql-forge-web`, no servlet / `RouterFunction`
+- **Preview uses `page.setContent()`** for self-contained HTML, `spring.main.web-application-type=none`
+- **Amis SDK is fetched on-demand** from jsdelivr CDN (not bundled into the MCP jar)
+
+This keeps the MCP process lightweight, standalone, and runnable in any environment.
 
 ### stdio Usage (jbang)
 
@@ -1030,6 +1086,8 @@ Configure multiple systems to connect one MCP server to several sql-forge backen
 
 > Follow this section end-to-end to see: **using only JSON configuration, no Java code written**, you can build an order management page with complex reports + CRUD + access control.
 
+> 💡 **Port convention**: this section assumes the backend at `http://localhost:8081` (matching the `sql-forge-mcp` examples, so Step 5's MCP replica works out of the box). This is also the Starter's new default (`application.yml` now ships with `server.port: 8081`); falling back to 8080 is only for legacy habits — just substitute the URLs.
+
 ### Goal
 
 - Order list filterable by username
@@ -1039,7 +1097,7 @@ Configure multiple systems to connect one MCP server to several sql-forge backen
 ### Step 1: Register SQL Template (Complex Report)
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/template/sql
+PUT http://localhost:8081/sql/forge/api/template/sql
 Content-Type: application/json
 
 {
@@ -1052,7 +1110,7 @@ Content-Type: application/json
 Verify execution:
 
 ```http request
-POST http://localhost:8080/sql/forge/api/template/sql/order-report
+POST http://localhost:8081/sql/forge/api/template/sql/order-report
 Content-Type: application/json
 
 {"username": "alice"}
@@ -1061,7 +1119,7 @@ Content-Type: application/json
 ### Step 2: Register Amis Page Template
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/template/amis
+PUT http://localhost:8081/sql/forge/api/template/amis
 Content-Type: application/json
 
 {
@@ -1079,7 +1137,7 @@ Content-Type: application/json
 Grant the Order Management page to the "manager" role:
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/role-template
+PUT http://localhost:8081/sql/forge/api/role-template
 Content-Type: application/json
 
 {
@@ -1091,7 +1149,7 @@ Content-Type: application/json
 Then assign the "manager" role to a specific user (admin only):
 
 ```http request
-PUT http://localhost:8080/sql/forge/api/user-role
+PUT http://localhost:8081/sql/forge/api/user-role
 Content-Type: application/json
 
 {
@@ -1103,13 +1161,36 @@ Content-Type: application/json
 ### Step 4: Login and Access
 
 ```http request
-POST http://localhost:8080/sql/forge/api/auth/login
+POST http://localhost:8081/sql/forge/api/auth/login
 Content-Type: application/json
 
 {"username": "alice", "password": "..."}
 ```
 
 After login, visit the Web Console (`/sql/forge/web`) and open the "Order Management" page.
+
+### Step 5: Replicate the Above via AI Agent + MCP
+
+If you've already started `sql-forge-mcp` per [Section 4](#4-sql-forge-mcp-ai-mcp-server) and registered the backend as `TestSys`, all four steps above can be done by an AI Agent with one prompt. Tell Claude Code:
+
+> "Use the TestSys MCP tools to build an order management page for the ORDERS table, filterable by username, matching the HTTP example above, and save it as `order-management`."
+
+The Agent follows this pipeline (each row = one MCP call):
+
+| Agent action | MCP Primitive | Tool / URI | Replaces HTTP step |
+|---|---|---|---|
+| Probe table + columns | Tool | `describeSchema(TestSys, ORDERS)` | — (HTTP side didn't have this) |
+| Read Amis knowledge | Resource | `amis://schema-hints` + `amis://examples/crud-page` | — |
+| Register SQL template | Tool | `saveSqlTemplate(TestSys, order-report, ...)` | Step 1 PUT |
+| Validate assembled page JSON | Tool | `validateAmisTemplate(json)` | — |
+| Render verification | Tool | `previewAmisTemplate(TestSys, json)` | — |
+| Save Amis template | Tool | `amisTemplateSave(TestSys, order-management, ...)` | Step 2 PUT |
+| Bind role-template | Tool | Execute SQL directly OR `saveSqlTemplate` | Step 3 PUT |
+| Round-trip verify | Tool | `getAmisTemplate(TestSys, order-management)` | Open the page in Step 4 |
+
+No manual HTTP, no JSON hand-crafting, no browser refresh — the Agent drives the entire MCP channel and ends up with the same `order-management` page.
+
+> A full 11-step agent pipeline (with Prompts triggers + common error fixes) lives in [`docs/agent-journey.md`](docs/agent-journey.md).
 
 ### What You Just Built
 
@@ -1149,4 +1230,33 @@ sql:
           enabled: true            # Enable Amis template API (default true)
     console:
       enabled: true                # Enable Web Console (default true)
+
+server:
+  port: 8081                      # Default 8081, aligned with .mcp.json; see next section
 ```
+
+---
+
+## 🔌 Port Configuration Sync Guide
+
+All HTTP / MCP examples in this repo default to **`http://localhost:8081`**. To change, update **both** of the following to stay in sync:
+
+| Location | Field | Notes |
+|------|------|------|
+| Backend `application.yml` | `server.port` | Port where the Starter listens (default 8081, fully aligned with docs and `.mcp.json`) |
+| MCP `.mcp.json` `--sql.forge.mcp.systems[i].url` | url | The baseUrl MCP's fetcher hits; must match `server.port` |
+
+> Every MCP tool call (`executeSQL` / `jsonSelect` / `amisTemplateSave` …) reaches the backend via this url. Mismatch shows up as `mcpHealth` returning `DEGRADED` or HTTP 404/401.
+>
+> If you only use the Starter without MCP and don't want the default 8081, you can also fall back to 8080 (no .mcp.json to touch) — just substitute `localhost:8081` with `localhost:8080` in the examples.
+
+---
+
+## 📚 Further Reading
+
+| Document | Content | Audience |
+|------|------|------|
+| [`docs/agent-journey.md`](docs/agent-journey.md) | Full 11-step MCP Agent pipeline (probe → read knowledge → assemble → validate → render → save → round-trip → delete), with Prompts triggers and common error fixes | Claude Code / Cursor / AI Agent users |
+| [`docs/deployment.md`](docs/deployment.md) | sql-forge-mcp production runbook: JVM args / .mcp.json / auth / logging / monitoring / alert thresholds / rollback / security audit / pre/post-deployment checklist | Ops / SRE |
+| [`docs/profiling.md`](docs/profiling.md) | sql-forge-mcp performance analysis guide: async-profiler / JFR / jcmd / 5 common bottlenecks and tuning order | Developers debugging perf |
+| [`sql-forge-mcp/README.md`](sql-forge-mcp/README.md) / [`README.en.md`](sql-forge-mcp/README.en.md) | MCP module-specific doc: Resources 5 / Tools 29 / Prompts 3, module constraints, design philosophy | MCP server developers / integrators |

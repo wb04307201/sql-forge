@@ -30,3 +30,13 @@ build/
 .vscode/
 .playwright-mcp/
 /target/sql-forge-parent-1.0-SNAPSHOT.pom
+
+# 防止 jar/依赖被解压到仓库根(常见 jbang/mvn dependency:unpack 副作用)
+/ch/
+/io/
+/META-INF/
+/org/
+/OSGI-INF/
+
+# MCP 运行时日志(audit + server log,jvm 启动时 cwd 下生成)
+/mcp/
