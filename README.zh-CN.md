@@ -95,21 +95,21 @@
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-spring-boot-starter</artifactId>
-    <version>1.6.2</version>
+    <version>1.6.3</version>
 </dependency>
 
 <!-- Calcite 跨库联邦查询（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-calcite-spring-boot-starter</artifactId>
-    <version>1.6.2</version>
+    <version>1.6.3</version>
 </dependency>
 
 <!-- Amis 模板 + Web Console（可选） -->
 <dependency>
     <groupId>io.github.wb04307201</groupId>
     <artifactId>sql-forge-web-spring-boot-starter</artifactId>
-    <version>1.6.2</version>
+    <version>1.6.3</version>
 </dependency>
 ```
 
@@ -1045,7 +1045,7 @@ MCP 服务按规范把能力分到三类原语（**29 个 Tool** + **5 个 Resou
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.6.2",
+        "io.github.wb04307201:sql-forge-mcp:1.6.3",
         "--sql.forge.mcp.systems[0].name=订单系统",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=订单系统，包含系统表：用户、角色、字典等，业务表：商品、订单、支付记录、用户地址、库存、订单物流、商品分类、商品评价等",
@@ -1066,7 +1066,7 @@ MCP 服务按规范把能力分到三类原语（**29 个 Tool** + **5 个 Resou
     "sql-forge-mcp": {
       "command": "jbang.cmd",
       "args": [
-        "io.github.wb04307201:sql-forge-mcp:1.6.2",
+        "io.github.wb04307201:sql-forge-mcp:1.6.3",
         "--sql.forge.mcp.systems[0].name=订单系统",
         "--sql.forge.mcp.systems[0].url=http://localhost:8081",
         "--sql.forge.mcp.systems[0].description=订单系统",
